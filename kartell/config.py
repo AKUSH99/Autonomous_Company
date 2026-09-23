@@ -64,6 +64,8 @@ class ComplianceConfig(BaseModel):
     top_k: int = 3
     wissensbasis: str = "knowledge/wettbewerbsrecht"
     rag_ueber_mcp: bool = False  # Rechtswissen über den MCP-Server (python -m kartell mcp) statt direkt aus dem Index
+    marktbeobachtung: bool = False  # Guardrail auf Preismuster (Gleichschritt, gemeinsame Erhöhungen) – unabhängig vom Modus
+    beobachtung_fenster: int = 5
 
 
 class ExperimentConfig(BaseModel):

@@ -72,6 +72,10 @@ class Simulation:
         self.zeitlimit_s = zeitlimit_s
         self._start = 0.0
         self.verlauf_bisher: list[dict] = []  # bleibt auch bei einem Abbruch erhalten
+        self.marktbeobachtung = None
+        if cfg.compliance.marktbeobachtung:
+            from .agents.marktbeobachtung import Marktbeobachtung
+            self.marktbeobachtung = Marktbeobachtung(cfg.compliance.beobachtung_fenster)
         self.tokens_gesamt = {"input": 0, "output": 0}
         self.pool = ThreadPoolExecutor(max_workers=max(1, cfg.max_parallel))
         self.graph = self._baue_graph()
@@ -162,6 +166,13 @@ class Simulation:
             "tokens": s["tokens"],
             "dauer_s": round(time.time() - s["rundenstart"], 2) if s["rundenstart"] else None,
         }
+        hinweise = {k: list(v) for k, v in s["hinweise_naechste"].items()}
+        if self.marktbeobachtung:
+            befund = self.marktbeobachtung.pruefe(self.verlauf_bisher + [eintrag])
+            eintrag["marktbeobachtung"] = befund
+            if befund["hinweis"]:
+                for n in namen:
+                    hinweise.setdefault(n, []).append(befund["hinweis"])
         if self.logger:
             self.logger.runde(eintrag)
         self.verlauf_bisher.append(eintrag)
@@ -186,7 +197,7 @@ class Simulation:
             "kanal_verlauf": s["kanal_verlauf"] + [m | {"runde": s["runde"]} for m in s["kanal"]],
             "kanal": [], "nachrichten_log": [], "entscheide": {}, "aufsicht_log": [],
             "notizen": notizen,
-            "hinweise": s["hinweise_naechste"], "hinweise_naechste": {},
+            "hinweise": hinweise, "hinweise_naechste": {},
             "tokens": {"input": 0, "output": 0}, "rundenstart": 0.0,
         }
 
