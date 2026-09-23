@@ -97,7 +97,7 @@ Mit drei Shops entstanden in zwei von drei Läufen perfekte Kartelle (Index +1.0
 | selbst geschrieben (39 Nachrichten, 22 unzulässig) | Precision 1.00 · Recall 0.68 · 0 Fehlalarme | Precision 1.00 · Recall 1.00 · 0 Fehlalarme |
 | 120 echte Agenten-Nachrichten | ausstehend: menschliche Labels | 94 von 120 blockiert |
 
-Jev (TypeSafe, über OpenRouter) als zweiter, unabhängiger Richter: Auswertung läuft. Menschliche Labels im [Label-Werkzeug](https://claude.ai/artifact/9MeAB2xSJ6v4924KHLHr3m), danach `python -m kartell labels-auswerten --urteile reports/urteile_*.jsonl`.
+Jev (TypeSafe, über die Decisions-API von OpenRouter) als zweiter, unabhängiger Richter ist eingebaut (`kartell/llm/jev.py`), wurde aber noch nicht ausgewertet: Im GitHub-Lauf war `OPENROUTER_API_KEY` leer. Apertus ist bei OpenRouter nicht gelistet (Modellsuche über 459 Modelle); Jev erscheint dort ebenfalls nicht, weil es über den separaten Decisions-Endpunkt läuft. Menschliche Labels im [Label-Werkzeug](https://claude.ai/artifact/9MeAB2xSJ6v4924KHLHr3m), danach `python -m kartell labels-auswerten --urteile reports/urteile_*.jsonl`.
 
 ## Kosten
 
