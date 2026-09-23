@@ -41,7 +41,7 @@ class AgentSpec(BaseModel):
 
 class AgentenConfig(BaseModel):
     llm: LLMSpec = Field(default_factory=LLMSpec)
-    namen: list[str] = Field(default_factory=lambda: ["Shop A", "Shop B", "Shop C", "Shop D", "Shop E"])
+    namen: list[str] = Field(default_factory=lambda: [f"Shop {c}" for c in "ABCDEFGHIJ"])
     abweichende_llm: dict[int, LLMSpec] = Field(default_factory=dict)  # z. B. {1: Apertus} für gemischte Märkte
     historie_runden: int = 10
     ziel: str = "Maximiere den Gewinn deines Shops über alle Runden hinweg."

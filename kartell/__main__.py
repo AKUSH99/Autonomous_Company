@@ -96,7 +96,8 @@ def _pruefe_modell(spec: LLMSpec, berichte) -> None:
 def _auftrag(args) -> None:
     """Arbeitet eine Auftragsdatei ab: mehrere Läufe, optional Guardrail-Evaluation, danach der Bericht.
 
-    Gedacht für lange Versuchsreihen ohne Aufsicht, z. B. in GitHub Actions.
+    Gedacht für lange Versuchsreihen ohne Aufsicht, z. B. in GitHub Actions. Optionale Felder:
+    budget_usd / reserve_usd (Budgetwächter über alle Läufe), zeitlimit_min (pro Lauf).
     """
     from pathlib import Path
 
@@ -104,6 +105,7 @@ def _auftrag(args) -> None:
 
     from .bericht import erstelle_bericht
     from .eval_compliance import evaluiere, lade_testset
+    from .kosten import Budgetwaechter, guthaben_usd
     from .runner import fuehre_experiment_aus
     auftrag = yaml.safe_load(Path(args.datei).read_text(encoding="utf-8"))
     modell = auftrag.get("modell")
@@ -111,20 +113,39 @@ def _auftrag(args) -> None:
     berichte.mkdir(parents=True, exist_ok=True)
     if modell:
         _pruefe_modell(VOREINSTELLUNGEN[modell], berichte)
+    spec = VOREINSTELLUNGEN[modell] if modell else LLMSpec()
+    waechter = None
+    if auftrag.get("budget_usd"):
+        waechter = Budgetwaechter(spec, float(auftrag["budget_usd"]), float(auftrag.get("reserve_usd", 0.5)))
+        quelle = f"Guthaben {waechter.start_guthaben:.2f} USD" if waechter.start_guthaben is not None else "ohne Guthaben-Abfrage"
+        print(f"Budget {waechter.budget:.2f} USD ({quelle})")
+    ergebnisse = []
     for eintrag in auftrag.get("laeufe", []):
+        if waechter and waechter.erschoepft:
+            print(f"Budget erschöpft – {eintrag['config']} entfällt.")
+            continue
         cfg = lade_config(eintrag["config"])
         cfg = mit_modell(cfg, modell) if modell else cfg
         cfg.runden = eintrag.get("runden", cfg.runden)
         cfg.wiederholungen = eintrag.get("wiederholungen", cfg.wiederholungen)
-        fuehre_experiment_aus(cfg, args.ausgabe)
-    if auftrag.get("guardrail_evaluation"):
-        llm = VOREINSTELLUNGEN[modell] if modell else LLMSpec()
-        r = evaluiere(ComplianceConfig(llm=llm), lade_testset())
-        datei = berichte / f"guardrail_{modell or llm.model}.json"
+        ergebnisse += fuehre_experiment_aus(cfg, args.ausgabe, waechter, eintrag.get("zeitlimit_min", auftrag.get("zeitlimit_min")))
+    if auftrag.get("guardrail_evaluation") and not (waechter and waechter.erschoepft):
+        r = evaluiere(ComplianceConfig(llm=spec), lade_testset())
+        datei = berichte / f"guardrail_{modell or spec.model}.json"
         datei.write_text(json.dumps(r, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"Guardrail-Evaluation: {json.dumps(r['ergebnisse'], ensure_ascii=False)} → {datei}")
+    kosten = {"geschaetzt_usd": round(sum(e.get("kosten_usd_geschaetzt") or 0 for e in ergebnisse), 4)}
+    if waechter and waechter.start_guthaben is not None:
+        danach = guthaben_usd(spec)
+        kosten |= {"guthaben_vorher_usd": waechter.start_guthaben, "guthaben_nachher_usd": danach,
+                   "verbraucht_usd": None if danach is None else round(waechter.start_guthaben - danach, 4)}
+    (berichte / "kosten.json").write_text(json.dumps(kosten, indent=2), encoding="utf-8")
+    print(f"Kosten: {json.dumps(kosten)}")
     if any(Path(args.ausgabe).glob("*/runden.jsonl")):
         print(f"Bericht geschrieben: {erstelle_bericht(args.ausgabe, berichte)}")
+    ausfaelle = [e for e in ergebnisse if (e.get("abbruch") or {}).get("art") == "ModellAusfall"]
+    if ausfaelle:
+        raise SystemExit(f"{len(ausfaelle)} Lauf/Läufe wegen Modellausfall abgebrochen – Protokoll prüfen.")
 
 
 def _bericht(args) -> None:

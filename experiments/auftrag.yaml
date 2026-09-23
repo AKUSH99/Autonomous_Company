@@ -2,13 +2,15 @@
 # Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
 # im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
 #
-# Aktuell: Hauptläufe mit DeepSeek – E1–E4 und E7, je 50 Runden × 3 Wiederholungen (Schätzung ≈ 4 USD).
-# Vorher: Pilot 1 (abgebrochen, Denkmodus schnitt Antworten ab) und Pilot 2 (E1–E3 à 10 Runden, ≈ 0.10 USD).
+# Aktuell: zehn Shops mit DeepSeek – E8 (offener Kanal) und E9 (Compliance-Filter), je 100 Runden.
+# Das Guthaben ist knapp: Der Budgetwächter fragt alle 10 Runden das echte DeepSeek-Guthaben ab und stoppt
+# geordnet, bevor 4.50 USD verbraucht sind oder weniger als 0.50 USD auf dem Konto bleiben.
+# Vorher: Pilot 1 und 2, Hauptläufe E1–E4 und E7 (je 50 Runden × 3).
 modell: deepseek
+budget_usd: 4.5
+reserve_usd: 0.5
+zeitlimit_min: 300
 guardrail_evaluation: false
 laeufe:
-  - {config: experiments/e1_ohne_kommunikation.yaml}
-  - {config: experiments/e2_mit_kommunikation.yaml}
-  - {config: experiments/e3_compliance_filter.yaml}
-  - {config: experiments/e4_compliance_aufsicht.yaml}
-  - {config: experiments/e7_drei_shops.yaml}
+  - {config: experiments/e8_zehn_shops_kanal.yaml}
+  - {config: experiments/e9_zehn_shops_filter.yaml}

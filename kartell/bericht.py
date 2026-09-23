@@ -17,8 +17,11 @@ def lade_lauf(ordner: Path) -> dict | None:
     runden = [json.loads(z) for z in runden_datei.read_text(encoding="utf-8").splitlines() if z.strip()]
     b = meta["benchmarks"]
     benchmarks = Benchmarks(b["nash_preis"], b["monopol_preis"], b["nash_gewinn"], b["monopol_gewinn"], b["grenzkosten"])
+    ergebnis_datei = ordner / "ergebnis.json"
+    ergebnis = json.loads(ergebnis_datei.read_text(encoding="utf-8")) if ergebnis_datei.exists() else {}
     return {"ordner": ordner, "meta": meta, "runden": runden, "benchmarks": benchmarks,
-            "kennzahlen": zusammenfassung(runden, benchmarks), "fertig": (ordner / "ergebnis.json").exists()}
+            "kennzahlen": zusammenfassung(runden, benchmarks), "fertig": ergebnis_datei.exists(),
+            "abbruch": ergebnis.get("abbruch"), "kosten_usd": ergebnis.get("kosten_usd_geschaetzt")}
 
 
 def lade_laeufe(wurzel: str | Path) -> list[dict]:
@@ -36,18 +39,27 @@ def erstelle_bericht(wurzel: str | Path, ausgabe: str | Path = "reports") -> Pat
     zeilen = ["# Auswertung KI-Kartell", "",
               "Kennzahlen über die zweite Hälfte jedes Laufs (die erste Hälfte gilt als Lernphase). "
               "Mittelwert ± Standardabweichung über die Wiederholungen.", "",
-              "| Versuch | Läufe | Modelle | Ø Preis (CHF) | Preisindex | Kollusionsindex | blockiert / Nachrichten |",
-              "|---|---|---|---|---|---|---|"]
+              "| Versuch | Läufe | Runden | Modelle | Ø Preis (CHF) | Preisindex | Kollusionsindex | blockiert / Nachrichten | Kosten (USD, geschätzt) |",
+              "|---|---|---|---|---|---|---|---|---|"]
     for name, gruppe in gruppen.items():
         k = [l["kennzahlen"] for l in gruppe]
         preis = mittelwert_und_streuung(x["mittlerer_preis"] for x in k)
         pi = mittelwert_und_streuung(x["preisindex"] for x in k)
         ki = mittelwert_und_streuung(x["kollusionsindex"] for x in k)
         modelle = ", ".join(sorted(set(gruppe[0]["meta"]["agenten"].values())))
-        zeilen.append(f"| {name} | {len(gruppe)} | {modelle} | {preis[0]:.2f} ± {preis[1]:.2f} | "
+        runden = sorted({x["runden"] for x in k})
+        kosten = [l["kosten_usd"] for l in gruppe if l["kosten_usd"] is not None]
+        zeilen.append(f"| {name} | {len(gruppe)} | {'–'.join(map(str, runden[::max(1, len(runden) - 1)]))} | {modelle} | "
+                      f"{preis[0]:.2f} ± {preis[1]:.2f} | "
                       f"{round(pi[0], 2) + 0.0:+.2f} ± {pi[1]:.2f} | {round(ki[0], 2) + 0.0:+.2f} ± {ki[1]:.2f} | "
-                      f"{sum(x['blockierte_nachrichten'] for x in k)} / {sum(x['nachrichten'] for x in k)} |")
+                      f"{sum(x['blockierte_nachrichten'] for x in k)} / {sum(x['nachrichten'] for x in k)} | "
+                      f"{f'{sum(kosten):.2f}' if kosten else '–'} |")
     zeilen += ["", "Preisindex und Kollusionsindex: 0 = Wettbewerb (Nash), 1 = perfektes Kartell (Monopol).", ""]
+    vorzeitig = [l for l in laeufe if l["abbruch"]]
+    if vorzeitig:
+        zeilen += ["**Vorzeitig beendete Läufe** (ausgewertet sind die Runden bis zum Stopp):", ""]
+        zeilen += [f"- `{l['ordner'].name}` nach {len(l['runden'])} Runden: {l['abbruch']['grund']}" for l in vorzeitig]
+        zeilen.append("")
 
     try:
         import matplotlib

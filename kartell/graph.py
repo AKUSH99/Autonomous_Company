@@ -40,12 +40,21 @@ class Zustand(TypedDict):
 MAX_AUSFALL_RUNDEN = 3
 
 
-class ModellAusfall(RuntimeError):
+class Abbruch(RuntimeError):
+    """Der Lauf endet vor der letzten Runde; die bisherigen Runden bleiben gültig und werden ausgewertet."""
+
+
+class ModellAusfall(Abbruch):
     """Die Modelle antworten dauerhaft nicht – der Lauf wird abgebrochen."""
 
 
+class LimitErreicht(Abbruch):
+    """Budget oder Zeitlimit erreicht – geplanter, geordneter Stopp."""
+
+
 class Simulation:
-    def __init__(self, cfg: ExperimentConfig, seed: int = 1, logger=None, agenten=None, compliance=None):
+    def __init__(self, cfg: ExperimentConfig, seed: int = 1, logger=None, agenten=None, compliance=None,
+                 waechter=None, zeitlimit_s: float | None = None):
         self.cfg = cfg
         self.seed = seed
         self.markt = LogitMarkt(cfg.markt)
@@ -59,6 +68,11 @@ class Simulation:
         self.compliance = compliance
         self.logger = logger
         self._ausfall_runden = 0
+        self.waechter = waechter  # z. B. kosten.Budgetwaechter: (runde, tokens_lauf, tokens_runde) -> Abbruchgrund | None
+        self.zeitlimit_s = zeitlimit_s
+        self._start = 0.0
+        self.verlauf_bisher: list[dict] = []  # bleibt auch bei einem Abbruch erhalten
+        self.tokens_gesamt = {"input": 0, "output": 0}
         self.pool = ThreadPoolExecutor(max_workers=max(1, cfg.max_parallel))
         self.graph = self._baue_graph()
 
@@ -150,12 +164,20 @@ class Simulation:
         }
         if self.logger:
             self.logger.runde(eintrag)
+        self.verlauf_bisher.append(eintrag)
+        self.tokens_gesamt = self._plus_tokens(self.tokens_gesamt, s["tokens"]["input"], s["tokens"]["output"])
         # Scheitern alle Preisentscheide mehrmals in Folge (Schlüssel ungültig, Guthaben leer, Anbieter down),
         # wäre der Rest des Laufs nur fortgeschriebene Vorrundenpreise – abbrechen statt Daten verfälschen.
         fehler = [s["entscheide"][n].get("fehler") for n in namen]
         self._ausfall_runden = self._ausfall_runden + 1 if all(fehler) else 0
         if self._ausfall_runden >= MAX_AUSFALL_RUNDEN:
             raise ModellAusfall(f"{MAX_AUSFALL_RUNDEN} Runden in Folge ohne gültigen Preisentscheid, zuletzt: {fehler[0]}")
+        if s["runde"] < self.cfg.runden:
+            if self.zeitlimit_s and time.time() - self._start > self.zeitlimit_s:
+                raise LimitErreicht(f"Zeitlimit {self.zeitlimit_s / 60:.0f} Min. nach Runde {s['runde']} erreicht")
+            grund = self.waechter(s["runde"], self.tokens_gesamt, s["tokens"]) if self.waechter else None
+            if grund:
+                raise LimitErreicht(f"{grund} – gestoppt nach Runde {s['runde']}")
         notizen = {n: {"plan": s["entscheide"][n].get("plan", ""), "erkenntnisse": s["entscheide"][n].get("erkenntnisse", "")}
                    for n in namen}
         return {
@@ -204,7 +226,10 @@ class Simulation:
             "entscheide": {}, "aufsicht_log": [], "notizen": {}, "hinweise": {}, "hinweise_naechste": {},
             "tokens": {"input": 0, "output": 0}, "rundenstart": 0.0,
         }
-        # Pro Runde höchstens 5 Knoten; LangGraph bricht standardmässig nach 25 Schritten ab.
-        ende = self.graph.invoke(start, config={"recursion_limit": self.cfg.runden * 6 + 20})
-        self.pool.shutdown(wait=False)
+        self._start = time.time()
+        try:
+            # Pro Runde höchstens 5 Knoten; LangGraph bricht standardmässig nach 25 Schritten ab.
+            ende = self.graph.invoke(start, config={"recursion_limit": self.cfg.runden * 6 + 20})
+        finally:
+            self.pool.shutdown(wait=False)
         return ende["verlauf"]
