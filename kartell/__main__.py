@@ -115,6 +115,48 @@ def _modellsuche(suche: dict, berichte) -> None:
         print(f"Modellsuche '{begriff}': " + (", ".join(m["id"] for m in liste) if liste else "keine Treffer"))
 
 
+def _stichprobe(args) -> None:
+    from pathlib import Path
+
+    from .stichprobe import sammle_nachrichten, ziehe_stichprobe
+    alle = sammle_nachrichten(args.laeufe)
+    stichprobe = ziehe_stichprobe(alle, args.anzahl, args.seed)
+    Path(args.ausgabe).write_text("".join(json.dumps(n, ensure_ascii=False) + "\n" for n in stichprobe), encoding="utf-8")
+    print(f"{len(stichprobe)} von {len(alle)} Nachrichten → {args.ausgabe}")
+
+
+def _urteile_sammeln(auftrag: dict, berichte) -> None:
+    """LLM-Richter beurteilen die Stichprobe echter Nachrichten – ohne die menschlichen Labels zu kennen."""
+    from .agents.compliance import ComplianceAbteilung
+    from .stichprobe import lade_jsonl
+    stichprobe = lade_jsonl(auftrag["stichprobe"])
+    for name in auftrag.get("modelle", []):
+        spec = voreinstellung(name).model_copy(update={"temperature": 0.0})
+        _pruefe_modell(spec, berichte)
+        abteilung = ComplianceAbteilung(ComplianceConfig(modus="filter", llm=spec))
+        zeilen, fehler = [], 0
+        for n in stichprobe:
+            u = abteilung.pruefe_nachricht(n["quelle"]["von"], n["text"])
+            fehler += u.get("fehler") is not None
+            zeilen.append({"id": n["id"], "status": u["status"], "kategorie": u.get("kategorie"),
+                           "begruendung": u.get("begruendung"), "fehler": u.get("fehler")})
+        datei = berichte / f"urteile_{kurz(name)}.jsonl"
+        datei.write_text("".join(json.dumps(z, ensure_ascii=False) + "\n" for z in zeilen), encoding="utf-8")
+        blockiert = sum(z["status"] == "blockiert" for z in zeilen)
+        print(f"Urteile {name}: {blockiert}/{len(zeilen)} blockiert, {fehler} LLM-Fehler → {datei}")
+
+
+def _labels_auswerten(args) -> None:
+    from pathlib import Path
+
+    from .stichprobe import lade_jsonl, werte_labels_aus
+    urteile = {Path(p).stem.removeprefix("urteile_"): lade_jsonl(p) for p in args.urteile or []}
+    r = werte_labels_aus(lade_jsonl(args.stichprobe), lade_jsonl(args.labels), urteile)
+    print(json.dumps(r, ensure_ascii=False, indent=2))
+    if args.ausgabe:
+        Path(args.ausgabe).write_text(json.dumps(r, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def _auftrag(args) -> None:
     """Arbeitet eine Auftragsdatei ab: mehrere Läufe, optional Guardrail-Evaluation, danach der Bericht.
 
@@ -144,13 +186,16 @@ def _auftrag(args) -> None:
         waechter = Budgetwaechter(spec, float(auftrag["budget_usd"]), float(auftrag.get("reserve_usd", 0.5)))
         quelle = f"Guthaben {waechter.start_guthaben:.2f} USD" if waechter.start_guthaben is not None else "ohne Guthaben-Abfrage"
         print(f"Budget {waechter.budget:.2f} USD ({quelle})")
+    if auftrag.get("urteile_sammeln"):  # zuerst: kostet wenig und soll nicht am Budget der Läufe scheitern
+        _urteile_sammeln(auftrag["urteile_sammeln"], berichte)
     ergebnisse = []
     for eintrag in auftrag.get("laeufe", []):
         if waechter and waechter.erschoepft:
             print(f"Budget erschöpft – {eintrag['config']} entfällt.")
             continue
         cfg = lade_config(eintrag["config"])
-        cfg = mit_modell(cfg, modell, richter) if modell else cfg
+        temperatur = eintrag.get("compliance_temperatur", auftrag.get("compliance_temperatur"))
+        cfg = mit_modell(cfg, modell, richter, temperatur) if modell else cfg
         cfg.runden = eintrag.get("runden", cfg.runden)
         cfg.wiederholungen = eintrag.get("wiederholungen", cfg.wiederholungen)
         ergebnisse += fuehre_experiment_aus(cfg, args.ausgabe, waechter, eintrag.get("zeitlimit_min", auftrag.get("zeitlimit_min")),
@@ -226,6 +271,20 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--ausgabe", default="runs")
     s.add_argument("--berichte", default="reports")
     s.set_defaults(fn=_auftrag)
+
+    s = sub.add_parser("stichprobe", help="Stichprobe echter Agenten-Nachrichten für die Guardrail-Evaluation ziehen")
+    s.add_argument("laeufe", nargs="+", help="Ordner mit Läufen (werden rekursiv durchsucht)")
+    s.add_argument("--anzahl", type=int, default=120)
+    s.add_argument("--seed", type=int, default=7)
+    s.add_argument("--ausgabe", default="evaluation/echte_nachrichten.jsonl")
+    s.set_defaults(fn=_stichprobe)
+
+    s = sub.add_parser("labels-auswerten", help="Menschliche Labels auswerten: Kappa, Filter, Regeln und LLM-Richter")
+    s.add_argument("--stichprobe", default="evaluation/echte_nachrichten.jsonl")
+    s.add_argument("--labels", default="evaluation/echte_nachrichten_labels.jsonl")
+    s.add_argument("--urteile", nargs="*", help="urteile_<modell>.jsonl aus einem Auftrag")
+    s.add_argument("--ausgabe", help="Ergebnis zusätzlich als JSON speichern")
+    s.set_defaults(fn=_labels_auswerten)
 
     s = sub.add_parser("mcp", help="MCP-Server mit Wissensbasis und Regel-Prüfung starten (stdio)")
     s.add_argument("--wissensbasis", help="Ordner mit Markdown-Dateien (Standard: knowledge/wettbewerbsrecht)")

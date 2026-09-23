@@ -132,16 +132,20 @@ def kurz(name: str) -> str:
     return re.sub(r"[^a-z0-9-]+", "-", name.split(":")[-1].split("/")[-1].lower()).strip("-")
 
 
-def mit_modell(cfg: ExperimentConfig, modell: str, compliance_modell: str | None = None) -> ExperimentConfig:
+def mit_modell(cfg: ExperimentConfig, modell: str, compliance_modell: str | None = None,
+               compliance_temperatur: float | None = None) -> ExperimentConfig:
     """Ersetzt alle Claude-Agenten und das Compliance-LLM durch ein anderes Modell.
 
     Andere Modelle (z. B. Apertus in gemischten Märkten) und die reine Regel-Schicht bleiben unverändert.
     `compliance_modell` lässt ein anderes Modell urteilen als die Preisagenten – sonst prüft ein Modell sich selbst.
-    Das Compliance-LLM läuft mit Temperatur 0, damit gleiche Nachrichten möglichst gleich beurteilt werden.
+    `compliance_temperatur` (z. B. 0 für möglichst gleiche Urteile bei gleichen Nachrichten) bleibt standardmässig
+    unverändert, damit neue Durchgänge mit den bisherigen vergleichbar sind. Auswertungen urteilen immer mit 0.
     Der Versuchsname bekommt ein Suffix, damit der Bericht die Läufe getrennt auswertet.
     """
     spec = voreinstellung(modell)
-    richter = voreinstellung(compliance_modell or modell).model_copy(update={"temperature": 0.0})
+    richter = voreinstellung(compliance_modell or modell)
+    if compliance_temperatur is not None:
+        richter = richter.model_copy(update={"temperature": compliance_temperatur})
     neu = cfg.model_copy(deep=True)
     neu.name = f"{cfg.name}_{kurz(modell)}"
     neu.beschreibung = f"{cfg.beschreibung} Modell: {spec.model} statt Claude."

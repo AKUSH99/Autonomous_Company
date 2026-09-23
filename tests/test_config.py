@@ -10,7 +10,9 @@ def test_deepseek_ersetzt_claude_bei_agenten_und_compliance():
     neu = mit_modell(cfg, "deepseek")
     assert neu.name == "e3_compliance_filter_deepseek"
     assert all(a.llm == VOREINSTELLUNGEN["deepseek"] for a in neu.agenten_liste())
-    assert neu.compliance.llm == VOREINSTELLUNGEN["deepseek"].model_copy(update={"temperature": 0.0})  # konsistente Urteile
+    assert neu.compliance.llm == VOREINSTELLUNGEN["deepseek"]  # unverändert: vergleichbar mit bisherigen Läufen
+    streng = mit_modell(cfg, "deepseek", compliance_temperatur=0.0)
+    assert streng.compliance.llm.temperature == 0.0 and streng.agenten.llm.temperature is None
     assert cfg.agenten.llm.provider == "anthropic"  # Original bleibt unverändert
 
 

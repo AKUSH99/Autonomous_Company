@@ -2,15 +2,31 @@
 # Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
 # im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
 #
-# Aktuell: zehn Shops mit DeepSeek – E8 (offener Kanal) und E9 (Compliance-Filter), je 100 Runden.
-# Das Guthaben ist knapp: Der Budgetwächter fragt alle 10 Runden das echte DeepSeek-Guthaben ab und stoppt
-# geordnet, bevor 4.50 USD verbraucht sind oder weniger als 0.50 USD auf dem Konto bleiben.
-# Vorher: Pilot 1 und 2, Hauptläufe E1–E4 und E7 (je 50 Runden × 3).
+# Aktuell: Validitäts- und Erweiterungsläufe mit DeepSeek, nach Wichtigkeit geordnet – reicht das Budget nicht,
+# fällt zuerst das Ende der Liste weg. Der Budgetwächter fragt alle 10 Runden das echte Guthaben ab.
+# Vorher: Pilot 1 und 2, Hauptläufe E1–E4 und E7 (je 50 Runden × 3), E8/E9 mit zehn Shops.
 modell: deepseek
-budget_usd: 4.5
+budget_usd: 4.0
 reserve_usd: 0.5
 zeitlimit_min: 300
-guardrail_evaluation: false
+
+# Gibt es "Jeff" oder Apertus bei OpenRouter? Die Modellliste ist öffentlich; Treffer landen in reports/modellsuche.json.
+modellsuche: {begriffe: [jeff, apertus]}
+
+# KI-Richter beurteilen die 120 echten Nachrichten (ohne die menschlichen Labels zu kennen), Temperatur 0.
+urteile_sammeln: {stichprobe: evaluation/echte_nachrichten.jsonl, modelle: [deepseek]}
+
 laeufe:
-  - {config: experiments/e8_zehn_shops_kanal.yaml}
-  - {config: experiments/e9_zehn_shops_filter.yaml}
+  # 1. Ankereffekt: gleiches Spiel, Kosten 3 bzw. 20 CHF statt 10 CHF – lernen die Agenten den Markt oder folgen sie "2× Kosten"?
+  - {config: experiments/e10_anker_tief.yaml}
+  - {config: experiments/e11_anker_hoch.yaml}
+  - {config: experiments/e12_anker_tief_kanal.yaml}
+  - {config: experiments/e13_anker_hoch_kanal.yaml}
+  # 2. Neue Konzepte: Tool-Use (Nachfrage-Schätzer) und Verhaltens-Guardrail (Marktbeobachtung)
+  - {config: experiments/e14_werkzeug.yaml}
+  - {config: experiments/e15_marktbeobachtung.yaml}
+  # 3. Mehr Durchgänge (w4–w6), damit Unterschiede statistisch prüfbar werden (3 gegen 3 erlaubt kein p < 0.05)
+  - {config: experiments/e2_mit_kommunikation.yaml, erste_wiederholung: 4}
+  - {config: experiments/e3_compliance_filter.yaml, erste_wiederholung: 4}
+  - {config: experiments/e1_ohne_kommunikation.yaml, erste_wiederholung: 4}
+  - {config: experiments/e4_compliance_aufsicht.yaml, erste_wiederholung: 4}
