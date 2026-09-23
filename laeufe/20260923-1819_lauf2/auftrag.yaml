@@ -1,0 +1,12 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
+# im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell: Pilot mit DeepSeek, je 10 Runden, geschätzt unter 0.20 USD.
+# Pilot 2: ohne Denkmodus – im ersten Pilot schnitt der lange Denkprozess die Antworten ab.
+modell: deepseek
+guardrail_evaluation: true
+laeufe:
+  - {config: experiments/e1_ohne_kommunikation.yaml, runden: 10, wiederholungen: 1}
+  - {config: experiments/e2_mit_kommunikation.yaml, runden: 10, wiederholungen: 1}
+  - {config: experiments/e3_compliance_filter.yaml, runden: 10, wiederholungen: 1}
