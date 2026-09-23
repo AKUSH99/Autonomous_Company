@@ -67,6 +67,8 @@ Falls leer, wähle selbst einen Startimpuls. Gib den Tick-Report T1 aus.
 
 Der erste komplette Durchlauf liegt in [`simulation/run-01/`](simulation/run-01): 14 Ticks von der Konzeptidee bis zum Launch – mit echtem, spielbarem Browser-Spiel, echten QA-Messungen (Bots im Headless-Browser), 15 dokumentierten Producer-Entscheidungen und einem ehrlichen Post-Mortem.
 
+**Zusehen:** [`studio-live/`](studio-live) ist ein Pixel-Büro im Kairosoft-Stil, in dem man den Agenten beim Arbeiten zuschaut – als Aufzeichnung von Run 01 oder live, wenn jeder Agent ein echter Claude-Aufruf mit seinem System-Prompt ist.
+
 ## Repository-Struktur
 
 ```
@@ -83,6 +85,7 @@ docs/
   entscheidungsprotokoll.md  Setup-Entscheidungen (SET-xx) + Vorlage für D-xxx
 simulation/
   run-01/                    Kompletter Durchlauf: Spiel, QA-Skripte, Logs, Launch-Paket
+studio-live/                 Studio zum Zusehen: Aufzeichnung von Run 01 oder Live-Lauf mit Claude
 ```
 
 ## Leitplanken
