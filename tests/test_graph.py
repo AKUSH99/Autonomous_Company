@@ -65,3 +65,22 @@ def test_guardrail_preisgrenze_und_ausfall():
     verlauf = Simulation(cfg, agenten=[a, b]).starte()
     assert verlauf[0]["preise"]["Shop A"] == 50.0 and verlauf[0]["entscheide"]["Shop A"]["korrigiert"]
     assert verlauf[1]["entscheide"]["Shop B"]["fehler"] and verlauf[1]["preise"]["Shop B"] == 15.0
+
+
+def test_dauerhafter_modellausfall_bricht_lauf_ab():
+    import pytest
+
+    from kartell.graph import MAX_AUSFALL_RUNDEN, ModellAusfall
+    cfg = _cfg()
+    cfg.runden = 10
+    agenten = [LLMPreisAgent(AgentSpec(name=n, llm=LLMSpec()), cfg, _SkriptLLM(fehler_bei="Runde"), 10.0)
+               for n in ("Shop A", "Shop B")]
+    protokoll = []
+
+    class Logger:
+        def runde(self, eintrag):
+            protokoll.append(eintrag)
+
+    with pytest.raises(ModellAusfall):
+        Simulation(cfg, agenten=agenten, logger=Logger()).starte()
+    assert len(protokoll) == MAX_AUSFALL_RUNDEN  # die gescheiterten Runden bleiben im Protokoll sichtbar

@@ -1,0 +1,78 @@
+# Führt die Läufe aus experiments/auftrag.yaml auf GitHub aus – ohne eigenen Rechner.
+# Start: auftrag.yaml ändern und pushen, oder unter "Actions" → "Experimente" → "Run workflow".
+# Schlüssel: Repository-Secret DEEPSEEK_API_KEY (und/oder ANTHROPIC_API_KEY) unter
+# Settings → Secrets and variables → Actions. Ergebnisse landen im Branch "ergebnisse" unter laeufe/.
+name: Experimente
+
+on:
+  push:
+    branches-ignore: [ergebnisse]
+    paths: [experiments/auftrag.yaml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: experimente
+  cancel-in-progress: false
+
+jobs:
+  schluessel:
+    runs-on: ubuntu-latest
+    outputs:
+      vorhanden: ${{ steps.pruefen.outputs.vorhanden }}
+    steps:
+      - id: pruefen
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "$DEEPSEEK_API_KEY$ANTHROPIC_API_KEY" ]; then
+            echo "vorhanden=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Kein API-Schlüssel hinterlegt (Secret DEEPSEEK_API_KEY oder ANTHROPIC_API_KEY) – Lauf übersprungen."
+            echo "vorhanden=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  lauf:
+    needs: schluessel
+    if: needs.schluessel.outputs.vorhanden == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[analyse]"
+
+      - name: Auftrag abarbeiten
+        shell: bash
+        run: python -m kartell auftrag experiments/auftrag.yaml 2>&1 | tee protokoll.txt
+
+      - name: Ergebnisse im Branch "ergebnisse" sichern
+        if: always()
+        shell: bash
+        run: |
+          ziel="laeufe/$(date -u +%Y%m%d-%H%M)_lauf${GITHUB_RUN_NUMBER}"
+          mkdir -p "$RUNNER_TEMP/out"
+          for f in runs reports protokoll.txt experiments/auftrag.yaml; do [ -e "$f" ] && cp -r "$f" "$RUNNER_TEMP/out/"; done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git clean -fdxq
+          if git fetch --depth 1 origin ergebnisse; then
+            git checkout -q -B ergebnisse FETCH_HEAD
+          else
+            git checkout -q --orphan ergebnisse && git rm -rfq .
+            printf '# Ergebnisse\n\nAutomatisch erzeugt vom Workflow "Experimente". Jeder Ordner in laeufe/ ist ein Auftrag.\n' > LIESMICH.md
+          fi
+          mkdir -p "$ziel" && cp -r "$RUNNER_TEMP/out/." "$ziel/"
+          git add -A
+          git commit -qm "Ergebnisse ${ziel#laeufe/} (${GITHUB_SHA::7})"
+          git push -q origin ergebnisse
+          echo "Ergebnisse gesichert: Branch ergebnisse, Ordner $ziel"

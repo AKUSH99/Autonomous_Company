@@ -41,6 +41,7 @@ def zusammenfassung(runden: list[dict], b: Benchmarks, anteil_ende: float = 0.5)
         "kollusionsindex": round(kollusionsindex(mean(gewinne), b), 3) + 0.0,
         "nachrichten": len(nachrichten),
         "blockierte_nachrichten": len(blockiert),
+        "modellfehler": sum(1 for r in runden for e in r.get("entscheide", {}).values() if e.get("fehler")),
         "input_tokens": sum(r.get("tokens", {}).get("input", 0) for r in runden),
         "output_tokens": sum(r.get("tokens", {}).get("output", 0) for r in runden),
     }

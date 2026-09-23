@@ -70,6 +70,63 @@ def _eval_compliance(args) -> None:
     print(json.dumps(r, ensure_ascii=False, indent=2))
 
 
+def _pruefe_modell(spec: LLMSpec, berichte) -> None:
+    """Vor langen Läufen: Schlüssel gültig und Modellname beim Anbieter vorhanden? Schreibt die Modellliste mit."""
+    import os
+
+    import openai
+    if spec.provider != "openai_compat":
+        return
+    if spec.api_key_env and not os.environ.get(spec.api_key_env):
+        raise SystemExit(f"Umgebungsvariable {spec.api_key_env} fehlt – ohne Schlüssel kein Lauf.")
+    client = openai.OpenAI(base_url=spec.base_url, api_key=os.environ.get(spec.api_key_env or "", "") or "nicht-benoetigt")
+    try:
+        ids = sorted(m.id for m in client.models.list())
+    except openai.AuthenticationError as e:
+        raise SystemExit(f"Schlüssel in {spec.api_key_env} wird abgelehnt: {e}") from e
+    except openai.APIError as e:
+        print(f"Hinweis: Modellliste nicht abrufbar ({e}), fahre ohne Prüfung fort.")
+        return
+    (berichte / "modelle.txt").write_text("\n".join(ids) + "\n", encoding="utf-8")
+    print(f"Verfügbare Modelle bei {spec.base_url}: {', '.join(ids)}")
+    if spec.model not in ids:
+        raise SystemExit(f"Modell {spec.model} ist nicht verfügbar. Namen in kartell/config.py (VOREINSTELLUNGEN) anpassen.")
+
+
+def _auftrag(args) -> None:
+    """Arbeitet eine Auftragsdatei ab: mehrere Läufe, optional Guardrail-Evaluation, danach der Bericht.
+
+    Gedacht für lange Versuchsreihen ohne Aufsicht, z. B. in GitHub Actions.
+    """
+    from pathlib import Path
+
+    import yaml
+
+    from .bericht import erstelle_bericht
+    from .eval_compliance import evaluiere, lade_testset
+    from .runner import fuehre_experiment_aus
+    auftrag = yaml.safe_load(Path(args.datei).read_text(encoding="utf-8"))
+    modell = auftrag.get("modell")
+    berichte = Path(args.berichte)
+    berichte.mkdir(parents=True, exist_ok=True)
+    if modell:
+        _pruefe_modell(VOREINSTELLUNGEN[modell], berichte)
+    for eintrag in auftrag.get("laeufe", []):
+        cfg = lade_config(eintrag["config"])
+        cfg = mit_modell(cfg, modell) if modell else cfg
+        cfg.runden = eintrag.get("runden", cfg.runden)
+        cfg.wiederholungen = eintrag.get("wiederholungen", cfg.wiederholungen)
+        fuehre_experiment_aus(cfg, args.ausgabe)
+    if auftrag.get("guardrail_evaluation"):
+        llm = VOREINSTELLUNGEN[modell] if modell else LLMSpec()
+        r = evaluiere(ComplianceConfig(llm=llm), lade_testset())
+        datei = berichte / f"guardrail_{modell or llm.model}.json"
+        datei.write_text(json.dumps(r, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"Guardrail-Evaluation: {json.dumps(r['ergebnisse'], ensure_ascii=False)} → {datei}")
+    if any(Path(args.ausgabe).glob("*/runden.jsonl")):
+        print(f"Bericht geschrieben: {erstelle_bericht(args.ausgabe, berichte)}")
+
+
 def _bericht(args) -> None:
     from .bericht import erstelle_bericht
     print(f"Bericht geschrieben: {erstelle_bericht(args.laeufe, args.ausgabe)}")
@@ -107,6 +164,12 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--nur-regeln", action="store_true", help="nur die Regel-Schicht (ohne LLM) auswerten")
     s.add_argument("--modell", choices=sorted(VOREINSTELLUNGEN), help="Claude durch eine Voreinstellung ersetzen, z. B. deepseek")
     s.set_defaults(fn=_eval_compliance)
+
+    s = sub.add_parser("auftrag", help="Mehrere Läufe aus einer Auftragsdatei abarbeiten (z. B. in GitHub Actions)")
+    s.add_argument("datei")
+    s.add_argument("--ausgabe", default="runs")
+    s.add_argument("--berichte", default="reports")
+    s.set_defaults(fn=_auftrag)
 
     s = sub.add_parser("bericht", help="Auswertung über alle Läufe erstellen")
     s.add_argument("laeufe", nargs="?", default="runs")

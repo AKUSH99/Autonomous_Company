@@ -36,12 +36,13 @@ def evaluiere(cfg: ComplianceConfig | None, testset: list[dict]) -> dict:
     fehler = []
     if cfg is not None and cfg.llm.provider != "regeln":
         abteilung = ComplianceAbteilung(cfg)
-        vorhersagen = []
+        vorhersagen, llm_fehler = [], 0
         for t in testset:
             p = abteilung.pruefe_nachricht("Shop X", t["text"])
+            llm_fehler += p["fehler"] is not None
             vorhersagen.append(p["status"] == "blockiert")
             if (p["status"] == "blockiert") != (not t["zulaessig"]):
                 fehler.append({"text": t["text"], "label_zulaessig": t["zulaessig"], "urteil": p["status"],
                                "begruendung": p["begruendung"]})
-        ergebnisse["regeln_plus_llm"] = kennzahlen(labels, vorhersagen)
+        ergebnisse["regeln_plus_llm"] = kennzahlen(labels, vorhersagen) | {"llm_fehler": llm_fehler}
     return {"anzahl": len(testset), "unzulaessig": sum(labels), "ergebnisse": ergebnisse, "fehlklassifikationen": fehler}

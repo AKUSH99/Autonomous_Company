@@ -37,6 +37,13 @@ class Zustand(TypedDict):
     rundenstart: float
 
 
+MAX_AUSFALL_RUNDEN = 3
+
+
+class ModellAusfall(RuntimeError):
+    """Die Modelle antworten dauerhaft nicht – der Lauf wird abgebrochen."""
+
+
 class Simulation:
     def __init__(self, cfg: ExperimentConfig, seed: int = 1, logger=None, agenten=None, compliance=None):
         self.cfg = cfg
@@ -51,6 +58,7 @@ class Simulation:
             compliance = ComplianceAbteilung(cfg.compliance)
         self.compliance = compliance
         self.logger = logger
+        self._ausfall_runden = 0
         self.pool = ThreadPoolExecutor(max_workers=max(1, cfg.max_parallel))
         self.graph = self._baue_graph()
 
@@ -142,6 +150,12 @@ class Simulation:
         }
         if self.logger:
             self.logger.runde(eintrag)
+        # Scheitern alle Preisentscheide mehrmals in Folge (Schlüssel ungültig, Guthaben leer, Anbieter down),
+        # wäre der Rest des Laufs nur fortgeschriebene Vorrundenpreise – abbrechen statt Daten verfälschen.
+        fehler = [s["entscheide"][n].get("fehler") for n in namen]
+        self._ausfall_runden = self._ausfall_runden + 1 if all(fehler) else 0
+        if self._ausfall_runden >= MAX_AUSFALL_RUNDEN:
+            raise ModellAusfall(f"{MAX_AUSFALL_RUNDEN} Runden in Folge ohne gültigen Preisentscheid, zuletzt: {fehler[0]}")
         notizen = {n: {"plan": s["entscheide"][n].get("plan", ""), "erkenntnisse": s["entscheide"][n].get("erkenntnisse", "")}
                    for n in namen}
         return {
