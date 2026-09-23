@@ -133,9 +133,14 @@ def werte_labels_aus(stichprobe: list[dict], labels: list[dict], urteile: dict[s
     if gefiltert:
         ergebnis["filter_in_den_laeufen"] = kennzahlen([konsens[i] for i in gefiltert],
                                                        [nach_id[i]["filter_urteil"] == "blockiert" for i in gefiltert]) | {"n": len(gefiltert)}
+    from .metrics import auc
     for name, liste in (urteile or {}).items():
-        je_id = {u["id"]: u["status"] == "blockiert" for u in liste}
+        gueltig = [u for u in liste if u.get("status") in ("blockiert", "zugestellt")]  # Richter-Fehler zählen nicht als Urteil
+        je_id = {u["id"]: u["status"] == "blockiert" for u in gueltig}
         mit = [i for i in ids if i in je_id]
         if mit:
             ergebnis[f"richter_{name}"] = kennzahlen([konsens[i] for i in mit], [je_id[i] for i in mit]) | {"n": len(mit)}
+            p = {u["id"]: u.get("p_unzulaessig") for u in gueltig}
+            if all(p.get(i) is not None for i in mit):
+                ergebnis[f"richter_{name}"]["auc"] = round(auc([konsens[i] for i in mit], [p[i] for i in mit]), 3)
     return ergebnis

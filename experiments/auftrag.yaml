@@ -2,31 +2,13 @@
 # Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
 # im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
 #
-# Aktuell: Validitäts- und Erweiterungsläufe mit DeepSeek, nach Wichtigkeit geordnet – reicht das Budget nicht,
-# fällt zuerst das Ende der Liste weg. Der Budgetwächter fragt alle 10 Runden das echte Guthaben ab.
-# Vorher: Pilot 1 und 2, Hauptläufe E1–E4 und E7 (je 50 Runden × 3), E8/E9 mit zehn Shops.
-modell: deepseek
-budget_usd: 4.0
-reserve_usd: 0.5
-zeitlimit_min: 300
-
-# Gibt es "Jeff" oder Apertus bei OpenRouter? Die Modellliste ist öffentlich; Treffer landen in reports/modellsuche.json.
-modellsuche: {begriffe: [jeff, apertus]}
-
-# KI-Richter beurteilen die 120 echten Nachrichten (ohne die menschlichen Labels zu kennen), Temperatur 0.
-urteile_sammeln: {stichprobe: evaluation/echte_nachrichten.jsonl, modelle: [deepseek]}
-
-laeufe:
-  # 1. Ankereffekt: gleiches Spiel, Kosten 3 bzw. 20 CHF statt 10 CHF – lernen die Agenten den Markt oder folgen sie "2× Kosten"?
-  - {config: experiments/e10_anker_tief.yaml}
-  - {config: experiments/e11_anker_hoch.yaml}
-  - {config: experiments/e12_anker_tief_kanal.yaml}
-  - {config: experiments/e13_anker_hoch_kanal.yaml}
-  # 2. Neue Konzepte: Tool-Use (Nachfrage-Schätzer) und Verhaltens-Guardrail (Marktbeobachtung)
-  - {config: experiments/e14_werkzeug.yaml}
-  - {config: experiments/e15_marktbeobachtung.yaml}
-  # 3. Mehr Durchgänge (w4–w6), damit Unterschiede statistisch prüfbar werden (3 gegen 3 erlaubt kein p < 0.05)
-  - {config: experiments/e2_mit_kommunikation.yaml, erste_wiederholung: 4}
-  - {config: experiments/e3_compliance_filter.yaml, erste_wiederholung: 4}
-  - {config: experiments/e1_ohne_kommunikation.yaml, erste_wiederholung: 4}
-  - {config: experiments/e4_compliance_aufsicht.yaml, erste_wiederholung: 4}
+# Aktuell: Richter-Vergleich – Jev (TypeSafe, Decisions-API über OpenRouter) und DeepSeek beurteilen
+# (1) die 120 echten Agenten-Nachrichten (menschliche Labels folgen im Label-Werkzeug) und
+# (2) das selbst geschriebene Testset mit 39 gelabelten Nachrichten (Kennzahlen sofort, bei Jev auch AUC).
+# Keine Experimente – kostet wenige Cent.
+# Vorher: Validierungsläufe (Anker-Test E10–E13, Tool-Use E14, Marktbeobachtung E15, Durchgänge 4–6).
+modellsuche: {begriffe: [jev, apertus]}
+urteile_sammeln:
+  stichprobe: [evaluation/echte_nachrichten.jsonl, evaluation/compliance_testset.jsonl]
+  modelle: [jev, deepseek]
+laeufe: []

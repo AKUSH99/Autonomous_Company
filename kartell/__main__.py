@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from .config import OPENROUTER_URL, ComplianceConfig, LLMSpec, kurz, lade_config, mit_modell, voreinstellung
 
@@ -126,24 +127,50 @@ def _stichprobe(args) -> None:
 
 
 def _urteile_sammeln(auftrag: dict, berichte) -> None:
-    """LLM-Richter beurteilen die Stichprobe echter Nachrichten – ohne die menschlichen Labels zu kennen."""
+    """Richter beurteilen Nachrichten – ohne menschliche Labels zu kennen.
+
+    `stichprobe`: eine Datei oder eine Liste. Einträge ohne `id` bekommen T001, T002, ...; tragen sie ein Label
+    (`zulaessig`, wie im selbst geschriebenen Testset), werden Kennzahlen gleich mitgerechnet.
+    `modelle`: Voreinstellungen (`deepseek`, `openrouter:<id>`) als LLM-Compliance-Abteilung (Regeln + RAG + LLM) oder
+    `jev` / `jev:<modell-id>` für Jev über die Decisions-API (liefert eine Wahrscheinlichkeit statt einer Begründung).
+    """
     from .agents.compliance import ComplianceAbteilung
+    from .eval_compliance import kennzahlen
+    from .llm.jev import STANDARD_MODELL, JevRichter
+    from .metrics import auc
     from .stichprobe import lade_jsonl
-    stichprobe = lade_jsonl(auftrag["stichprobe"])
+    dateien = auftrag["stichprobe"] if isinstance(auftrag["stichprobe"], list) else [auftrag["stichprobe"]]
     for name in auftrag.get("modelle", []):
-        spec = voreinstellung(name).model_copy(update={"temperature": 0.0})
-        _pruefe_modell(spec, berichte)
-        abteilung = ComplianceAbteilung(ComplianceConfig(modus="filter", llm=spec))
-        zeilen, fehler = [], 0
-        for n in stichprobe:
-            u = abteilung.pruefe_nachricht(n["quelle"]["von"], n["text"])
-            fehler += u.get("fehler") is not None
-            zeilen.append({"id": n["id"], "status": u["status"], "kategorie": u.get("kategorie"),
-                           "begruendung": u.get("begruendung"), "fehler": u.get("fehler")})
-        datei = berichte / f"urteile_{kurz(name)}.jsonl"
-        datei.write_text("".join(json.dumps(z, ensure_ascii=False) + "\n" for z in zeilen), encoding="utf-8")
-        blockiert = sum(z["status"] == "blockiert" for z in zeilen)
-        print(f"Urteile {name}: {blockiert}/{len(zeilen)} blockiert, {fehler} LLM-Fehler → {datei}")
+        if name == "jev" or name.startswith("jev:"):
+            richter = JevRichter(name.split(":", 1)[1] if ":" in name else STANDARD_MODELL)
+            pruefe = richter.pruefe
+        else:
+            spec = voreinstellung(name).model_copy(update={"temperature": 0.0})
+            _pruefe_modell(spec, berichte)
+            richter, pruefe = None, ComplianceAbteilung(ComplianceConfig(modus="filter", llm=spec)).pruefe_nachricht
+        for datei_pfad in dateien:
+            eintraege = lade_jsonl(datei_pfad)
+            zeilen = []
+            for i, n in enumerate(eintraege, 1):
+                u = pruefe((n.get("quelle") or {}).get("von", "Shop X"), n["text"])
+                zeilen.append({"id": n.get("id", f"T{i:03d}"), "status": u["status"], "kategorie": u.get("kategorie"),
+                               "begruendung": u.get("begruendung"), "p_unzulaessig": u.get("p_unzulaessig"),
+                               "fehler": u.get("fehler")})
+            stamm = Path(datei_pfad).stem
+            ziel = berichte / (f"urteile_{kurz(name)}.jsonl" if datei_pfad == dateien[0] else f"urteile_{kurz(name)}_{stamm}.jsonl")
+            ziel.write_text("".join(json.dumps(z, ensure_ascii=False) + "\n" for z in zeilen), encoding="utf-8")
+            gueltig = [(n, z) for n, z in zip(eintraege, zeilen) if z["status"] != "fehler"]
+            zusammenfassung = {"nachrichten": len(zeilen), "fehler": len(zeilen) - len(gueltig),
+                               "blockiert": sum(z["status"] == "blockiert" for _, z in gueltig)}
+            if gueltig and all("zulaessig" in n for n, _ in gueltig):  # gelabeltes Testset: gleich auswerten
+                labels = [not n["zulaessig"] for n, _ in gueltig]
+                zusammenfassung |= kennzahlen(labels, [z["status"] == "blockiert" for _, z in gueltig])
+                if all(z["p_unzulaessig"] is not None for _, z in gueltig):
+                    zusammenfassung["auc"] = round(auc(labels, [z["p_unzulaessig"] for _, z in gueltig]), 3)
+            (berichte / f"{ziel.stem}_kennzahlen.json").write_text(json.dumps(zusammenfassung, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(f"Urteile {name} über {stamm}: {json.dumps(zusammenfassung, ensure_ascii=False)} → {ziel}")
+        if richter is not None and richter.erste_rohantwort is not None:
+            (berichte / f"rohantwort_{kurz(name)}.json").write_text(json.dumps(richter.erste_rohantwort, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def _labels_auswerten(args) -> None:

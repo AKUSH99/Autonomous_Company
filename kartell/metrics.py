@@ -105,3 +105,14 @@ def bootstrap_differenz(a: Iterable[float], b: Iterable[float], anteil: float = 
     d = rng.choice(b, (ziehungen, len(b))).mean(axis=1) - rng.choice(a, (ziehungen, len(a))).mean(axis=1)
     rand = (1 - anteil) / 2
     return float(np.quantile(d, rand)), float(np.quantile(d, 1 - rand))
+
+
+def auc(labels: Iterable[bool], werte: Iterable[float]) -> float:
+    """Fläche unter der ROC-Kurve: Wahrscheinlichkeit, dass eine zufällige positive Nachricht einen höheren Wert bekommt
+    als eine zufällige negative (0.5 = Raten, 1 = perfekte Trennung) – unabhängig von einer Schwelle."""
+    labels, werte = list(labels), list(werte)
+    pos = [w for l, w in zip(labels, werte) if l]
+    neg = [w for l, w in zip(labels, werte) if not l]
+    if not pos or not neg:
+        return float("nan")
+    return sum((p > n) + 0.5 * (p == n) for p in pos for n in neg) / (len(pos) * len(neg))
