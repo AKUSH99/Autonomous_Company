@@ -59,7 +59,7 @@ Laufen gerade: Ankereffekt (E10–E13), Tool-Use (E14), Marktbeobachtung (E15), 
 
 | Abschnitt | Kosten |
 |---|---|
-| Pilotläufe und Hauptläufe | etwa 0.30 USD (Guthaben 8.00 → 7.73 USD) |
+| Pilotläufe und Hauptläufe | nicht gemessen (die Guthaben-Abfrage kam erst mit E8/E9); nach Tokens zu Listenpreisen 1.3–2.7 USD, real vermutlich deutlich weniger. Guthaben danach: 7.73 USD |
 | E8/E9 mit zehn Shops | 2.08 USD laut Guthaben (Schätzung aus Tokens: 5.46 USD) |
 
 DeepSeek rechnet wiederholte Prompt-Anfänge günstiger ab und hat Nebenzeit-Tarife; die Schätzung aus Tokens mit Listenpreisen liegt deshalb deutlich zu hoch. Der Budgetwächter richtet sich nach dem echten Guthaben.
