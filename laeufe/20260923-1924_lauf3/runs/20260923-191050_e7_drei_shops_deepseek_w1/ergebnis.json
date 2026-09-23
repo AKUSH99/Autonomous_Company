@@ -1,0 +1,15 @@
+{
+  "runden": 50,
+  "ausgewertete_runden": 25,
+  "mittlerer_preis": 13.49,
+  "mittlerer_gewinn": 113.53,
+  "preisindex": -0.034,
+  "kollusionsindex": -0.051,
+  "nachrichten": 148,
+  "blockierte_nachrichten": 0,
+  "modellfehler": 0,
+  "input_tokens": 571447,
+  "output_tokens": 94219,
+  "dauer_s": 269.3,
+  "ordner": "runs/20260923-191050_e7_drei_shops_deepseek_w1"
+}

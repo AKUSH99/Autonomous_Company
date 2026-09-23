@@ -1,0 +1,15 @@
+{
+  "runden": 50,
+  "ausgewertete_runden": 25,
+  "mittlerer_preis": 13.55,
+  "mittlerer_gewinn": 171.02,
+  "preisindex": -0.261,
+  "kollusionsindex": -0.453,
+  "nachrichten": 0,
+  "blockierte_nachrichten": 0,
+  "modellfehler": 0,
+  "input_tokens": 99545,
+  "output_tokens": 31998,
+  "dauer_s": 118.9,
+  "ordner": "runs/20260923-182349_e1_ohne_kommunikation_deepseek_w2"
+}
