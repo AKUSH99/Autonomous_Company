@@ -27,6 +27,7 @@ class LLMSpec(BaseModel):
     effort: Optional[Literal["low", "medium", "high", "xhigh", "max"]] = None
     max_tokens: int = 16000
     temperature: Optional[float] = None  # nur openai_compat; aktuelle Claude-Modelle bestimmen das selbst
+    extra_body: Optional[dict] = None  # nur openai_compat: anbieterspezifische Felder, z. B. Denkmodus abschalten
 
     @property
     def kurzname(self) -> str:
@@ -96,9 +97,12 @@ def lade_config(pfad: str | Path) -> ExperimentConfig:
 
 # Modell-Voreinstellungen für `--modell`: ersetzen Claude in jedem Versuch, ohne die YAML-Dateien zu duplizieren.
 # Modellnamen ändern sich bei Anbietern häufig – vor dem ersten Lauf gegen die Modellliste des Anbieters prüfen.
+# DeepSeek denkt ohne Angabe vor jeder Antwort lange nach; im Pilotlauf verbrauchte das bis zu 4800 Tokens pro Aufruf
+# und schnitt die eigentliche Antwort ab. Deshalb ohne Denkmodus – wie bei den Preisagenten von Fish et al. (2024).
 VOREINSTELLUNGEN: dict[str, LLMSpec] = {
     "deepseek": LLMSpec(provider="openai_compat", model="deepseek-flash", base_url="https://api.deepseek.com",
-                        api_key_env="DEEPSEEK_API_KEY", max_tokens=8000),
+                        api_key_env="DEEPSEEK_API_KEY", max_tokens=8000,
+                        extra_body={"thinking": {"type": "disabled"}}),
 }
 
 

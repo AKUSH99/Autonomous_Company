@@ -91,7 +91,7 @@ class LLMPreisAgent:
         try:
             a = self.llm.strukturiert(self.system, prompt, KanalNachricht)
         except LLMFehler as e:
-            return Schritt({"nachricht": "", "ueberlegung": ""}, fehler=str(e))
+            return Schritt({"nachricht": "", "ueberlegung": ""}, e.input_tokens, e.output_tokens, fehler=str(e))
         text = a.objekt.nachricht.strip()[: self.cfg.kommunikation.max_zeichen]
         return Schritt({"nachricht": text, "ueberlegung": a.objekt.ueberlegung}, a.input_tokens, a.output_tokens)
 
@@ -103,7 +103,8 @@ class LLMPreisAgent:
         except LLMFehler as e:
             # Fällt das Modell aus, bleibt der Preis der Vorrunde – das Experiment läuft weiter.
             return Schritt({"preis": vorher, "preis_roh": None, "korrigiert": True, "plan": ctx.notizen.get("plan", ""),
-                            "erkenntnisse": ctx.notizen.get("erkenntnisse", ""), "beobachtungen": ""}, fehler=str(e))
+                            "erkenntnisse": ctx.notizen.get("erkenntnisse", ""), "beobachtungen": ""},
+                           e.input_tokens, e.output_tokens, fehler=str(e))
         e = a.objekt
         preis = min(max(e.preis, 0.0), self.max_preis)
         return Schritt(

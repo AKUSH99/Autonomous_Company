@@ -102,6 +102,7 @@ class ComplianceAbteilung:
                 "kategorie": regel.kategorie if regel.verdacht else "unbedenklich",
                 "begruendung": "LLM nicht verfügbar – Entscheid der Regel-Schicht.",
                 "rechtsgrundlagen": [], "fehler": str(e),
+                "input_tokens": e.input_tokens, "output_tokens": e.output_tokens,
             }
         u = a.objekt
         return ergebnis | {
@@ -123,7 +124,8 @@ class ComplianceAbteilung:
         try:
             a = self.llm.strukturiert(prompts.PLAN_SYSTEM, f"Strategienotiz von {name}:\n{text}", PlanUrteil)
         except LLMFehler as e:
-            return {"bedenklich": False, "begruendung": "", "hinweis": "", "input_tokens": 0, "output_tokens": 0, "fehler": str(e)}
+            return {"bedenklich": False, "begruendung": "", "hinweis": "", "input_tokens": e.input_tokens,
+                    "output_tokens": e.output_tokens, "fehler": str(e)}
         u = a.objekt
         return {"bedenklich": u.bedenklich, "begruendung": u.begruendung,
                 "hinweis": u.hinweis_an_agent if u.bedenklich else "",

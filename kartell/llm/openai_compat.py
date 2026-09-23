@@ -44,6 +44,8 @@ class OpenAICompatClient:
         kwargs: dict = dict(model=self.spec.model, messages=messages, max_tokens=self.spec.max_tokens)
         if self.spec.temperature is not None:
             kwargs["temperature"] = self.spec.temperature
+        if self.spec.extra_body:
+            kwargs["extra_body"] = self.spec.extra_body
         if self._json_schema_ok:
             kwargs["response_format"] = {
                 "type": "json_schema",
@@ -70,11 +72,16 @@ class OpenAICompatClient:
             try:
                 antwort = self._anfrage(messages, schema)
             except openai.APIError as e:
-                raise LLMFehler(f"{self.spec.model}: {e}") from e
+                raise LLMFehler(f"{self.spec.model}: {e}", tokens_in, tokens_out) from e
             if antwort.usage:
                 tokens_in += antwort.usage.prompt_tokens or 0
                 tokens_out += antwort.usage.completion_tokens or 0
-            text = antwort.choices[0].message.content or ""
+            wahl = antwort.choices[0]
+            text = wahl.message.content or ""
+            if wahl.finish_reason == "length":
+                # Nochmals fragen hilft nicht: das Limit ist erreicht, bevor die Antwort fertig ist (oft ein langer Denkprozess).
+                raise LLMFehler(f"{self.spec.model}: Antwort bei max_tokens={self.spec.max_tokens} abgeschnitten "
+                                f"({antwort.usage.completion_tokens if antwort.usage else '?'} Output-Tokens).", tokens_in, tokens_out)
             try:
                 objekt = schema.model_validate(_json_aus_text(text))
                 return LLMAntwort(objekt=objekt, input_tokens=tokens_in, output_tokens=tokens_out, modell=self.spec.model)
@@ -84,4 +91,4 @@ class OpenAICompatClient:
                     {"role": "assistant", "content": text},
                     {"role": "user", "content": f"Die Antwort war kein gültiges JSON nach Schema ({letzter_fehler}). Bitte nur das JSON-Objekt."},
                 ]
-        raise LLMFehler(f"{self.spec.model} lieferte kein gültiges JSON: {letzter_fehler}")
+        raise LLMFehler(f"{self.spec.model} lieferte kein gültiges JSON: {letzter_fehler}", tokens_in, tokens_out)

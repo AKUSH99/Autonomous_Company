@@ -92,3 +92,27 @@ def test_openai_compat_uebernimmt_modell_und_max_tokens_der_voreinstellung():
     assert a.objekt.preis == 17.5 and a.input_tokens == 90
     assert aufrufe[0]["model"] == "deepseek-flash" and aufrufe[0]["max_tokens"] == 8000
     assert aufrufe[0]["response_format"]["type"] == "json_schema"
+    assert aufrufe[0]["thinking"] == {"type": "disabled"}  # DeepSeek-Denkmodus aus (extra_body)
+
+
+def test_openai_compat_abgeschnittene_antwort_meldet_ursache_und_tokens():
+    import pytest
+
+    from kartell.llm import LLMFehler
+    aufrufe = []
+
+    def handler(request):
+        aufrufe.append(json.loads(request.content))
+        return httpx2.Response(200, json={
+            "id": "c1", "object": "chat.completion", "created": 0, "model": "m",
+            "choices": [{"index": 0, "finish_reason": "length", "message": {"role": "assistant", "content": ""}}],
+            "usage": {"prompt_tokens": 900, "completion_tokens": 4000, "total_tokens": 4900},
+        })
+
+    client = openai.OpenAI(api_key="x", base_url="http://test/v1", max_retries=0,
+                           http_client=openai.DefaultHttpxClient(transport=httpx2.MockTransport(handler)))
+    c = OpenAICompatClient(LLMSpec(provider="openai_compat", model="m", base_url="http://test/v1", max_tokens=4000), client=client)
+    with pytest.raises(LLMFehler, match="abgeschnitten") as fehler:
+        c.strukturiert("S", "N", PreisEntscheid)
+    assert len(aufrufe) == 1  # keine sinnlose Wiederholung
+    assert (fehler.value.input_tokens, fehler.value.output_tokens) == (900, 4000)  # Kosten bleiben sichtbar
