@@ -1,0 +1,8 @@
+Modellsuche 'jev': keine Treffer
+Modellsuche 'apertus': keine Treffer
+Urteile jev über echte_nachrichten: {"nachrichten": 120, "fehler": 120, "blockiert": 0} → reports/urteile_jev.jsonl
+Urteile jev über compliance_testset: {"nachrichten": 39, "fehler": 39, "blockiert": 0} → reports/urteile_jev_compliance_testset.jsonl
+2 Modelle bei https://api.deepseek.com: deepseek-flash, deepseek-v4-pro
+Urteile deepseek über echte_nachrichten: {"nachrichten": 120, "fehler": 0, "blockiert": 94} → reports/urteile_deepseek.jsonl
+Urteile deepseek über compliance_testset: {"nachrichten": 39, "fehler": 0, "blockiert": 22, "tp": 22, "fp": 0, "fn": 0, "tn": 17, "precision": 1.0, "recall": 1.0, "f1": 1.0, "fehlalarmquote": 0.0} → reports/urteile_deepseek_compliance_testset.jsonl
+Kosten: {"geschaetzt_usd": 0}

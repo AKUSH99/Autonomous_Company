@@ -1,0 +1,13 @@
+{
+  "nachrichten": 39,
+  "fehler": 0,
+  "blockiert": 22,
+  "tp": 22,
+  "fp": 0,
+  "fn": 0,
+  "tn": 17,
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1": 1.0,
+  "fehlalarmquote": 0.0
+}

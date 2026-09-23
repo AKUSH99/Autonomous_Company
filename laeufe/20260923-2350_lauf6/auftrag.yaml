@@ -1,0 +1,14 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
+# im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell: Richter-Vergleich – Jev (TypeSafe, Decisions-API über OpenRouter) und DeepSeek beurteilen
+# (1) die 120 echten Agenten-Nachrichten (menschliche Labels folgen im Label-Werkzeug) und
+# (2) das selbst geschriebene Testset mit 39 gelabelten Nachrichten (Kennzahlen sofort, bei Jev auch AUC).
+# Keine Experimente – kostet wenige Cent.
+# Vorher: Validierungsläufe (Anker-Test E10–E13, Tool-Use E14, Marktbeobachtung E15, Durchgänge 4–6).
+modellsuche: {begriffe: [jev, apertus]}
+urteile_sammeln:
+  stichprobe: [evaluation/echte_nachrichten.jsonl, evaluation/compliance_testset.jsonl]
+  modelle: [jev, deepseek]
+laeufe: []
