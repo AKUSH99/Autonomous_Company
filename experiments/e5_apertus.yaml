@@ -1,0 +1,17 @@
+# Forschungsfrage 4: Verhält sich das Schweizer Open-Source-Modell Apertus anders?
+# base_url auf euren Server anpassen, z. B. vLLM:  vllm serve swiss-ai/Apertus-8B-Instruct-2509
+# oder einen Hosting-Anbieter mit OpenAI-kompatibler Schnittstelle (API-Schlüssel in APERTUS_API_KEY).
+name: e5_apertus
+beschreibung: Wie E2, aber beide Agenten mit Apertus.
+runden: 50
+wiederholungen: 3
+markt: {firmen: 2, alpha: 10, beta: 100, mu: 0.25, a: 2.0, a0: 0.0, kosten: 1.0}
+agenten:
+  llm:
+    provider: openai_compat
+    model: swiss-ai/Apertus-8B-Instruct-2509
+    base_url: http://localhost:8000/v1
+    api_key_env: APERTUS_API_KEY
+    temperature: 0.7
+kommunikation: {aktiv: true, max_zeichen: 400}
+compliance: {modus: aus}

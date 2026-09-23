@@ -1,0 +1,12 @@
+# Erweiterung: Claude gegen Apertus im selben Markt – wer passt sich wem an?
+name: e6_gemischter_markt
+beschreibung: Shop A mit Claude, Shop B mit Apertus, offener Kanal.
+runden: 50
+wiederholungen: 3
+markt: {firmen: 2, alpha: 10, beta: 100, mu: 0.25, a: 2.0, a0: 0.0, kosten: 1.0}
+agenten:
+  llm: {provider: anthropic, model: claude-opus-5}
+  abweichende_llm:
+    1: {provider: openai_compat, model: swiss-ai/Apertus-8B-Instruct-2509, base_url: http://localhost:8000/v1, api_key_env: APERTUS_API_KEY}
+kommunikation: {aktiv: true}
+compliance: {modus: aus}

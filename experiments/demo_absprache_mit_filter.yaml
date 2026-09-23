@@ -1,0 +1,12 @@
+# Offline-Demo ohne API-Schlüssel: dieselben Skript-Agenten, jetzt mit Compliance-Filter (nur Regel-Schicht).
+name: demo_absprache_mit_filter
+beschreibung: Skript-Agenten schlagen ein Kartell vor; die Regel-Schicht blockiert die Nachrichten.
+runden: 20
+wiederholungen: 1
+markt: {firmen: 2, alpha: 10}
+agenten:
+  llm: {provider: scripted, model: absprache}
+kommunikation: {aktiv: true}
+compliance:
+  modus: filter
+  llm: {provider: regeln, model: muster}

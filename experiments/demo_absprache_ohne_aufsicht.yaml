@@ -1,0 +1,10 @@
+# Offline-Demo ohne API-Schlüssel: feste Skript-Strategien (kein LLM!), nur um den Ablauf zu zeigen.
+name: demo_absprache_ohne_aufsicht
+beschreibung: Skript-Agenten schlagen im Kanal ein Kartell vor; niemand greift ein.
+runden: 20
+wiederholungen: 1
+markt: {firmen: 2, alpha: 10}
+agenten:
+  llm: {provider: scripted, model: absprache}
+kommunikation: {aktiv: true}
+compliance: {modus: aus}

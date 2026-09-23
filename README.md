@@ -1,98 +1,107 @@
-# Autonomous_Company
+# KI-Kartell
 
-**Ein autonomes KI-Game-Studio nach dem Vorbild von *Game Dev Story* (Kairosoft).**
-Sieben spezialisierte KI-Agenten entwickeln gemeinsam ein Spiel von der Konzeptidee bis zum Launch – ohne menschliche Eingriffe. Ein Producer-Agent orchestriert den Ablauf, löst Konflikte und dokumentiert jede Entscheidung.
+**Sprechen sich KI-Preisagenten ab – und können Guardrails das verhindern?**
 
-Dieses Repository enthält die **System-Prompts** aller Agenten sowie das gemeinsame Kommunikations-Protokoll. Jeder Prompt lässt sich direkt in eine Chat-Instanz oder eine Multi-Agenten-Plattform einsetzen.
+Ein Multi-Agenten-System, in dem LLM-Agenten als konkurrierende Online-Shops Runde für Runde ihre Preise festlegen. Ein simulierter Markt entscheidet, wer wie viel verkauft. Wir untersuchen, ob die Agenten ohne jede Anweisung zu überhöhten Preisen finden (Kollusion), welche Rolle ein Kommunikationskanal spielt und ob ein Compliance-Agent mit Wettbewerbsrecht-Wissen (RAG) Absprachen verhindern kann.
 
-## Das Team
-
-| Kürzel | Agent | Kernaufgabe | Prompt |
-|---|---|---|---|
-| `PRD` | Producer | Orchestriert Phasen, Gates, Konflikte und das Entscheidungs-Protokoll | [`prompts/00_producer.md`](prompts/00_producer.md) |
-| `CD` | Creative Director | Erfindet und bewertet Konzepte (Genre × Thema, Kern-Loop, Zielgruppe, USP) | [`prompts/01_creative_director.md`](prompts/01_creative_director.md) |
-| `GD` | Game Designer | Schreibt das GDD: Mechaniken, Level, Progression, UI-Flows, Balancing | [`prompts/02_game_designer.md`](prompts/02_game_designer.md) |
-| `DEV` | Programmierer | Wählt den Tech-Stack, baut Architektur und spielbare Builds | [`prompts/03_programmierer.md`](prompts/03_programmierer.md) |
-| `ART` | Artist / Sound | Definiert Grafik- und Audio-Stil, erstellt oder beschreibt Assets | [`prompts/04_artist_sound.md`](prompts/04_artist_sound.md) |
-| `QA` | Testing | Testet gegen das GDD, meldet Bugs, führt den Mock-Review durch | [`prompts/05_qa_testing.md`](prompts/05_qa_testing.md) |
-| `MKT` | Marketing | Positionierung, Store-Listing, Social-Media-Plan, Hype | [`prompts/06_marketing.md`](prompts/06_marketing.md) |
-
-Jeder Prompt folgt derselben Struktur:
-**0** Studio-Kontext · **1** Rolle & Kernaufgabe · **2** Eingaben & Outputs (mit Vorlagen) · **3** Autonomie-Regeln · **4** Umgang mit Unsicherheit · **5** Kommunikations-Format · **6** Integration in den Workflow · **7** Definition of Done.
-
-## Der Workflow
+Gruppenarbeit im Modul Generative KI, FHNW BSc Business Artificial Intelligence · Präsentation 23.11.2026
 
 ```mermaid
-flowchart TD
-    K["Kickoff<br/>Producer gibt Startimpuls"] --> P1
-    P1["Phase 1 · Ideenfindung (T1–T2)<br/>CD: 2–3 Konzepte → Producer wählt"] -->|Konzept-Freeze| P2
-    P2["Phase 2 · Design (T3–T4)<br/>GD: GDD · parallel: DEV-Machbarkeit, ART-Stil-Skizze, CD-Vision-Check"] -->|Design-Lock| P3
-    P3["Phase 3 · Entwicklung & Assets (T5–T8)<br/>DEV und ART parallel · QA-Smoke-Test · MKT-Teaser"] -->|"Alpha (T6) → Beta (T8)"| P4
-    P4["Phase 4 · Testing & Feedback (T9–T11)<br/>QA testet → DEV, GD, ART fixen parallel"] -->|Release Candidate| P5
-    P5["Phase 5 · Marketing & Launch (T12–T13)<br/>MKT: Launch-Paket · QA: Claims-Check"] -->|Launch| PM["Launch-Bericht & Post-Mortem"]
-    PM -.->|Studio-Wissen fürs nächste Spiel| K
+flowchart LR
+    subgraph Runde["Eine Runde (LangGraph)"]
+        K["kommunikation<br/>Agenten schreiben in den Kanal"] --> F["compliance_filter<br/>Regeln + LLM + RAG"]
+        F --> P["preisentscheid<br/>Agenten setzen Preise"]
+        P --> A["aufsicht<br/>prüft Strategienotizen"]
+        A --> M["markt<br/>Logit-Nachfrage, Gewinne"]
+    end
+    M -->|nächste Runde| K
+    W[("Wissensbasis<br/>Kartellrecht")] -.->|BM25| F
+    M --> L[("runden.jsonl")] --> D["Dashboard / Bericht"]
 ```
 
-**Kairosoft-Logik im System:**
-- **Kernwerte wie im Spiel:** Spaß, Kreativität, Grafik, Sound (1–10), dazu Bugs und Hype. Agenten prognostizieren, QA misst unabhängig.
-- **Genre × Thema:** Der Creative Director begründet jede Kombo – wie die „Great Combo" in Game Dev Story.
-- **Zeit in Ticks:** 13 Ticks Standard-Budget, einmalig +2 Puffer. Danach gilt: *Scope kürzen, nicht Zeit verlängern.*
-- **Parallelarbeit:** Programmierer und Artist arbeiten gleichzeitig (Platzhalter-Assets verhindern gegenseitiges Blockieren); Marketing baut schon während der Entwicklung Hype auf.
-- **Kritiker-Urteil:** QA simuliert vor dem Release einen Mock-Review mit vier Kritiker-Personas (/40).
-- **Studio-Wissen:** Jedes Post-Mortem fließt ins nächste Projekt ein.
+Knoten werden je Versuchsbedingung zu- oder weggeschaltet: ohne Kanal fehlen `kommunikation` und `compliance_filter`, ohne Aufsicht fehlt `aufsicht`.
 
-**Autonomie ohne Deadlocks:** Jede Blocker-Meldung enthält einen Default, mit dem der Agent sofort weiterarbeitet. Der Producer entscheidet im selben Tick, sonst gilt der Default. Nach maximal zwei Iterationen entscheidet der Producer.
+## Schnellstart
 
-## Nutzung
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dashboard,analyse,dev]"
 
-### Variante A: Multi-Agenten-Plattform (empfohlen)
-1. Lege sieben Agenten an (z. B. mit CrewAI, AutoGen, LangGraph oder dem Claude Agent SDK) und setze jeweils den Inhalt der passenden Datei aus `prompts/` als System-Prompt.
-2. Route Nachrichten anhand der Felder `An:` und `CC:` im Kopf jeder Nachricht (`=== ÜBERGABE ===`, `=== AUFTRAG ===`, `=== KONSULTATION ===`, `=== BLOCKER ===`).
-3. Starte den Producer mit der Kickoff-Nachricht (siehe unten). Er eröffnet jeden Tick mit einem Tick-Report und verteilt die Aufträge.
-4. Optional: Ein gemeinsamer Dokumentenspeicher, in dem alle FINAL-Dokumente liegen, spart Tokens – der Producer referenziert sie dann per ID statt sie weiterzuleiten.
-
-### Variante B: Mehrere Chat-Fenster
-Öffne pro Agent ein eigenes Chat-Fenster mit dem jeweiligen Prompt als erste Nachricht bzw. System-Prompt. Kopiere Aufträge und Übergaben entsprechend der Felder `An:` / `CC:` zwischen den Fenstern hin und her. Aufwendiger, aber gut, um den Ablauf Schritt für Schritt zu beobachten.
-
-### Variante C: Ein einziges Chat-Fenster
-Gib alle sieben Prompts nacheinander ein und bitte das Modell, die Rollen im Wechsel zu spielen – jeweils mit dem Nachrichtenkopf der aktiven Rolle. Das ist der schnellste Einstieg, die Rollen trennen sich aber weniger sauber.
-
-### Kickoff-Nachricht (an den Producer)
-```
-Starte das Projekt. Startimpuls: <Thema oder Constraint, z. B. „Ein entspannendes Spiel über Gärtnern im Weltraum, in 5 Minuten verständlich">.
-Falls leer, wähle selbst einen Startimpuls. Gib den Tick-Report T1 aus.
+python -m kartell demo                  # Offline-Demo ohne API-Schlüssel (feste Skript-Strategien, kein LLM)
+streamlit run dashboard/app.py          # Dashboard: Preisverlauf, Kanal, Compliance-Entscheide
+pytest                                  # 21 Tests, laufen ohne API-Schlüssel
 ```
 
-## In Aktion: Run 01 „Nachtwache"
+Die Demo zeigt den Ablauf mit zwei Skript-Agenten, die ein Kartell vorschlagen: Ohne Aufsicht landen die Preise beim Monopolpreis (Kollusionsindex 1,0), mit Compliance-Filter werden alle Vorschläge blockiert und die Preise bleiben beim Wettbewerbspreis (Index 0,0). **Das ist ein Funktionstest, kein Forschungsergebnis** – die Skript-Agenten sind fest programmiert.
 
-Der erste komplette Durchlauf liegt in [`simulation/run-01/`](simulation/run-01): 14 Ticks von der Konzeptidee bis zum Launch – mit echtem, spielbarem Browser-Spiel, echten QA-Messungen (Bots im Headless-Browser), 15 dokumentierten Producer-Entscheidungen und einem ehrlichen Post-Mortem.
+## Experimente mit echten LLM-Agenten
 
-**Zusehen:** [`studio-live/`](studio-live) ist ein Pixel-Büro im Kairosoft-Stil, in dem man den Agenten beim Arbeiten zuschaut – als Aufzeichnung von Run 01 oder live, wenn jeder Agent ein echter Claude-Aufruf mit seinem System-Prompt ist.
-
-## Repository-Struktur
-
-```
-prompts/                     System-Prompts, je ein Agent pro Datei
-  00_producer.md
-  01_creative_director.md
-  02_game_designer.md
-  03_programmierer.md
-  04_artist_sound.md
-  05_qa_testing.md
-  06_marketing.md
-docs/
-  studio_protokoll.md        Gemeinsame Regeln: Tick-Plan, Nachrichtentypen, IDs, Skalen
-  entscheidungsprotokoll.md  Setup-Entscheidungen (SET-xx) + Vorlage für D-xxx
-simulation/
-  run-01/                    Kompletter Durchlauf: Spiel, QA-Skripte, Logs, Launch-Paket
-studio-live/                 Studio zum Zusehen: Aufzeichnung von Run 01 oder Live-Lauf mit Claude
+```bash
+export ANTHROPIC_API_KEY=...                                   # oder `ant auth login`
+python -m kartell benchmark experiments/e2_mit_kommunikation.yaml   # Nash- und Monopolpreis
+python -m kartell schaetzung experiments/e2_mit_kommunikation.yaml  # Kostenschätzung vor dem Start
+python -m kartell lauf experiments/e2_mit_kommunikation.yaml --runden 10 --wiederholungen 1   # Pilotlauf
+python -m kartell lauf experiments/e2_mit_kommunikation.yaml   # voller Lauf (50 Runden × 3)
+python -m kartell bericht runs/                                # Tabelle + Grafiken in reports/
+python -m kartell eval-compliance --config experiments/e3_compliance_filter.yaml   # Guardrail-Evaluation
 ```
 
-## Leitplanken
+| Versuch | Forschungsfrage | Kanal | Compliance |
+|---|---|---|---|
+| `e1_ohne_kommunikation` | FF1: Kollusion ohne Kontakt? | aus | aus |
+| `e2_mit_kommunikation` | FF2: Effekt eines offenen Kanals | an | aus |
+| `e3_compliance_filter` | FF3: Wirkt ein Nachrichtenfilter? | an | Filter |
+| `e4_compliance_aufsicht` | FF3: Wirkt zusätzlich Aufsicht über Strategienotizen? | an | Filter + Aufsicht |
+| `e5_apertus` | FF4: Verhält sich Apertus anders? | an | aus |
+| `e6_gemischter_markt` | Erweiterung: Claude gegen Apertus | an | aus |
+| `e7_drei_shops` | Erweiterung: mehr Konkurrenz | an | aus |
 
-- **Transparenz:** Jede Entscheidung wird mit Was, Wer, Warum und Wann dokumentiert; Annahmen sind als solche gekennzeichnet, Schätzungen nie als Fakten ausgegeben.
-- **Ehrlichkeit:** QA bewertet nur auf Basis echter Befunde und sagt offen, ob ein Build ausgeführt oder nur statisch geprüft wurde. Marketing verspricht nur, was der Build nachweislich kann.
-- **Datenschutz & Ethik:** Keine Datenerhebung ohne ausdrückliche Einwilligung, keine Dark Patterns oder Lootboxen, nur eigene oder CC0-Assets, keine Fake-Reviews.
-- **Simulationsrahmen:** Der Launch ist ein Simulationsereignis – Marketing erstellt sendefertige Inhalte, veröffentlicht aber nichts real.
+**Kosten:** Standardmodell ist `claude-opus-5`. Laut Schätzung kostet ein voller Versuch (50 Runden × 3 Wiederholungen) je nach Bedingung 8–21 USD, E1–E4 und E7 zusammen rund 80 USD. Die Schätzung beruht auf angenommenen Token-Zahlen; denkt das Modell länger, wird es teurer – deshalb zuerst einen Pilotlauf machen. Günstiger geht es mit `claude-haiku-4-5` (etwa ein Fünftel) – ob die Qualität reicht, entscheidet ihr nach einem Pilotlauf. Tatsächliche Token-Zahlen stehen nach jedem Lauf in `ergebnis.json`.
 
-Alle Design-Entscheidungen hinter diesem Setup stehen in [`docs/entscheidungsprotokoll.md`](docs/entscheidungsprotokoll.md).
+**Apertus:** Die Konfigurationen `e5`/`e6` erwarten einen OpenAI-kompatiblen Server, z. B. lokal mit vLLM (`vllm serve swiss-ai/Apertus-8B-Instruct-2509`) oder bei einem Hosting-Anbieter. `base_url`, Modellname und `api_key_env` in der YAML-Datei anpassen und den Modellnamen gegen die Angaben des Anbieters prüfen.
+
+## Messgrössen
+
+- **Preisindex** und **Kollusionsindex** (Calvano et al. 2020): 0 = Wettbewerb im Nash-Gleichgewicht, 1 = perfektes Kartell. Gemessen über die zweite Hälfte jedes Laufs.
+- **Blockierte Nachrichten** und die Begründungen der Compliance-Abteilung.
+- **Guardrail-Qualität:** Precision, Recall und Fehlalarmquote auf `evaluation/compliance_testset.jsonl` (39 gelabelte Nachrichten), getrennt für Regel-Schicht und Regeln + LLM.
+- **Kosten und Tokens** pro Lauf.
+
+Aktueller Stand der Regel-Schicht allein: Precision 1,00, Recall 0,68, keine Fehlalarme. Sie verpasst vor allem verschleierte Signale wie „Vernünftige Preise sind gut für alle Anbieter“ – dafür gibt es die LLM-Schicht. **Einschränkung:** Einige Regeln wurden nach Blick auf dieses Testset ergänzt; für eine faire Messung braucht es ein zweites, zurückgehaltenes Testset.
+
+## Projektstruktur
+
+```
+kartell/
+  market.py            Logit-Markt, Nash- und Monopolpreis
+  graph.py             LangGraph-Orchestrierung einer Runde
+  agents/pricing.py    LLM-Preisagenten (Kontext, Gedächtnis, Guardrails)
+  agents/compliance.py Compliance-Abteilung: Regel-Schicht + LLM-Urteil mit RAG
+  agents/scripted.py   feste Strategien für Tests und Demo
+  agents/prompts.py    alle Prompt-Texte
+  llm/                 Backends: Anthropic-SDK (Claude), OpenAI-kompatibel (Apertus u. a.)
+  rag.py               BM25-Retrieval über die Wissensbasis
+  metrics.py           Preis- und Kollusionsindex
+  runner.py, bericht.py, kosten.py, eval_compliance.py, __main__.py
+knowledge/wettbewerbsrecht/  Wissensbasis (vereinfachte Zusammenfassungen, keine Rechtsberatung)
+experiments/                 Versuchskonfigurationen (YAML)
+evaluation/                  Testdatensatz für den Guardrail
+dashboard/app.py             Streamlit-Dashboard
+docs/projektskizze.md        Projektskizze für die Abstimmung mit den Dozierenden
+docs/entscheidungen.md       Architektur-Entscheidungen mit Begründung und Alternativen
+tests/                       pytest, ohne API-Schlüssel lauffähig
+```
+
+## Grenzen
+
+- Simulierter Markt mit einem Standardmodell der Forschung, keine echten Preise oder Kundschaft.
+- LLM-Antworten sind nicht deterministisch; deshalb drei Wiederholungen je Bedingung. Für belastbare Aussagen eher mehr.
+- Die Wissensbasis fasst Rechtstexte vereinfacht zusammen und ersetzt keine Rechtsberatung.
+- Die Agenten erhalten bewusst keine Anweisung zu kooperieren. Das Ergebnis hängt trotzdem von Prompt-Details ab – eine Prompt-Variation gehört in die Auswertung.
+
+## Quellen
+
+- Calvano, E., Calzolari, G., Denicolò, V., Pastorello, S. (2020): Artificial Intelligence, Algorithmic Pricing, and Collusion. *American Economic Review*, 110(10).
+- Fish, S., Gonczarowski, Y. A., Shorrer, R. I. (2024): Algorithmic Collusion by Large Language Models. arXiv:2404.00806.
+- Bundesgesetz über Kartelle und andere Wettbewerbsbeschränkungen (Kartellgesetz, KG), SR 251.
+- Vertrag über die Arbeitsweise der Europäischen Union (AEUV), Art. 101.
