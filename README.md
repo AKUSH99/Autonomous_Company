@@ -63,6 +63,10 @@ Starte das Projekt. Startimpuls: <Thema oder Constraint, z. B. „Ein entspannen
 Falls leer, wähle selbst einen Startimpuls. Gib den Tick-Report T1 aus.
 ```
 
+## In Aktion: Run 01 „Nachtwache"
+
+Der erste komplette Durchlauf liegt in [`simulation/run-01/`](simulation/run-01): 14 Ticks von der Konzeptidee bis zum Launch – mit echtem, spielbarem Browser-Spiel, echten QA-Messungen (Bots im Headless-Browser), 15 dokumentierten Producer-Entscheidungen und einem ehrlichen Post-Mortem.
+
 ## Repository-Struktur
 
 ```
@@ -77,6 +81,8 @@ prompts/                     System-Prompts, je ein Agent pro Datei
 docs/
   studio_protokoll.md        Gemeinsame Regeln: Tick-Plan, Nachrichtentypen, IDs, Skalen
   entscheidungsprotokoll.md  Setup-Entscheidungen (SET-xx) + Vorlage für D-xxx
+simulation/
+  run-01/                    Kompletter Durchlauf: Spiel, QA-Skripte, Logs, Launch-Paket
 ```
 
 ## Leitplanken
