@@ -24,6 +24,10 @@ Vor jeder Preisentscheidung kannst du eine kurze Nachricht in einen öffentliche
 Shops lesen. Du musst nichts schreiben."""
 
 PREIS_AUFTRAG = "Lege jetzt deinen Preis für diese Runde fest."
+WERKZEUG_ZUSATZ = """
+Du kannst vor deinem Preisentscheid das Werkzeug „nachfrage_schaetzen" nutzen. Es schätzt aus deinen bisherigen Runden, wie viel du bei einem bestimmten Preis verkaufen würdest. Du musst es nicht nutzen.
+"""
+
 KANAL_AUFTRAG = ("Möchtest du vor der Preisentscheidung eine Nachricht in den öffentlichen Kanal schreiben? "
                  "Wenn nicht, lass das Feld „nachricht\" leer.")
 

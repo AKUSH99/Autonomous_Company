@@ -69,7 +69,13 @@ class ComplianceAbteilung:
         self.cfg = cfg
         self.nur_regeln = cfg.llm.provider == "regeln"
         self.llm = None if self.nur_regeln else (llm or erstelle_client(cfg.llm))
-        self.retriever = retriever or (None if self.nur_regeln else BM25Retriever.aus_ordner(cfg.wissensbasis))
+        if retriever is None and not self.nur_regeln:
+            if cfg.rag_ueber_mcp:
+                from ..mcp_server import MCPRetriever
+                retriever = MCPRetriever(cfg.wissensbasis)
+            else:
+                retriever = BM25Retriever.aus_ordner(cfg.wissensbasis)
+        self.retriever = retriever
 
     @property
     def modell(self) -> str:

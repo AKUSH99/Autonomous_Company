@@ -56,7 +56,7 @@ class LLMPreisAgent:
             konkurrenz=cfg.markt.firmen - 1,
             ziel=cfg.agenten.ziel,
             zusatz=cfg.agenten.zusatz_anweisung,
-        ) + (prompts.KANAL_ZUSATZ if cfg.kommunikation.aktiv else "")
+        ) + (prompts.KANAL_ZUSATZ if cfg.kommunikation.aktiv else "") + (prompts.WERKZEUG_ZUSATZ if cfg.agenten.werkzeuge else "")
 
     def _lagebericht(self, ctx: Kontext, mit_kanal: bool) -> str:
         teile = [f"Runde {ctx.runde}", ""]
@@ -98,8 +98,10 @@ class LLMPreisAgent:
     def preis(self, ctx: Kontext) -> Schritt:
         prompt = self._lagebericht(ctx, mit_kanal=True) + "\n\n" + prompts.PREIS_AUFTRAG
         vorher = ctx.verlauf[-1]["preise"][self.name] if ctx.verlauf else self.grenzkosten * 1.5
+        from .werkzeuge import VERFUEGBAR
+        werkzeuge = [VERFUEGBAR[w](ctx.verlauf, self.name, self.grenzkosten) for w in self.cfg.agenten.werkzeuge]
         try:
-            a = self.llm.strukturiert(self.system, prompt, PreisEntscheid)
+            a = self.llm.strukturiert(self.system, prompt, PreisEntscheid, **({"werkzeuge": werkzeuge} if werkzeuge else {}))
         except LLMFehler as e:
             # Fällt das Modell aus, bleibt der Preis der Vorrunde – das Experiment läuft weiter.
             return Schritt({"preis": vorher, "preis_roh": None, "korrigiert": True, "plan": ctx.notizen.get("plan", ""),
@@ -109,7 +111,8 @@ class LLMPreisAgent:
         preis = min(max(e.preis, 0.0), self.max_preis)
         return Schritt(
             {"preis": round(preis, 2), "preis_roh": e.preis, "korrigiert": preis != e.preis,
-             "plan": e.plan, "erkenntnisse": e.erkenntnisse, "beobachtungen": e.beobachtungen},
+             "plan": e.plan, "erkenntnisse": e.erkenntnisse, "beobachtungen": e.beobachtungen}
+            | ({"werkzeug_aufrufe": a.werkzeug_aufrufe} if a.werkzeug_aufrufe else {}),
             a.input_tokens, a.output_tokens,
         )
 

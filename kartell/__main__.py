@@ -175,6 +175,11 @@ def _auftrag(args) -> None:
         raise SystemExit(f"{len(ausfaelle)} Lauf/Läufe wegen Modellausfall abgebrochen – Protokoll prüfen.")
 
 
+def _mcp(args) -> None:
+    from .mcp_server import erstelle_server
+    erstelle_server(args.wissensbasis).run("stdio")
+
+
 def _bericht(args) -> None:
     from .bericht import erstelle_bericht
     print(f"Bericht geschrieben: {erstelle_bericht(args.laeufe, args.ausgabe)}")
@@ -221,6 +226,10 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--ausgabe", default="runs")
     s.add_argument("--berichte", default="reports")
     s.set_defaults(fn=_auftrag)
+
+    s = sub.add_parser("mcp", help="MCP-Server mit Wissensbasis und Regel-Prüfung starten (stdio)")
+    s.add_argument("--wissensbasis", help="Ordner mit Markdown-Dateien (Standard: knowledge/wettbewerbsrecht)")
+    s.set_defaults(fn=_mcp)
 
     s = sub.add_parser("bericht", help="Auswertung über alle Läufe erstellen")
     s.add_argument("laeufe", nargs="?", default="runs")

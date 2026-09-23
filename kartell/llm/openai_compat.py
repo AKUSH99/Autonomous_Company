@@ -14,7 +14,7 @@ import openai
 from pydantic import ValidationError
 
 from ..config import LLMSpec
-from .base import LLMAntwort, LLMFehler, T
+from .base import MAX_WERKZEUG_RUNDEN, LLMAntwort, LLMFehler, T, Werkzeug, fuehre_werkzeug_aus
 
 
 def _json_aus_text(text: str) -> dict:
@@ -40,13 +40,15 @@ class OpenAICompatClient:
         self.client = client or openai.OpenAI(base_url=spec.base_url, api_key=api_key or "nicht-benoetigt", max_retries=4)
         self._json_schema_ok = True
 
-    def _anfrage(self, messages: list[dict], schema: type[T]):
+    def _anfrage(self, messages: list[dict], schema: type[T], werkzeug_kwargs: dict | None = None):
         kwargs: dict = dict(model=self.spec.model, messages=messages, max_tokens=self.spec.max_tokens)
         if self.spec.temperature is not None:
             kwargs["temperature"] = self.spec.temperature
         if self.spec.extra_body:
             kwargs["extra_body"] = self.spec.extra_body
-        if self._json_schema_ok:
+        if werkzeug_kwargs:
+            kwargs |= werkzeug_kwargs  # mit Werkzeugen kein JSON-Schema-Zwang: das Format kommt aus dem Prompt
+        elif self._json_schema_ok:
             kwargs["response_format"] = {
                 "type": "json_schema",
                 "json_schema": {"name": schema.__name__, "schema": schema.model_json_schema()},
@@ -54,13 +56,13 @@ class OpenAICompatClient:
         try:
             return self.client.chat.completions.create(**kwargs)
         except openai.BadRequestError:
-            if not self._json_schema_ok:
-                raise
+            if not self._json_schema_ok or werkzeug_kwargs:
+                raise  # ohne Schema abgelehnt oder Werkzeuge nicht unterstützt: Fehler sichtbar machen
             self._json_schema_ok = False  # Server kann kein JSON-Schema: ab jetzt nur noch per Prompt
             kwargs.pop("response_format")
             return self.client.chat.completions.create(**kwargs)
 
-    def strukturiert(self, system: str, nutzer: str, schema: type[T]) -> LLMAntwort[T]:
+    def strukturiert(self, system: str, nutzer: str, schema: type[T], werkzeuge: list[Werkzeug] | None = None) -> LLMAntwort[T]:
         schema_text = json.dumps(schema.model_json_schema(), ensure_ascii=False)
         messages = [
             {"role": "system", "content": f"{system}\n\nAntworte nur mit einem JSON-Objekt nach diesem Schema:\n{schema_text}"},
@@ -68,15 +70,37 @@ class OpenAICompatClient:
         ]
         tokens_in = tokens_out = 0
         letzter_fehler = ""
-        for versuch in range(2):
+        protokoll: list[dict] = []
+        werkzeug_runden = json_versuche = 0
+        definitionen = [{"type": "function", "function": {"name": w.name, "description": w.beschreibung,
+                                                           "parameters": w.parameter.model_json_schema()}} for w in werkzeuge or []]
+        while json_versuche < 2:
+            werkzeug_kwargs = None
+            if definitionen:
+                werkzeug_kwargs = {"tools": definitionen, "tool_choice": "auto" if werkzeug_runden < MAX_WERKZEUG_RUNDEN else "none"}
             try:
-                antwort = self._anfrage(messages, schema)
+                antwort = self._anfrage(messages, schema, werkzeug_kwargs)
             except openai.APIError as e:
                 raise LLMFehler(f"{self.spec.model}: {e}", tokens_in, tokens_out) from e
             if antwort.usage:
                 tokens_in += antwort.usage.prompt_tokens or 0
                 tokens_out += antwort.usage.completion_tokens or 0
             wahl = antwort.choices[0]
+            aufrufe = getattr(wahl.message, "tool_calls", None) or []
+            if aufrufe and werkzeug_runden < MAX_WERKZEUG_RUNDEN:
+                werkzeug_runden += 1
+                messages.append({"role": "assistant", "content": wahl.message.content or "", "tool_calls": [
+                    {"id": a.id, "type": "function", "function": {"name": a.function.name, "arguments": a.function.arguments}}
+                    for a in aufrufe]})
+                for a in aufrufe:
+                    try:
+                        argumente = json.loads(a.function.arguments or "{}")
+                    except json.JSONDecodeError:
+                        argumente = {}
+                    text, _ = fuehre_werkzeug_aus(werkzeuge or [], a.function.name, argumente, protokoll)
+                    messages.append({"role": "tool", "tool_call_id": a.id, "content": text})
+                continue
+            json_versuche += 1
             text = wahl.message.content or ""
             if wahl.finish_reason == "length":
                 # Nochmals fragen hilft nicht: das Limit ist erreicht, bevor die Antwort fertig ist (oft ein langer Denkprozess).
@@ -84,7 +108,8 @@ class OpenAICompatClient:
                                 f"({antwort.usage.completion_tokens if antwort.usage else '?'} Output-Tokens).", tokens_in, tokens_out)
             try:
                 objekt = schema.model_validate(_json_aus_text(text))
-                return LLMAntwort(objekt=objekt, input_tokens=tokens_in, output_tokens=tokens_out, modell=self.spec.model)
+                return LLMAntwort(objekt=objekt, input_tokens=tokens_in, output_tokens=tokens_out, modell=self.spec.model,
+                                  werkzeug_aufrufe=protokoll)
             except (ValueError, ValidationError) as e:
                 letzter_fehler = str(e)[:300]
                 messages += [

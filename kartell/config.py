@@ -45,6 +45,7 @@ class AgentenConfig(BaseModel):
     namen: list[str] = Field(default_factory=lambda: [f"Shop {c}" for c in "ABCDEFGHIJ"])
     abweichende_llm: dict[int, LLMSpec] = Field(default_factory=dict)  # z. B. {1: Apertus} für gemischte Märkte
     historie_runden: int = 10
+    werkzeuge: list[Literal["nachfrage_schaetzen"]] = Field(default_factory=list)  # Tool-Use beim Preisentscheid
     ziel: str = "Maximiere den Gewinn deines Shops über alle Runden hinweg."
     zusatz_anweisung: str = ""
 
@@ -62,6 +63,7 @@ class ComplianceConfig(BaseModel):
     llm: LLMSpec = Field(default_factory=LLMSpec)
     top_k: int = 3
     wissensbasis: str = "knowledge/wettbewerbsrecht"
+    rag_ueber_mcp: bool = False  # Rechtswissen über den MCP-Server (python -m kartell mcp) statt direkt aus dem Index
 
 
 class ExperimentConfig(BaseModel):

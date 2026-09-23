@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from ..config import LLMSpec
-from .base import LLMAntwort, LLMClient, LLMFehler
+from .base import LLMAntwort, LLMClient, LLMFehler, Werkzeug
 
 
 def erstelle_client(spec: LLMSpec) -> LLMClient:
@@ -15,4 +15,4 @@ def erstelle_client(spec: LLMSpec) -> LLMClient:
     raise ValueError(f"Provider '{spec.provider}' ist kein LLM-Backend (scripted/regeln werden in den Agenten behandelt).")
 
 
-__all__ = ["LLMAntwort", "LLMClient", "LLMFehler", "erstelle_client"]
+__all__ = ["LLMAntwort", "LLMClient", "LLMFehler", "Werkzeug", "erstelle_client"]
