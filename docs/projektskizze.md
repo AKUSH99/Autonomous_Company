@@ -41,7 +41,9 @@ Eine Runde ist ein Durchlauf durch den Graphen: Kommunikation → Compliance-Fil
 | RAG | BM25-Retrieval über Zusammenfassungen von KG, AEUV und Behördenpraxis für den Compliance-Agenten |
 | Guardrails | Nachrichtenfilter (Regeln + LLM, fail-safe), Aufsicht über Notizen, Preisgrenzen, Fallback bei Modellausfall |
 | Modellvergleich / Apertus | Austauschbare Backends: Claude über das Anthropic-SDK, Apertus über eine OpenAI-kompatible Schnittstelle |
-| Tool-Use (Ausbau) | Geplant: Gewinnrechner als Werkzeug der Preisagenten – verändert ein Werkzeug die Kollusion? |
+| Tool-Use | Nachfrage-Schätzer als Werkzeug der Preisagenten (E14): verändert ein analytisches Werkzeug die Kollusion? |
+| MCP | Wissensbasis und Regel-Prüfung als MCP-Server; der Compliance-Agent kann sein Rechtswissen darüber beziehen |
+| Verhaltens-Guardrail | Marktbeobachtung erkennt Preismuster (Gleichschritt, gemeinsame Erhöhungen) statt nur Worte (E15) |
 
 ## 5. Evaluation
 
@@ -74,7 +76,7 @@ Alle kennen den Gesamtablauf und die Entscheidungen in `docs/entscheidungen.md`.
 | KW 41 | Pilot E1/E2, Prompts prüfen; Apertus-Zugang klären |
 | KW 42 | Zweites Testset für den Guardrail erstellen, Guardrail-Evaluation |
 | KW 43–44 | Hauptläufe E1–E4 |
-| KW 45 | E5–E7, Modellvergleich, optional Tool-Use-Erweiterung |
+| KW 45 | Labeling der echten Nachrichten (zwei Personen), Modellvergleich (Apertus/zweites Modell über OpenRouter) |
 | KW 46 | Auswertung, Grafiken, Erkenntnisse und Limitationen |
 | KW 47 | Präsentation, Probe, aufgezeichneter Backup-Lauf für die Demo |
 | KW 48 | Abschlusspräsentation 23.11.2026 |
