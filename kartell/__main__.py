@@ -142,6 +142,10 @@ def _urteile_sammeln(auftrag: dict, berichte) -> None:
     dateien = auftrag["stichprobe"] if isinstance(auftrag["stichprobe"], list) else [auftrag["stichprobe"]]
     for name in auftrag.get("modelle", []):
         if name == "jev" or name.startswith("jev:"):
+            import os
+            if not os.environ.get("OPENROUTER_API_KEY"):
+                print(f"Richter {name} übersprungen: OPENROUTER_API_KEY ist leer (Repository-Secret genau so benennen).")
+                continue
             richter = JevRichter(name.split(":", 1)[1] if ":" in name else STANDARD_MODELL)
             pruefe = richter.pruefe
         else:
@@ -198,7 +202,10 @@ def _auftrag(args) -> None:
     from .eval_compliance import evaluiere, lade_testset
     from .kosten import Budgetwaechter, guthaben_usd
     from .runner import fuehre_experiment_aus
+    import os
     auftrag = yaml.safe_load(Path(args.datei).read_text(encoding="utf-8"))
+    print("Schlüssel vorhanden: " + ", ".join(f"{n} {'ja' if os.environ.get(n) else 'nein'}"
+                                              for n in ("DEEPSEEK_API_KEY", "OPENROUTER_API_KEY", "ANTHROPIC_API_KEY")))
     modell, richter = auftrag.get("modell"), auftrag.get("compliance_modell")
     berichte = Path(args.berichte)
     berichte.mkdir(parents=True, exist_ok=True)

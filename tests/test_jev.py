@@ -62,6 +62,7 @@ def test_jev_im_auftrag_ueber_gelabeltes_testset(tmp_path, monkeypatch):
         p = 0.9 if "bleiben" in text or "gemeinsam" in text else 0.1
         return httpx.Response(200, json={"answers": {FRAGE_ID: {"type": "noul", "noul": p}}})
 
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-schluessel")
     echter_client = httpx.Client
     monkeypatch.setattr(jev.httpx, "Client", lambda **kw: echter_client(transport=httpx.MockTransport(handler)))
     testset = tmp_path / "testset.jsonl"
@@ -75,3 +76,16 @@ def test_jev_im_auftrag_ueber_gelabeltes_testset(tmp_path, monkeypatch):
     kennzahlen = json.loads((tmp_path / "reports" / "urteile_jev_kennzahlen.json").read_text())
     assert kennzahlen["recall"] == 1.0 and kennzahlen["precision"] == 1.0 and kennzahlen["auc"] == 1.0
     assert (tmp_path / "reports" / "rohantwort_jev.json").exists()
+
+
+def test_ohne_schluessel_wird_jev_uebersprungen(tmp_path, monkeypatch, capsys):
+    from kartell.__main__ import main
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    testset = tmp_path / "t.jsonl"
+    testset.write_text(json.dumps({"text": "Hallo", "zulaessig": True}) + "\n", encoding="utf-8")
+    auftrag = tmp_path / "auftrag.yaml"
+    auftrag.write_text(f"urteile_sammeln: {{stichprobe: [{testset}], modelle: [jev]}}\nlaeufe: []\n", encoding="utf-8")
+    main(["auftrag", str(auftrag), "--ausgabe", str(tmp_path / "runs"), "--berichte", str(tmp_path / "reports")])
+    ausgabe = capsys.readouterr().out
+    assert "OPENROUTER_API_KEY nein" in ausgabe and "übersprungen" in ausgabe
+    assert not (tmp_path / "reports" / "urteile_jev.jsonl").exists()
