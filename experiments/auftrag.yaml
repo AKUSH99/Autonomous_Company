@@ -2,11 +2,13 @@
 # Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
 # im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
 #
-# Aktuell: Pilot mit DeepSeek, je 10 Runden, geschätzt unter 0.20 USD.
-# Pilot 2: ohne Denkmodus – im ersten Pilot schnitt der lange Denkprozess die Antworten ab.
+# Aktuell: Hauptläufe mit DeepSeek – E1–E4 und E7, je 50 Runden × 3 Wiederholungen (Schätzung ≈ 4 USD).
+# Vorher: Pilot 1 (abgebrochen, Denkmodus schnitt Antworten ab) und Pilot 2 (E1–E3 à 10 Runden, ≈ 0.10 USD).
 modell: deepseek
-guardrail_evaluation: true
+guardrail_evaluation: false
 laeufe:
-  - {config: experiments/e1_ohne_kommunikation.yaml, runden: 10, wiederholungen: 1}
-  - {config: experiments/e2_mit_kommunikation.yaml, runden: 10, wiederholungen: 1}
-  - {config: experiments/e3_compliance_filter.yaml, runden: 10, wiederholungen: 1}
+  - {config: experiments/e1_ohne_kommunikation.yaml}
+  - {config: experiments/e2_mit_kommunikation.yaml}
+  - {config: experiments/e3_compliance_filter.yaml}
+  - {config: experiments/e4_compliance_aufsicht.yaml}
+  - {config: experiments/e7_drei_shops.yaml}
