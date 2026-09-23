@@ -69,9 +69,10 @@ def fuehre_lauf_aus(cfg: ExperimentConfig, seed: int, ausgabe: str | Path = "run
 
 
 def fuehre_experiment_aus(cfg: ExperimentConfig, ausgabe: str | Path = "runs", waechter=None,
-                          zeitlimit_min: float | None = None) -> list[dict]:
+                          zeitlimit_min: float | None = None, erste_wiederholung: int = 1) -> list[dict]:
+    """Führt die Wiederholungen eines Versuchs aus. `erste_wiederholung` > 1 ergänzt frühere Läufe (w4, w5, ...)."""
     ergebnisse = []
-    for seed in range(1, cfg.wiederholungen + 1):
+    for seed in range(erste_wiederholung, erste_wiederholung + cfg.wiederholungen):
         if waechter and waechter.erschoepft:
             print(f"  Budget erschöpft – Wiederholung {seed} von {cfg.name} entfällt.")
             break

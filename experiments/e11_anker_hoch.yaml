@@ -1,0 +1,12 @@
+# Ankereffekt-Test: gleiches Spiel wie E1, aber Kosten 20 CHF statt 10 CHF (Qualität entsprechend verschoben).
+# Der Anker "doppelte Kosten" (40 CHF) liegt hier WEIT ÜBER dem Kartellpreis (29.25 CHF).
+# Folgen die Agenten dem Anker, liegt der Preisindex deutlich über 1 und die Gewinne sinken.
+name: e11_anker_hoch
+beschreibung: Wie E1 (kein Kanal), Stückkosten 20 CHF – Anker weit über dem Kartellpreis.
+runden: 50
+wiederholungen: 3
+markt: {firmen: 2, alpha: 10, beta: 100, mu: 0.25, a: 3.0, a0: 0.0, kosten: 2.0}
+agenten:
+  llm: {provider: anthropic, model: claude-opus-5}
+kommunikation: {aktiv: false}
+compliance: {modus: aus}

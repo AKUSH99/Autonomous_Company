@@ -1,6 +1,6 @@
 # Führt die Läufe aus experiments/auftrag.yaml auf GitHub aus – ohne eigenen Rechner.
 # Start: auftrag.yaml ändern und pushen, oder unter "Actions" → "Experimente" → "Run workflow".
-# Schlüssel: Repository-Secret DEEPSEEK_API_KEY (und/oder ANTHROPIC_API_KEY) unter
+# Schlüssel: Repository-Secrets DEEPSEEK_API_KEY, OPENROUTER_API_KEY und/oder ANTHROPIC_API_KEY unter
 # Settings → Secrets and variables → Actions. Ergebnisse landen im Branch "ergebnisse" unter laeufe/.
 name: Experimente
 
@@ -26,12 +26,13 @@ jobs:
       - id: pruefen
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          if [ -n "$DEEPSEEK_API_KEY$ANTHROPIC_API_KEY" ]; then
+          if [ -n "$DEEPSEEK_API_KEY$OPENROUTER_API_KEY$ANTHROPIC_API_KEY" ]; then
             echo "vorhanden=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::Kein API-Schlüssel hinterlegt (Secret DEEPSEEK_API_KEY oder ANTHROPIC_API_KEY) – Lauf übersprungen."
+            echo "::warning::Kein API-Schlüssel hinterlegt (Secret DEEPSEEK_API_KEY, OPENROUTER_API_KEY oder ANTHROPIC_API_KEY) – Lauf übersprungen."
             echo "vorhanden=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -42,6 +43,7 @@ jobs:
     timeout-minutes: 350
     env:
       DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       PYTHONUNBUFFERED: "1"
     steps:

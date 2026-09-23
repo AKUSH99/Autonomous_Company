@@ -66,3 +66,19 @@ def test_zeitlimit():
     with pytest.raises(LimitErreicht, match="Zeitlimit"):
         sim.starte()
     assert len(sim.verlauf_bisher) == 1
+
+
+def test_permutationstest_und_bootstrap():
+    from kartell.metrics import bootstrap_differenz, permutationstest
+    assert permutationstest([1, 1.1, 1.2], [0, 0.1, 0.2]) == 0.1  # 3 gegen 3: kleinstmöglicher p-Wert
+    assert permutationstest([1, 1.1, 1.2, 1.3], [0, 0.1, 0.2, 0.3]) < 0.05
+    assert permutationstest([0.5, 0.2, 0.8], [0.4, 0.6, 0.3]) > 0.5
+    lo, hi = bootstrap_differenz([0.6, 0.7, 0.8], [0.1, 0.2, 0.3])
+    assert lo < -0.4 < -0.5 + 0.2 and hi < 0
+
+
+def test_wiederholungen_fortsetzen(tmp_path):
+    cfg = lade_config("experiments/demo_absprache_ohne_aufsicht.yaml")
+    cfg.runden, cfg.wiederholungen = 2, 2
+    fuehre_experiment_aus(cfg, tmp_path, erste_wiederholung=4)
+    assert sorted(p.name[-2:] for p in tmp_path.iterdir()) == ["w4", "w5"]

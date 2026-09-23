@@ -5,12 +5,12 @@ import argparse
 import json
 import sys
 
-from .config import VOREINSTELLUNGEN, ComplianceConfig, LLMSpec, lade_config, mit_modell
+from .config import OPENROUTER_URL, ComplianceConfig, LLMSpec, kurz, lade_config, mit_modell, voreinstellung
 
 
 def _lade(args):
     cfg = lade_config(args.config)
-    return mit_modell(cfg, args.modell) if getattr(args, "modell", None) else cfg
+    return mit_modell(cfg, args.modell, getattr(args, "compliance_modell", None)) if getattr(args, "modell", None) else cfg
 
 
 def _benchmark(args) -> None:
@@ -65,7 +65,8 @@ def _eval_compliance(args) -> None:
         if args.config:
             cfg = _lade(args).compliance
         else:
-            cfg = ComplianceConfig(llm=VOREINSTELLUNGEN[args.modell] if args.modell else LLMSpec())
+            name = args.compliance_modell or args.modell
+            cfg = ComplianceConfig(llm=voreinstellung(name).model_copy(update={"temperature": 0.0}) if name else LLMSpec())
     r = evaluiere(cfg, lade_testset(args.testset))
     print(json.dumps(r, ensure_ascii=False, indent=2))
 
@@ -87,10 +88,31 @@ def _pruefe_modell(spec: LLMSpec, berichte) -> None:
     except openai.APIError as e:
         print(f"Hinweis: Modellliste nicht abrufbar ({e}), fahre ohne Prüfung fort.")
         return
-    (berichte / "modelle.txt").write_text("\n".join(ids) + "\n", encoding="utf-8")
-    print(f"Verfügbare Modelle bei {spec.base_url}: {', '.join(ids)}")
+    (berichte / f"modelle_{kurz(spec.base_url.split('//')[-1].split('/')[0])}.txt").write_text("\n".join(ids) + "\n", encoding="utf-8")
+    print(f"{len(ids)} Modelle bei {spec.base_url}" + (f": {', '.join(ids)}" if len(ids) <= 20 else ""))
     if spec.model not in ids:
-        raise SystemExit(f"Modell {spec.model} ist nicht verfügbar. Namen in kartell/config.py (VOREINSTELLUNGEN) anpassen.")
+        raise SystemExit(f"Modell {spec.model} ist bei {spec.base_url} nicht verfügbar – Modellnamen prüfen (siehe modelle.txt).")
+
+
+def _modellsuche(suche: dict, berichte) -> None:
+    """Sucht in der Modellliste eines Anbieters (Standard: OpenRouter) nach Begriffen und speichert die Treffer."""
+    import os
+
+    import openai
+    base_url = suche.get("base_url", OPENROUTER_URL)
+    schluessel = os.environ.get(suche.get("api_key_env", "OPENROUTER_API_KEY"), "") or "nicht-benoetigt"
+    try:
+        modelle = [m.model_dump() for m in openai.OpenAI(base_url=base_url, api_key=schluessel).models.list()]
+    except openai.APIError as e:
+        print(f"Modellsuche bei {base_url} fehlgeschlagen: {e}")
+        return
+    treffer = {b: [{k: m.get(k) for k in ("id", "name", "context_length", "pricing", "description")}
+                   for m in modelle if b.lower() in f"{m.get('id', '')} {m.get('name', '')}".lower()]
+               for b in suche.get("begriffe", [])}
+    (berichte / "modellsuche.json").write_text(json.dumps({"base_url": base_url, "anzahl_modelle": len(modelle), "treffer": treffer},
+                                                          ensure_ascii=False, indent=2), encoding="utf-8")
+    for begriff, liste in treffer.items():
+        print(f"Modellsuche '{begriff}': " + (", ".join(m["id"] for m in liste) if liste else "keine Treffer"))
 
 
 def _auftrag(args) -> None:
@@ -108,12 +130,15 @@ def _auftrag(args) -> None:
     from .kosten import Budgetwaechter, guthaben_usd
     from .runner import fuehre_experiment_aus
     auftrag = yaml.safe_load(Path(args.datei).read_text(encoding="utf-8"))
-    modell = auftrag.get("modell")
+    modell, richter = auftrag.get("modell"), auftrag.get("compliance_modell")
     berichte = Path(args.berichte)
     berichte.mkdir(parents=True, exist_ok=True)
-    if modell:
-        _pruefe_modell(VOREINSTELLUNGEN[modell], berichte)
-    spec = VOREINSTELLUNGEN[modell] if modell else LLMSpec()
+    if auftrag.get("modellsuche"):
+        _modellsuche(auftrag["modellsuche"], berichte)
+    spec = voreinstellung(modell) if modell else LLMSpec()
+    richter_spec = voreinstellung(richter).model_copy(update={"temperature": 0.0}) if richter else spec
+    for s in {spec.kurzname: spec, richter_spec.kurzname: richter_spec}.values():
+        _pruefe_modell(s, berichte)
     waechter = None
     if auftrag.get("budget_usd"):
         waechter = Budgetwaechter(spec, float(auftrag["budget_usd"]), float(auftrag.get("reserve_usd", 0.5)))
@@ -125,13 +150,15 @@ def _auftrag(args) -> None:
             print(f"Budget erschöpft – {eintrag['config']} entfällt.")
             continue
         cfg = lade_config(eintrag["config"])
-        cfg = mit_modell(cfg, modell) if modell else cfg
+        cfg = mit_modell(cfg, modell, richter) if modell else cfg
         cfg.runden = eintrag.get("runden", cfg.runden)
         cfg.wiederholungen = eintrag.get("wiederholungen", cfg.wiederholungen)
-        ergebnisse += fuehre_experiment_aus(cfg, args.ausgabe, waechter, eintrag.get("zeitlimit_min", auftrag.get("zeitlimit_min")))
+        ergebnisse += fuehre_experiment_aus(cfg, args.ausgabe, waechter, eintrag.get("zeitlimit_min", auftrag.get("zeitlimit_min")),
+                                            eintrag.get("erste_wiederholung", 1))
     if auftrag.get("guardrail_evaluation") and not (waechter and waechter.erschoepft):
-        r = evaluiere(ComplianceConfig(llm=spec), lade_testset())
-        datei = berichte / f"guardrail_{modell or spec.model}.json"
+        testset = auftrag.get("guardrail_testset", "evaluation/compliance_testset.jsonl")
+        r = evaluiere(ComplianceConfig(llm=richter_spec.model_copy(update={"temperature": 0.0})), lade_testset(testset))
+        datei = berichte / f"guardrail_{Path(testset).stem}_{kurz(richter or modell or spec.model)}.json"
         datei.write_text(json.dumps(r, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"Guardrail-Evaluation: {json.dumps(r['ergebnisse'], ensure_ascii=False)} → {datei}")
     kosten = {"geschaetzt_usd": round(sum(e.get("kosten_usd_geschaetzt") or 0 for e in ergebnisse), 4)}
@@ -163,7 +190,8 @@ def main(argv: list[str] | None = None) -> None:
 
     s = sub.add_parser("schaetzung", help="Kosten eines Experiments schätzen")
     s.add_argument("config")
-    s.add_argument("--modell", choices=sorted(VOREINSTELLUNGEN), help="Claude durch eine Voreinstellung ersetzen, z. B. deepseek")
+    s.add_argument("--modell", help="Claude ersetzen: deepseek oder openrouter:<modell-id>")
+    s.add_argument("--compliance-modell", help="anderes Modell für die Compliance-Abteilung (Standard: wie --modell)")
     s.set_defaults(fn=_schaetzung)
 
     s = sub.add_parser("lauf", help="Experiment ausführen")
@@ -172,7 +200,8 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--wiederholungen", type=int)
     s.add_argument("--ausgabe", default="runs")
     s.add_argument("--ja", action="store_true", help="ohne Rückfrage zur Kostenschätzung starten")
-    s.add_argument("--modell", choices=sorted(VOREINSTELLUNGEN), help="Claude durch eine Voreinstellung ersetzen, z. B. deepseek")
+    s.add_argument("--modell", help="Claude ersetzen: deepseek oder openrouter:<modell-id>")
+    s.add_argument("--compliance-modell", help="anderes Modell für die Compliance-Abteilung (Standard: wie --modell)")
     s.set_defaults(fn=_lauf)
 
     s = sub.add_parser("demo", help="Offline-Demo ohne API-Schlüssel")
@@ -183,7 +212,8 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--config", help="Experiment-Config, deren Compliance-Einstellungen verwendet werden")
     s.add_argument("--testset", default="evaluation/compliance_testset.jsonl")
     s.add_argument("--nur-regeln", action="store_true", help="nur die Regel-Schicht (ohne LLM) auswerten")
-    s.add_argument("--modell", choices=sorted(VOREINSTELLUNGEN), help="Claude durch eine Voreinstellung ersetzen, z. B. deepseek")
+    s.add_argument("--modell", help="Claude ersetzen: deepseek oder openrouter:<modell-id>")
+    s.add_argument("--compliance-modell", help="anderes Modell für die Compliance-Abteilung (Standard: wie --modell)")
     s.set_defaults(fn=_eval_compliance)
 
     s = sub.add_parser("auftrag", help="Mehrere Läufe aus einer Auftragsdatei abarbeiten (z. B. in GitHub Actions)")

@@ -1,5 +1,7 @@
 """Modell-Voreinstellungen (--modell) und Kostenschätzung."""
-from kartell.config import VOREINSTELLUNGEN, lade_config, mit_modell
+import pytest
+
+from kartell.config import VOREINSTELLUNGEN, kurz, lade_config, mit_modell, voreinstellung
 from kartell.kosten import schaetze
 
 
@@ -8,7 +10,7 @@ def test_deepseek_ersetzt_claude_bei_agenten_und_compliance():
     neu = mit_modell(cfg, "deepseek")
     assert neu.name == "e3_compliance_filter_deepseek"
     assert all(a.llm == VOREINSTELLUNGEN["deepseek"] for a in neu.agenten_liste())
-    assert neu.compliance.llm == VOREINSTELLUNGEN["deepseek"]
+    assert neu.compliance.llm == VOREINSTELLUNGEN["deepseek"].model_copy(update={"temperature": 0.0})  # konsistente Urteile
     assert cfg.agenten.llm.provider == "anthropic"  # Original bleibt unverändert
 
 
@@ -26,3 +28,16 @@ def test_kostenschaetzung_deepseek_und_unbekannte_modelle():
     assert 0 < s["usd"] < 5 and not s["unvollstaendig"]
     assert schaetze(lade_config("experiments/e5_apertus.yaml"))["unvollstaendig"]  # eigener Server: Preis unbekannt
     assert schaetze(lade_config("experiments/demo_absprache_mit_filter.yaml"))["usd"] == 0
+
+
+def test_openrouter_modelle_und_eigener_richter():
+    spec = voreinstellung("openrouter:swiss-ai/apertus-70b-instruct")
+    assert spec.base_url == "https://openrouter.ai/api/v1" and spec.api_key_env == "OPENROUTER_API_KEY"
+    assert spec.model == "swiss-ai/apertus-70b-instruct" and kurz("openrouter:swiss-ai/apertus-70b-instruct") == "apertus-70b-instruct"
+    neu = mit_modell(lade_config("experiments/e3_compliance_filter.yaml"), "deepseek", "openrouter:anbieter/richter-modell")
+    assert neu.name == "e3_compliance_filter_deepseek_richter-richter-modell"
+    assert neu.agenten.llm.model == "deepseek-flash" and neu.compliance.llm.model == "anbieter/richter-modell"
+    ohne_filter = mit_modell(lade_config("experiments/e2_mit_kommunikation.yaml"), "deepseek", "openrouter:x/y")
+    assert ohne_filter.name == "e2_mit_kommunikation_deepseek"  # ohne Compliance kein Richter-Suffix
+    with pytest.raises(ValueError, match="openrouter:<modell-id>"):
+        voreinstellung("jeff")

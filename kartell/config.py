@@ -1,6 +1,7 @@
 """Experiment-Konfiguration (YAML -> Pydantic)."""
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Literal, Optional
 
@@ -106,19 +107,46 @@ VOREINSTELLUNGEN: dict[str, LLMSpec] = {
 }
 
 
-def mit_modell(cfg: ExperimentConfig, voreinstellung: str) -> ExperimentConfig:
-    """Ersetzt alle Claude-Agenten und das Compliance-LLM durch eine Voreinstellung.
+OPENROUTER_URL = "https://openrouter.ai/api/v1"
+
+
+def voreinstellung(name: str) -> LLMSpec:
+    """Löst einen Modellnamen für `--modell` auf: eine feste Voreinstellung oder `openrouter:<modell-id>`.
+
+    Über OpenRouter ist jedes dort gelistete Modell erreichbar (Schlüssel in OPENROUTER_API_KEY).
+    """
+    if name in VOREINSTELLUNGEN:
+        return VOREINSTELLUNGEN[name]
+    if name.startswith("openrouter:") and len(name) > len("openrouter:"):
+        return LLMSpec(provider="openai_compat", model=name.split(":", 1)[1], base_url=OPENROUTER_URL,
+                       api_key_env="OPENROUTER_API_KEY", max_tokens=4000)
+    raise ValueError(f"Unbekanntes Modell '{name}'. Erlaubt: {', '.join(VOREINSTELLUNGEN)} oder openrouter:<modell-id>")
+
+
+def kurz(name: str) -> str:
+    """Kurzer, dateinamentauglicher Name für Versuchsnamen: 'openrouter:swiss-ai/apertus-70b' -> 'apertus-70b'."""
+    return re.sub(r"[^a-z0-9-]+", "-", name.split(":")[-1].split("/")[-1].lower()).strip("-")
+
+
+def mit_modell(cfg: ExperimentConfig, modell: str, compliance_modell: str | None = None) -> ExperimentConfig:
+    """Ersetzt alle Claude-Agenten und das Compliance-LLM durch ein anderes Modell.
 
     Andere Modelle (z. B. Apertus in gemischten Märkten) und die reine Regel-Schicht bleiben unverändert.
+    `compliance_modell` lässt ein anderes Modell urteilen als die Preisagenten – sonst prüft ein Modell sich selbst.
+    Das Compliance-LLM läuft mit Temperatur 0, damit gleiche Nachrichten möglichst gleich beurteilt werden.
     Der Versuchsname bekommt ein Suffix, damit der Bericht die Läufe getrennt auswertet.
     """
-    spec = VOREINSTELLUNGEN[voreinstellung]
+    spec = voreinstellung(modell)
+    richter = voreinstellung(compliance_modell or modell).model_copy(update={"temperature": 0.0})
     neu = cfg.model_copy(deep=True)
-    neu.name = f"{cfg.name}_{voreinstellung}"
-    neu.beschreibung = f"{cfg.beschreibung} Voreinstellung {voreinstellung}: {spec.model} statt Claude."
+    neu.name = f"{cfg.name}_{kurz(modell)}"
+    neu.beschreibung = f"{cfg.beschreibung} Modell: {spec.model} statt Claude."
     if neu.agenten.llm.provider == "anthropic":
         neu.agenten.llm = spec
     neu.agenten.abweichende_llm = {i: spec if s.provider == "anthropic" else s for i, s in neu.agenten.abweichende_llm.items()}
     if neu.compliance.llm.provider == "anthropic":
-        neu.compliance.llm = spec
+        neu.compliance.llm = richter
+        if compliance_modell and neu.compliance.modus != "aus":
+            neu.name += f"_richter-{kurz(compliance_modell)}"
+            neu.beschreibung += f" Compliance: {richter.model}."
     return neu

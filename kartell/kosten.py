@@ -55,15 +55,24 @@ def schaetze(cfg: ExperimentConfig) -> dict:
 
 
 def guthaben_usd(spec: LLMSpec) -> float | None:
-    """Aktuelles Guthaben beim Anbieter, falls er es verrät (DeepSeek: GET /user/balance). Sonst None."""
+    """Aktuelles Guthaben beim Anbieter, falls er es verrät. Sonst None.
+
+    DeepSeek: GET /user/balance · OpenRouter: GET /credits (gekauft minus verbraucht).
+    """
     import os
 
     import httpx
     schluessel = os.environ.get(spec.api_key_env or "", "")
     if spec.provider != "openai_compat" or not spec.base_url or not schluessel:
         return None
+    basis, kopf = spec.base_url.rstrip("/"), {"Authorization": f"Bearer {schluessel}"}
     try:
-        r = httpx.get(f"{spec.base_url.rstrip('/')}/user/balance", headers={"Authorization": f"Bearer {schluessel}"}, timeout=20)
+        if "openrouter.ai" in basis:
+            r = httpx.get(f"{basis}/credits", headers=kopf, timeout=20)
+            r.raise_for_status()
+            d = r.json()["data"]
+            return float(d["total_credits"]) - float(d["total_usage"])
+        r = httpx.get(f"{basis}/user/balance", headers=kopf, timeout=20)
         r.raise_for_status()
         return next(float(b["total_balance"]) for b in r.json()["balance_infos"] if b.get("currency") == "USD")
     except (httpx.HTTPError, KeyError, ValueError, StopIteration, TypeError):
