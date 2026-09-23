@@ -92,3 +92,28 @@ class ExperimentConfig(BaseModel):
 def lade_config(pfad: str | Path) -> ExperimentConfig:
     daten = yaml.safe_load(Path(pfad).read_text(encoding="utf-8"))
     return ExperimentConfig.model_validate(daten)
+
+
+# Modell-Voreinstellungen für `--modell`: ersetzen Claude in jedem Versuch, ohne die YAML-Dateien zu duplizieren.
+# Modellnamen ändern sich bei Anbietern häufig – vor dem ersten Lauf gegen die Modellliste des Anbieters prüfen.
+VOREINSTELLUNGEN: dict[str, LLMSpec] = {
+    "deepseek": LLMSpec(provider="openai_compat", model="deepseek-flash", base_url="https://api.deepseek.com",
+                        api_key_env="DEEPSEEK_API_KEY", max_tokens=8000),
+}
+
+
+def mit_modell(cfg: ExperimentConfig, voreinstellung: str) -> ExperimentConfig:
+    """Ersetzt alle Claude-Agenten und das Compliance-LLM durch eine Voreinstellung.
+
+    Andere Modelle (z. B. Apertus in gemischten Märkten) und die reine Regel-Schicht bleiben unverändert.
+    Der Versuchsname bekommt ein Suffix, damit der Bericht die Läufe getrennt auswertet.
+    """
+    spec = VOREINSTELLUNGEN[voreinstellung]
+    neu = cfg.model_copy(deep=True)
+    neu.name = f"{cfg.name}_{voreinstellung}"
+    if neu.agenten.llm.provider == "anthropic":
+        neu.agenten.llm = spec
+    neu.agenten.abweichende_llm = {i: spec if s.provider == "anthropic" else s for i, s in neu.agenten.abweichende_llm.items()}
+    if neu.compliance.llm.provider == "anthropic":
+        neu.compliance.llm = spec
+    return neu

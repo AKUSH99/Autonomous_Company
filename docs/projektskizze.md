@@ -45,7 +45,7 @@ Eine Runde ist ein Durchlauf durch den Graphen: Kommunikation → Compliance-Fil
 
 ## 5. Evaluation
 
-**Versuchsplan:** E1–E4 und E7 mit Claude, E5–E6 mit Apertus; je 50 Runden und 3 Wiederholungen (mehr, falls das Budget reicht).
+**Versuchsplan:** E1–E4 und E7 mit Claude, E5–E6 mit Apertus; je 50 Runden und 3 Wiederholungen (mehr, falls das Budget reicht). Dieselben Versuche lassen sich mit `--modell deepseek` für rund 4 USD wiederholen – als günstiger Einstieg und als zusätzlicher Modellvergleich für FF4.
 
 **Kennzahlen:**
 - Preisindex und Kollusionsindex: 0 = Wettbewerb (Nash), 1 = perfektes Kartell, gemessen über die zweite Hälfte jedes Laufs

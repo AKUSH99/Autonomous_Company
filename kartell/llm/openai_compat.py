@@ -41,7 +41,7 @@ class OpenAICompatClient:
         self._json_schema_ok = True
 
     def _anfrage(self, messages: list[dict], schema: type[T]):
-        kwargs: dict = dict(model=self.spec.model, messages=messages, max_tokens=min(self.spec.max_tokens, 4000))
+        kwargs: dict = dict(model=self.spec.model, messages=messages, max_tokens=self.spec.max_tokens)
         if self.spec.temperature is not None:
             kwargs["temperature"] = self.spec.temperature
         if self._json_schema_ok:

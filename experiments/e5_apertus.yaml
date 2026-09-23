@@ -13,5 +13,6 @@ agenten:
     base_url: http://localhost:8000/v1
     api_key_env: APERTUS_API_KEY
     temperature: 0.7
+    max_tokens: 4000
 kommunikation: {aktiv: true, max_zeichen: 400}
 compliance: {modus: aus}

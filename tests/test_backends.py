@@ -72,3 +72,23 @@ def test_openai_compat_parst_json_auch_ohne_schema_support():
     a = c.strukturiert("S", "N", PreisEntscheid)
     assert a.objekt.preis == 17.5
     assert "response_format" in aufrufe[0] and "response_format" not in aufrufe[1]
+
+
+def test_openai_compat_uebernimmt_modell_und_max_tokens_der_voreinstellung():
+    from kartell.config import VOREINSTELLUNGEN
+    aufrufe = []
+
+    def handler(request):
+        aufrufe.append(json.loads(request.content))
+        return httpx2.Response(200, json={
+            "id": "c1", "object": "chat.completion", "created": 0, "model": "deepseek-flash",
+            "choices": [{"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": json.dumps(ANTWORT)}}],
+            "usage": {"prompt_tokens": 90, "completion_tokens": 25, "total_tokens": 115},
+        })
+
+    client = openai.OpenAI(api_key="x", base_url="http://test/v1", max_retries=0,
+                           http_client=openai.DefaultHttpxClient(transport=httpx2.MockTransport(handler)))
+    a = OpenAICompatClient(VOREINSTELLUNGEN["deepseek"], client=client).strukturiert("S", "N", PreisEntscheid)
+    assert a.objekt.preis == 17.5 and a.input_tokens == 90
+    assert aufrufe[0]["model"] == "deepseek-flash" and aufrufe[0]["max_tokens"] == 8000
+    assert aufrufe[0]["response_format"]["type"] == "json_schema"

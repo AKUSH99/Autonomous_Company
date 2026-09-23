@@ -7,21 +7,23 @@ from __future__ import annotations
 
 from .config import ExperimentConfig, LLMSpec
 
-# USD pro 1 Mio. Tokens (Input, Output), Anthropic-API-Listenpreise Stand 2026
+# USD pro 1 Mio. Tokens (Input, Output). Anthropic: Listenpreise Stand 2026.
+# DeepSeek: Tarif zur Spitzenzeit ohne Cache-Rabatt laut Drittquellen, Stand Sept. 2026 – auf der Preisseite prüfen.
 PREISE_USD = {
     "claude-opus-5": (5.0, 25.0),
     "claude-sonnet-5": (2.0, 10.0),
     "claude-haiku-4-5": (1.0, 5.0),
+    "deepseek-flash": (0.30, 1.20),
 }
 SCHAETZUNG_TOKENS = {"preis": (1500, 800), "nachricht": (1300, 400), "compliance": (1600, 300), "plan": (600, 250)}
 
 
 def _kosten(spec: LLMSpec, aufrufe: int, art: str) -> float | None:
-    if spec.provider != "anthropic":
-        return 0.0 if spec.provider in ("scripted", "regeln") else None  # eigener Server: keine Token-Kosten
+    if spec.provider in ("scripted", "regeln"):
+        return 0.0
     preise = PREISE_USD.get(spec.model)
     if preise is None:
-        return None
+        return None  # z. B. eigener Apertus-Server: Kosten hängen vom Hosting ab
     t_in, t_out = SCHAETZUNG_TOKENS[art]
     return aufrufe * (t_in * preise[0] + t_out * preise[1]) / 1e6
 

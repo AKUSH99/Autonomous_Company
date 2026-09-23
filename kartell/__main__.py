@@ -5,7 +5,12 @@ import argparse
 import json
 import sys
 
-from .config import ComplianceConfig, LLMSpec, lade_config
+from .config import VOREINSTELLUNGEN, ComplianceConfig, LLMSpec, lade_config, mit_modell
+
+
+def _lade(args):
+    cfg = lade_config(args.config)
+    return mit_modell(cfg, args.modell) if getattr(args, "modell", None) else cfg
 
 
 def _benchmark(args) -> None:
@@ -18,8 +23,11 @@ def _benchmark(args) -> None:
 
 
 def _schaetzung(args) -> dict:
+    return _zeige_schaetzung(_lade(args))
+
+
+def _zeige_schaetzung(cfg) -> dict:
     from .kosten import schaetze
-    cfg = lade_config(args.config)
     s = schaetze(cfg)
     print(f"Kostenschätzung {cfg.name}: {cfg.runden} Runden × {cfg.wiederholungen} Wiederholungen")
     for z in s["zeilen"]:
@@ -31,12 +39,12 @@ def _schaetzung(args) -> dict:
 
 def _lauf(args) -> None:
     from .runner import fuehre_experiment_aus
-    cfg = lade_config(args.config)
+    cfg = _lade(args)
     if args.runden:
         cfg.runden = args.runden
     if args.wiederholungen:
         cfg.wiederholungen = args.wiederholungen
-    s = _schaetzung(args) if not args.ja else None
+    s = _zeige_schaetzung(cfg) if not args.ja else None  # nach --runden/--wiederholungen: tatsächlicher Umfang
     if s and s["usd"] > 0 and input("Starten? [j/N] ").strip().lower() not in ("j", "ja", "y", "yes"):
         print("Abgebrochen.")
         return
@@ -54,7 +62,10 @@ def _eval_compliance(args) -> None:
     from .eval_compliance import evaluiere, lade_testset
     cfg = None
     if not args.nur_regeln:
-        cfg = lade_config(args.config).compliance if args.config else ComplianceConfig(llm=LLMSpec())
+        if args.config:
+            cfg = _lade(args).compliance
+        else:
+            cfg = ComplianceConfig(llm=VOREINSTELLUNGEN[args.modell] if args.modell else LLMSpec())
     r = evaluiere(cfg, lade_testset(args.testset))
     print(json.dumps(r, ensure_ascii=False, indent=2))
 
@@ -74,6 +85,7 @@ def main(argv: list[str] | None = None) -> None:
 
     s = sub.add_parser("schaetzung", help="Kosten eines Experiments schätzen")
     s.add_argument("config")
+    s.add_argument("--modell", choices=sorted(VOREINSTELLUNGEN), help="Claude durch eine Voreinstellung ersetzen, z. B. deepseek")
     s.set_defaults(fn=_schaetzung)
 
     s = sub.add_parser("lauf", help="Experiment ausführen")
@@ -82,6 +94,7 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--wiederholungen", type=int)
     s.add_argument("--ausgabe", default="runs")
     s.add_argument("--ja", action="store_true", help="ohne Rückfrage zur Kostenschätzung starten")
+    s.add_argument("--modell", choices=sorted(VOREINSTELLUNGEN), help="Claude durch eine Voreinstellung ersetzen, z. B. deepseek")
     s.set_defaults(fn=_lauf)
 
     s = sub.add_parser("demo", help="Offline-Demo ohne API-Schlüssel")
@@ -92,6 +105,7 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--config", help="Experiment-Config, deren Compliance-Einstellungen verwendet werden")
     s.add_argument("--testset", default="evaluation/compliance_testset.jsonl")
     s.add_argument("--nur-regeln", action="store_true", help="nur die Regel-Schicht (ohne LLM) auswerten")
+    s.add_argument("--modell", choices=sorted(VOREINSTELLUNGEN), help="Claude durch eine Voreinstellung ersetzen, z. B. deepseek")
     s.set_defaults(fn=_eval_compliance)
 
     s = sub.add_parser("bericht", help="Auswertung über alle Läufe erstellen")
