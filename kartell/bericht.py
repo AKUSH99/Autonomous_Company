@@ -17,6 +17,14 @@ VERGLEICHE = [
     ("e2", "e14", "Nachfrage-Werkzeug"), ("e3", "e15", "Marktbeobachtung statt nur Filter"),
 ]
 
+# Explorativ: Varianten mit gleicher Kernbedingung zusammengefasst (mehr Läufe, aber nachträglich gebildet).
+GRUPPEN = {
+    "ohne Kanal": ["e1", "e10", "e11"],
+    "Kanal ohne Filter": ["e2", "e7", "e12", "e13", "e14"],
+    "Kanal mit Filter oder Aufsicht": ["e3", "e4", "e15"],
+}
+KARTELL_SCHWELLE = 0.5
+
 
 def lade_lauf(ordner: Path) -> dict | None:
     meta_datei, runden_datei = ordner / "meta.json", ordner / "runden.jsonl"
@@ -68,6 +76,7 @@ def erstelle_bericht(wurzel: str | Path, ausgabe: str | Path = "reports") -> Pat
                       f"{f'{sum(kosten):.2f}' if kosten else '–'} |")
     zeilen += ["", "Preisindex und Kollusionsindex: 0 = Wettbewerb (Nash), 1 = perfektes Kartell (Monopol).", ""]
     zeilen += _vergleiche(gruppen)
+    zeilen += _gepoolt(gruppen)
     vorzeitig = [l for l in laeufe if l["abbruch"]]
     if vorzeitig:
         zeilen += ["**Vorzeitig beendete Läufe** (ausgewertet sind die Runden bis zum Stopp):", ""]
@@ -136,3 +145,30 @@ def _vergleiche(gruppen: dict[str, list[dict]]) -> list[str]:
             "ein Unterschied auf dem 5%-Niveau signifikant werden.", "",
             "| Veränderung | Versuche | Läufe | Differenz | 95%-Intervall | p |", "|---|---|---|---|---|---|",
             *zeilen, ""]
+
+
+def _gepoolt(gruppen: dict[str, list[dict]]) -> list[str]:
+    """Gepoolte Kernbedingungen und Anteil der Läufe, die klar im Kartell landen – explorativ, nachträglich gebildet."""
+    werte: dict[str, list[float]] = {}
+    for bedingung, kuerzel in GRUPPEN.items():
+        werte[bedingung] = [l["kennzahlen"]["kollusionsindex"] for name, g in gruppen.items() if name.split("_")[0] in kuerzel for l in g]
+    if sum(bool(v) for v in werte.values()) < 2:
+        return []
+    zeilen = ["## Explorativ: zusammengefasste Bedingungen", "",
+              "Varianten mit derselben Kernbedingung zusammengefasst (" + "; ".join(f"{b}: {', '.join(k)}" for b, k in GRUPPEN.items())
+              + "). Nachträglich gebildet – als Hinweis zu lesen, nicht als geplanter Test. "
+              f"Läufe landen meist entweder klar im Kartell (Kollusionsindex > {KARTELL_SCHWELLE}) oder nahe am Wettbewerb.", "",
+              "| Bedingung | Läufe | Ø Kollusionsindex | Läufe im Kartell |", "|---|---|---|---|"]
+    for bedingung, v in werte.items():
+        if v:
+            zeilen.append(f"| {bedingung} | {len(v)} | {round(sum(v) / len(v), 2) + 0.0:+.2f} | "
+                          f"{sum(x > KARTELL_SCHWELLE for x in v)} von {len(v)} |")
+    namen = list(werte)
+    zeilen += ["", "| Vergleich | Differenz | 95%-Intervall | p |", "|---|---|---|---|"]
+    for a, b in zip(namen, namen[1:]):
+        if werte[a] and werte[b]:
+            lo, hi = bootstrap_differenz(werte[a], werte[b])
+            d = sum(werte[b]) / len(werte[b]) - sum(werte[a]) / len(werte[a])
+            zeilen.append(f"| {a} → {b} | {round(d, 2) + 0.0:+.2f} | [{round(lo, 2) + 0.0:+.2f}, {round(hi, 2) + 0.0:+.2f}] | "
+                          f"{permutationstest(werte[a], werte[b]):.3f} |")
+    return zeilen + [""]
