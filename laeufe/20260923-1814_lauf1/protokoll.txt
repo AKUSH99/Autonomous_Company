@@ -1,0 +1,42 @@
+Verfügbare Modelle bei https://api.deepseek.com: deepseek-flash, deepseek-v4-pro
+▶ e1_ohne_kommunikation_deepseek · Wiederholung 1 · 10 Runden · Nash 14.73 / Monopol 19.25 CHF
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/Autonomous_Company/Autonomous_Company/kartell/__main__.py", line 184, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/runner/work/Autonomous_Company/Autonomous_Company/kartell/__main__.py", line 180, in main
+    args.fn(args)
+  File "/home/runner/work/Autonomous_Company/Autonomous_Company/kartell/__main__.py", line 119, in _auftrag
+    fuehre_experiment_aus(cfg, args.ausgabe)
+  File "/home/runner/work/Autonomous_Company/Autonomous_Company/kartell/runner.py", line 57, in fuehre_experiment_aus
+    return [fuehre_lauf_aus(cfg, seed, ausgabe) for seed in range(1, cfg.wiederholungen + 1)]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Autonomous_Company/Autonomous_Company/kartell/runner.py", line 47, in fuehre_lauf_aus
+    verlauf = sim.starte()
+              ^^^^^^^^^^^^
+  File "/home/runner/work/Autonomous_Company/Autonomous_Company/kartell/graph.py", line 208, in starte
+    ende = self.graph.invoke(start, config={"recursion_limit": self.cfg.runden * 6 + 20})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/site-packages/langgraph/pregel/main.py", line 3913, in invoke
+    for chunk in self.stream(
+                 ^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/site-packages/langgraph/pregel/main.py", line 2967, in stream
+    for _ in runner.tick(
+             ^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/site-packages/langgraph/pregel/_runner.py", line 207, in tick
+    run_with_retry(
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/site-packages/langgraph/pregel/_retry.py", line 617, in run_with_retry
+    return task.proc.invoke(task.input, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/site-packages/langgraph/_internal/_runnable.py", line 707, in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/site-packages/langgraph/_internal/_runnable.py", line 447, in invoke
+    ret = self.func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Autonomous_Company/Autonomous_Company/kartell/graph.py", line 158, in markt_runde
+    raise ModellAusfall(f"{MAX_AUSFALL_RUNDEN} Runden in Folge ohne gültigen Preisentscheid, zuletzt: {fehler[0]}")
+kartell.graph.ModellAusfall: 3 Runden in Folge ohne gültigen Preisentscheid, zuletzt: deepseek-flash lieferte kein gültiges JSON: Kein JSON-Objekt in der Antwort.
+During task with name 'markt' and id 'cf5b240f-6228-1227-5574-efd4d4a56ec9'
