@@ -1,0 +1,18 @@
+{
+  "runden": 50,
+  "ausgewertete_runden": 25,
+  "mittlerer_preis": 18.1,
+  "startpreis": 19.95,
+  "mittlerer_gewinn": 328.25,
+  "preisindex": 0.746,
+  "kollusionsindex": 0.919,
+  "nachrichten": 0,
+  "blockierte_nachrichten": 0,
+  "modellfehler": 0,
+  "input_tokens": 96881,
+  "output_tokens": 31214,
+  "dauer_s": 111.4,
+  "ordner": "runs/20260923-232522_e1_ohne_kommunikation_deepseek_w5",
+  "abbruch": null,
+  "kosten_usd_geschaetzt": 0.0665
+}

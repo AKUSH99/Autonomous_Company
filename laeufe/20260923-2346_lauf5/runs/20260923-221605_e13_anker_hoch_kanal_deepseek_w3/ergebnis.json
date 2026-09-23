@@ -1,0 +1,18 @@
+{
+  "runden": 50,
+  "ausgewertete_runden": 25,
+  "mittlerer_preis": 33.0,
+  "startpreis": 34.75,
+  "mittlerer_gewinn": 244.36,
+  "preisindex": 1.83,
+  "kollusionsindex": 0.187,
+  "nachrichten": 100,
+  "blockierte_nachrichten": 0,
+  "modellfehler": 0,
+  "input_tokens": 445871,
+  "output_tokens": 71328,
+  "dauer_s": 344.5,
+  "ordner": "runs/20260923-221605_e13_anker_hoch_kanal_deepseek_w3",
+  "abbruch": null,
+  "kosten_usd_geschaetzt": 0.2194
+}
