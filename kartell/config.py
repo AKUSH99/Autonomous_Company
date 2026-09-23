@@ -115,6 +115,7 @@ def mit_modell(cfg: ExperimentConfig, voreinstellung: str) -> ExperimentConfig:
     spec = VOREINSTELLUNGEN[voreinstellung]
     neu = cfg.model_copy(deep=True)
     neu.name = f"{cfg.name}_{voreinstellung}"
+    neu.beschreibung = f"{cfg.beschreibung} Voreinstellung {voreinstellung}: {spec.model} statt Claude."
     if neu.agenten.llm.provider == "anthropic":
         neu.agenten.llm = spec
     neu.agenten.abweichende_llm = {i: spec if s.provider == "anthropic" else s for i, s in neu.agenten.abweichende_llm.items()}
