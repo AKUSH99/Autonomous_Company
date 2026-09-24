@@ -1,0 +1,3 @@
+Schlüssel vorhanden: DEEPSEEK_API_KEY ja, OPENROUTER_API_KEY nein, ANTHROPIC_API_KEY nein
+Richter jev übersprungen: OPENROUTER_API_KEY ist leer (Repository-Secret genau so benennen).
+Kosten: {"geschaetzt_usd": 0}
