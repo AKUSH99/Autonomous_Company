@@ -14,7 +14,7 @@ streamlit run dashboard/app.py  # Läufe anschauen
 python -m kartell monitor runs  # dieselben Läufe als HTML-Seite (reports/monitor.html)
 ```
 
-Dann den [Kartell-Monitor](https://claude.ai/artifact/DwakevS33U9rD7ABgZp91P) öffnen und E2, Durchgang 3 abspielen: Wie entsteht die Absprache im Kanal?
+Dann den [Kartell-Monitor](https://claude.ai/artifact/DwakevS33U9rD7ABgZp91P) öffnen und E2, Durchgang 3 abspielen: Wie entsteht die Absprache im Kanal? Danach E16, Durchgang 8, Runden 19–23: Wie reagiert Shop B auf die erzwungene Abweichung, und was schreibt Shop A, der gar nicht abgewichen ist?
 
 **Verstanden, wenn ihr erklären könnt:** Was passiert in einer Runde, in welcher Reihenfolge, und warum sind die Skript-Agenten nur ein Funktionstest?
 

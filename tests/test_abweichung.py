@@ -28,7 +28,7 @@ def test_ohne_kartellphase_keine_abweichung():
 
 
 def _runde(t, a, b, nachrichten=(), abweichung=False):
-    return {"runde": t, "preise": {"Shop A": a, "Shop B": b},
+    return {"runde": t, "preise": {"Shop A": a, "Shop B": b}, "gewinne": {"Shop A": (a - 10) * 40, "Shop B": (b - 10) * 40},
             "nachrichten": [{"von": von, "text": text, "status": "zugestellt"} for von, text in nachrichten],
             "abweichung": {"shop": "Shop A", "start": 10} if abweichung else None}
 
@@ -50,3 +50,18 @@ def test_ohne_strafe():
     runden += [_runde(t, 19.0, 19.0, [("Shop B", "Neue Farben sind da.")]) for t in range(11, 25)]
     e = analysiere_lauf(runden)
     assert not e["strafe"] and e["rueckkehr"] and not e["verbale_reaktion"]
+
+
+def test_lohnt_sich_und_placebo():
+    from kartell.abweichung import placebo
+    from kartell.market import Benchmarks
+    from kartell.metrics import fisher_exakt
+    runden = [_runde(t, 19.0, 19.0) for t in range(1, 10)] + [_runde(10, 14.73, 19.0, abweichung=True)]
+    runden += [_runde(11, 17.0, 16.0), _runde(12, 17.0, 16.5)] + [_runde(t, 18.9, 19.0) for t in range(13, 25)]
+    e = analysiere_lauf(runden)
+    assert e["gewinn_abweichler"] < 0 and not e["lohnt_sich"]
+    b = Benchmarks(14.73, 19.25, 200.0, 300.0, 10.0)
+    ruhig = [_runde(t, 19.0, 19.0) for t in range(1, 30)]
+    assert placebo(ruhig, b, ab_runde=10, bis_runde=20) == 0.0  # stabiles Kartell: niemand senkt von sich aus
+    assert placebo([_runde(t, 14.8, 14.8) for t in range(1, 30)], b, ab_runde=10, bis_runde=20) is None  # nie im Kartell
+    assert round(fisher_exakt(6, 0, 0, 9), 6) == round(1 / 5005, 6) and round(fisher_exakt(3, 0, 0, 3), 3) == 0.1

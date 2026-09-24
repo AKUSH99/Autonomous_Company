@@ -116,3 +116,20 @@ def auc(labels: Iterable[bool], werte: Iterable[float]) -> float:
     if not pos or not neg:
         return float("nan")
     return sum((p > n) + 0.5 * (p == n) for p in pos for n in neg) / (len(pos) * len(neg))
+
+
+def fisher_exakt(a: int, b: int, c: int, d: int) -> float:
+    """Zweiseitiger exakter Test nach Fisher für die Vierfeldertafel [[a, b], [c, d]].
+
+    Summiert die Wahrscheinlichkeiten aller Tafeln mit gleichen Randsummen, die höchstens so wahrscheinlich sind
+    wie die beobachtete – geeignet für sehr kleine Zahlen wie „6 von 6 gegen 0 von 9“.
+    """
+    from math import comb
+    zeile1, spalte1, n = a + b, a + c, a + b + c + d
+
+    def p(x: int) -> float:
+        return comb(spalte1, x) * comb(n - spalte1, zeile1 - x) / comb(n, zeile1)
+
+    beobachtet = p(a)
+    moeglich = range(max(0, zeile1 + spalte1 - n), min(zeile1, spalte1) + 1)
+    return min(1.0, sum(p(x) for x in moeglich if p(x) <= beobachtet * (1 + 1e-9)))
