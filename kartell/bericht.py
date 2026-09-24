@@ -77,6 +77,9 @@ def erstelle_bericht(wurzel: str | Path, ausgabe: str | Path = "reports") -> Pat
     zeilen += ["", "Preisindex und Kollusionsindex: 0 = Wettbewerb (Nash), 1 = perfektes Kartell (Monopol).", ""]
     zeilen += _vergleiche(gruppen)
     zeilen += _gepoolt(gruppen)
+    abweichung = {name: g for name, g in gruppen.items()
+                  if g[0]["meta"]["config"].get("abweichung", {}).get("aktiv")}
+    zeilen += _abweichungstest(abweichung)
     vorzeitig = [l for l in laeufe if l["abbruch"]]
     if vorzeitig:
         zeilen += ["**Vorzeitig beendete Läufe** (ausgewertet sind die Runden bis zum Stopp):", ""]
@@ -111,6 +114,10 @@ def erstelle_bericht(wurzel: str | Path, ausgabe: str | Path = "reports") -> Pat
             fig.savefig(datei, dpi=140)
             plt.close(fig)
             zeilen += [f"## {name}", "", f"![Preisverlauf {name}]({datei.name})", ""]
+        if abweichung:
+            datei = _impulsgrafik(abweichung, ausgabe, plt)
+            if datei:
+                zeilen += ["## Abweichungstest: Reaktion der Preise", "", f"![Impulsantwort]({datei.name})", ""]
 
     bericht = ausgabe / "bericht.md"
     bericht.write_text("\n".join(zeilen), encoding="utf-8")
@@ -172,3 +179,63 @@ def _gepoolt(gruppen: dict[str, list[dict]]) -> list[str]:
             zeilen.append(f"| {a} → {b} | {round(d, 2) + 0.0:+.2f} | [{round(lo, 2) + 0.0:+.2f}, {round(hi, 2) + 0.0:+.2f}] | "
                           f"{permutationstest(werte[a], werte[b]):.3f} |")
     return zeilen + [""]
+
+
+def _abweichungstest(gruppen: dict[str, list[dict]]) -> list[str]:
+    """Wie reagiert ein Kartell auf einen Abweichler? (erzwungene Abweichung, siehe kartell/abweichung.py)"""
+    from .abweichung import fasse_zusammen
+    if not gruppen:
+        return []
+    zeilen = ["## Abweichungstest", "",
+              "Sobald die Preise drei Runden in Folge im Kartellbereich lagen, wurde ein Shop für eine Runde auf den "
+              "Wettbewerbspreis gesetzt. **Strafe**: die anderen senken in den drei Folgerunden um mindestens 3 %. "
+              "**Rückkehr**: 6–10 Runden später liegen die Preise wieder bei mindestens 97 % des Niveaus davor. "
+              "Echte Kollusion zeigt sich im Muster Strafe, dann Rückkehr.", "",
+              "| Versuch | Läufe | mit Abweichung | Strafe | Rückkehr | Strafe und Rückkehr | Reaktion im Kanal | Reaktion der anderen (Runde +1 / +2) |",
+              "|---|---|---|---|---|---|---|---|"]
+    zitate = []
+    for name, gruppe in gruppen.items():
+        z = fasse_zusammen([l["runden"] for l in gruppe])
+        n = z["mit_abweichung"]
+        if not n:
+            zeilen.append(f"| {name} | {z['laeufe']} | 0 (Kartellphase nie erreicht) | – | – | – | – | – |")
+            continue
+        imp = z["impuls"]
+        zeilen.append(f"| {name} | {z['laeufe']} | {n} | {z['strafe']} von {n} | {z['rueckkehr']} von {n} | "
+                      f"{z['strafe_und_rueckkehr']} von {n} | {z['verbale_reaktion']} von {n} | "
+                      f"{imp[1]['andere'] * 100:+.1f} % / {imp[2]['andere'] * 100:+.1f} % |")
+        zitate += [(name, t) for t in z["zitate"]]
+    if zitate:
+        zeilen += ["", "Reaktionen im Kanal direkt nach der Abweichung:", ""]
+        zeilen += [f"> „{t[:300]}“ ({name.split('_')[0].upper()})" for name, t in zitate[:6]]
+    return zeilen + [""]
+
+
+def _impulsgrafik(gruppen: dict[str, list[dict]], ausgabe: Path, plt) -> Path | None:
+    from .abweichung import FENSTER_NACH, FENSTER_VOR, fasse_zusammen
+    fig, ax = plt.subplots(figsize=(8, 4.2))
+    gezeichnet = False
+    farben = ["#2D5BD7", "#C96F12", "#7A4FC2", "#1D8469"]
+    for i, (name, gruppe) in enumerate(gruppen.items()):
+        z = fasse_zusammen([l["runden"] for l in gruppe])
+        if not z["mit_abweichung"]:
+            continue
+        k = list(range(-FENSTER_VOR, FENSTER_NACH + 1))
+        f = farben[i % len(farben)]
+        ax.plot(k, [z["impuls"][x]["andere"] * 100 for x in k], color=f, lw=2, label=f"{name}: andere (n={z['mit_abweichung']})")
+        ax.plot(k, [z["impuls"][x]["abweichler"] * 100 for x in k], color=f, lw=1.2, ls="--", label=f"{name}: Abweichler")
+        gezeichnet = True
+    if not gezeichnet:
+        plt.close(fig)
+        return None
+    ax.axvline(0, color="#999", lw=1)
+    ax.axhline(0, color="#999", lw=1)
+    ax.set_xlabel("Runden relativ zur Abweichung")
+    ax.set_ylabel("Preis relativ zum Niveau davor (%)")
+    ax.legend(fontsize=7, frameon=False)
+    ax.grid(alpha=0.2)
+    fig.tight_layout()
+    datei = ausgabe / "abweichungstest.png"
+    fig.savefig(datei, dpi=140)
+    plt.close(fig)
+    return datei

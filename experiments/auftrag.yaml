@@ -2,10 +2,16 @@
 # Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
 # im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
 #
-# Aktuell: Jev (TypeSafe, Decisions-API über OpenRouter) als zweiter Richter über
-# (1) die 120 echten Agenten-Nachrichten und (2) das selbst geschriebene Testset (39 gelabelte Nachrichten).
-# Der erste Versuch scheiterte, weil OPENROUTER_API_KEY im Lauf leer war. DeepSeek-Urteile liegen schon vor.
+# Aktuell: Abweichungstest (Calvano et al. 2020) – bestrafen KI-Kartelle einen Abweichler und kehren danach zurück?
+# E16 mit Kanal (10 Durchgänge), E17 ohne Kanal (6 Durchgänge). Budget 2.20 USD, Reserve 0.50 USD.
+# Jev als zweiter Richter läuft mit, sobald OPENROUTER_API_KEY für den Workflow sichtbar ist (sonst übersprungen).
+modell: deepseek
+budget_usd: 2.2
+reserve_usd: 0.5
+zeitlimit_min: 300
 urteile_sammeln:
   stichprobe: [evaluation/echte_nachrichten.jsonl, evaluation/compliance_testset.jsonl]
   modelle: [jev]
-laeufe: []
+laeufe:
+  - {config: experiments/e16_abweichung_kanal.yaml}
+  - {config: experiments/e17_abweichung_ohne_kanal.yaml}

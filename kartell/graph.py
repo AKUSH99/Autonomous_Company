@@ -77,6 +77,7 @@ class Simulation:
             from .agents.marktbeobachtung import Marktbeobachtung
             self.marktbeobachtung = Marktbeobachtung(cfg.compliance.beobachtung_fenster)
         self.tokens_gesamt = {"input": 0, "output": 0}
+        self.abweichung_start: int | None = None  # Runde, in der die erzwungene Abweichung begann
         self.pool = ThreadPoolExecutor(max_workers=max(1, cfg.max_parallel))
         self.graph = self._baue_graph()
 
@@ -133,7 +134,27 @@ class Simulation:
         for agent, schritt in schritte:
             tokens = self._plus_tokens(tokens, schritt.input_tokens, schritt.output_tokens)
             entscheide[agent.name] = schritt.daten | {"fehler": schritt.fehler, "modell": agent.modell}
+        self._erzwinge_abweichung(s["runde"], entscheide)
         return {"entscheide": entscheide, "tokens": tokens, "rundenstart": start}
+
+    def _im_kartell(self, runde: dict, schwelle: float) -> bool:
+        b = self.benchmarks
+        return all((p - b.nash_preis) / (b.monopol_preis - b.nash_preis) >= schwelle for p in runde["preise"].values())
+
+    def _erzwinge_abweichung(self, runde: int, entscheide: dict) -> None:
+        a = self.cfg.abweichung
+        if not a.aktiv:
+            return
+        if self.abweichung_start is None:
+            letzte = self.verlauf_bisher[-a.kartell_runden:]
+            if not (a.ab_runde <= runde <= a.bis_runde and len(letzte) == a.kartell_runden
+                    and all(self._im_kartell(r, a.schwelle_preisindex) for r in letzte)):
+                return
+            self.abweichung_start = runde
+        if self.abweichung_start <= runde < self.abweichung_start + a.dauer:
+            name = self.agenten[a.shop].name
+            entscheide[name] = entscheide[name] | {"preis_gewollt": entscheide[name]["preis"], "erzwungen": True,
+                                                   "preis": round(self.benchmarks.nash_preis, 2)}
 
     def aufsicht(self, s: Zustand) -> dict:
         namen = list(s["entscheide"])
@@ -163,6 +184,9 @@ class Simulation:
             "nachrichten": s["nachrichten_log"],
             "entscheide": {n: {k: v for k, v in s["entscheide"][n].items() if k != "preis"} for n in namen},
             "aufsicht": s["aufsicht_log"],
+            "abweichung": ({"shop": self.agenten[self.cfg.abweichung.shop].name, "start": self.abweichung_start}
+                           if self.abweichung_start is not None and self.abweichung_start <= s["runde"]
+                           < self.abweichung_start + self.cfg.abweichung.dauer else None),
             "tokens": s["tokens"],
             "dauer_s": round(time.time() - s["rundenstart"], 2) if s["rundenstart"] else None,
         }
