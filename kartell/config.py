@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Literal, Optional
 
@@ -117,6 +118,34 @@ class ExperimentConfig(BaseModel):
 def lade_config(pfad: str | Path) -> ExperimentConfig:
     daten = yaml.safe_load(Path(pfad).read_text(encoding="utf-8"))
     return ExperimentConfig.model_validate(daten)
+
+
+VERSUCHE = Path(__file__).resolve().parent.parent / "experiments"
+
+
+@lru_cache(maxsize=1)
+def _titel_der_versuche() -> dict[str, str]:
+    titel = {}
+    for datei in VERSUCHE.glob("*.yaml"):
+        daten = yaml.safe_load(datei.read_text(encoding="utf-8"))
+        if isinstance(daten, dict) and daten.get("name") and daten.get("titel"):
+            titel[daten["name"]] = daten["titel"]
+    return titel
+
+
+def anzeigename(name: str, titel: str = "") -> str:
+    """Lesbarer Name für Bericht und Monitor: 'e3_compliance_filter_deepseek' -> 'E3 · Compliance-Filter'.
+
+    Ohne `titel` (ältere Läufe) wird er aus experiments/*.yaml nachgeschlagen; ein eigener Richter bleibt sichtbar.
+    """
+    if not titel:
+        passend = [n for n in _titel_der_versuche() if name == n or name.startswith(n + "_")]
+        titel = _titel_der_versuche()[max(passend, key=len)] if passend else ""
+    if not titel:
+        return name
+    kuerzel = name.split("_")[0]
+    text = f"{kuerzel.upper()} · {titel}" if re.fullmatch(r"e\d+", kuerzel) else titel
+    return text + (f" · Richter {name.split('_richter-', 1)[1]}" if "_richter-" in name else "")
 
 
 # Modell-Voreinstellungen für `--modell`: ersetzen Claude in jedem Versuch, ohne die YAML-Dateien zu duplizieren.

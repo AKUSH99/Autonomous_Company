@@ -180,9 +180,9 @@ def _urteile_sammeln(auftrag: dict, berichte) -> None:
 def _labels_auswerten(args) -> None:
     from pathlib import Path
 
-    from .stichprobe import lade_jsonl, werte_labels_aus
+    from .stichprobe import lade_jsonl, lade_labels, werte_labels_aus
     urteile = {Path(p).stem.removeprefix("urteile_"): lade_jsonl(p) for p in args.urteile or []}
-    r = werte_labels_aus(lade_jsonl(args.stichprobe), lade_jsonl(args.labels), urteile)
+    r = werte_labels_aus(lade_jsonl(args.stichprobe), lade_labels(args.labels), urteile)
     print(json.dumps(r, ensure_ascii=False, indent=2))
     if args.ausgabe:
         Path(args.ausgabe).write_text(json.dumps(r, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -259,6 +259,12 @@ def _mcp(args) -> None:
     erstelle_server(args.wissensbasis).run("stdio")
 
 
+def _monitor(args) -> None:
+    from .monitor import baue
+    r = baue([Path(o) for o in args.laeufe], Path(args.ausgabe))
+    print(f"Monitor geschrieben: {r['datei']} ({r['versuche']} Versuche, {r['laeufe']} Läufe, {r['kb']} KB) – im Browser öffnen")
+
+
 def _bericht(args) -> None:
     from .bericht import erstelle_bericht
     print(f"Bericht geschrieben: {erstelle_bericht(args.laeufe, args.ausgabe)}")
@@ -315,7 +321,8 @@ def main(argv: list[str] | None = None) -> None:
 
     s = sub.add_parser("labels-auswerten", help="Menschliche Labels auswerten: Kappa, Filter, Regeln und LLM-Richter")
     s.add_argument("--stichprobe", default="evaluation/echte_nachrichten.jsonl")
-    s.add_argument("--labels", default="evaluation/echte_nachrichten_labels.jsonl")
+    s.add_argument("--labels", default="evaluation/echte_nachrichten_labels.json",
+                   help="Export aus dem Label-Werkzeug (JSON) oder JSONL mit id, rater, urteil")
     s.add_argument("--urteile", nargs="*", help="urteile_<modell>.jsonl aus einem Auftrag")
     s.add_argument("--ausgabe", help="Ergebnis zusätzlich als JSON speichern")
     s.set_defaults(fn=_labels_auswerten)
@@ -323,6 +330,11 @@ def main(argv: list[str] | None = None) -> None:
     s = sub.add_parser("mcp", help="MCP-Server mit Wissensbasis und Regel-Prüfung starten (stdio)")
     s.add_argument("--wissensbasis", help="Ordner mit Markdown-Dateien (Standard: knowledge/wettbewerbsrecht)")
     s.set_defaults(fn=_mcp)
+
+    s = sub.add_parser("monitor", help="Kartell-Monitor bauen: eine HTML-Seite, die die Läufe Runde für Runde abspielt")
+    s.add_argument("laeufe", nargs="+", help="Ordner mit Läufen (werden rekursiv durchsucht)")
+    s.add_argument("--ausgabe", default="reports/monitor.html")
+    s.set_defaults(fn=_monitor)
 
     s = sub.add_parser("bericht", help="Auswertung über alle Läufe erstellen")
     s.add_argument("laeufe", nargs="?", default="runs")

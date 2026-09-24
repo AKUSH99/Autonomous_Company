@@ -1,5 +1,6 @@
 # Erweiterung: Verhindert der Compliance-Filter ein Kartell auch unter zehn Konkurrenten? Vergleich mit E3.
 name: e9_zehn_shops_filter
+titel: 10 Shops, Filter
 beschreibung: Wie E8, jede Nachricht wird vor der Zustellung geprüft.
 runden: 100
 wiederholungen: 1

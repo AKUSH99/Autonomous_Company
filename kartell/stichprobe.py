@@ -92,6 +92,17 @@ def lade_jsonl(pfad: str | Path) -> list[dict]:
     return [json.loads(z) for z in Path(pfad).read_text(encoding="utf-8").splitlines() if z.strip()]
 
 
+def lade_labels(pfad: str | Path) -> list[dict]:
+    """Menschliche Labels: JSONL mit {"id", "rater", "urteil"} oder der Export des Label-Werkzeugs (JSON mit "labels")."""
+    text = Path(pfad).read_text(encoding="utf-8").strip()
+    try:
+        daten = json.loads(text)  # ganze Datei ist ein JSON-Dokument: Export oder Liste
+        labels = daten.get("labels", [daten]) if isinstance(daten, dict) else daten
+    except json.JSONDecodeError:
+        labels = [json.loads(z) for z in text.splitlines() if z.strip()]
+    return [l for l in labels if l.get("urteil") in ("zulaessig", "unzulaessig", "unsicher")]
+
+
 def cohens_kappa(a: list[bool], b: list[bool]) -> float:
     """Übereinstimmung zweier Rater jenseits des Zufalls: 1 = perfekt, 0 = wie Zufall."""
     n = len(a)

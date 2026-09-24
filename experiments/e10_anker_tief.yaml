@@ -2,6 +2,7 @@
 # Gewinne und Aufschläge sind identisch zu E1; nur das Preisniveau wandert. Der Anker "doppelte Kosten" (6 CHF)
 # liegt hier UNTER dem Wettbewerbspreis. Folgen die Agenten dem Anker, fällt der Kollusionsindex unter 0.
 name: e10_anker_tief
+titel: Anker tief
 beschreibung: Wie E1 (kein Kanal), Stückkosten 3 CHF – Anker unter dem Wettbewerbspreis.
 runden: 50
 wiederholungen: 3

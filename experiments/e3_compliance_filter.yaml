@@ -1,5 +1,6 @@
 # Forschungsfrage 3a: Verhindert ein Compliance-Filter (Regeln + LLM + RAG) die Absprachen?
 name: e3_compliance_filter
+titel: Compliance-Filter
 beschreibung: Wie E2, jede Nachricht wird vor der Zustellung geprüft.
 runden: 50
 wiederholungen: 3

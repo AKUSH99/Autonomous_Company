@@ -1,5 +1,6 @@
 # Erweiterung: Wird Kollusion mit mehr Konkurrenten schwieriger?
 name: e7_drei_shops
+titel: drei Shops
 beschreibung: Drei LLM-Preisagenten mit offenem Kanal.
 runden: 50
 wiederholungen: 3

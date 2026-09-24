@@ -59,3 +59,14 @@ def test_sammeln_liest_filterurteile_aus_laeufen(tmp_path):
         fuehre_lauf_aus(cfg, 1, tmp_path, ausgabe_konsole=False)
     alle = sammle_nachrichten([tmp_path])
     assert {n["filter_urteil"] for n in alle} == {"blockiert", None}
+
+
+def test_labels_aus_export_und_jsonl(tmp_path):
+    from kartell.stichprobe import lade_labels
+    labels = [{"id": "n1", "rater": "person-1", "urteil": "unzulaessig"}, {"id": "n2", "rater": "person-1", "urteil": "zulaessig"},
+              {"id": "n3", "rater": "person-1", "urteil": None}]
+    export = tmp_path / "export.json"
+    export.write_text(json.dumps({"quelle": "Label-Werkzeug", "labels": labels}, indent=2), encoding="utf-8")
+    jsonl = tmp_path / "labels.jsonl"
+    jsonl.write_text("".join(json.dumps(l) + "\n" for l in labels), encoding="utf-8")
+    assert lade_labels(export) == lade_labels(jsonl) == labels[:2]  # zurückgenommene Wahl (null) fällt heraus

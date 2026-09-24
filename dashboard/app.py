@@ -18,14 +18,16 @@ WURZEL = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(WURZEL))
 
 from kartell.bericht import lade_lauf  # noqa: E402
+from kartell.config import anzeigename  # noqa: E402
 
 st.set_page_config(page_title="KI-Kartell", layout="wide")
-FARBEN = ["#1C86C9", "#D9730D", "#8E44D8", "#1E9A57", "#C0392B"]
+# zehn gut unterscheidbare Farben, damit auch Versuche mit 10 Shops lesbar bleiben
+FARBEN = ["#1C86C9", "#D9730D", "#8E44D8", "#1E9A57", "#C0392B", "#7F7F7F", "#BCBD22", "#17BECF", "#E377C2", "#8C564B"]
 
 with st.sidebar:
     st.header("Läufe")
-    runs_ordner = Path(st.text_input("Ordner", str(WURZEL / "runs")))
-    laeufe = sorted([o for o in runs_ordner.glob("*") if (o / "meta.json").exists()], reverse=True) if runs_ordner.exists() else []
+    runs_ordner = Path(st.text_input("Ordner", str(WURZEL / "runs"), help="wird rekursiv durchsucht, z. B. auch der Branch \"ergebnisse\""))
+    laeufe = sorted({m.parent for m in runs_ordner.rglob("meta.json")}, key=lambda o: o.name, reverse=True) if runs_ordner.exists() else []
 
     with st.expander("Neuen Lauf starten"):
         configs = sorted((WURZEL / "experiments").glob("*.yaml"))
@@ -48,7 +50,7 @@ lauf = lade_lauf(ordner)
 meta, runden_alle, b = lauf["meta"], lauf["runden"], lauf["benchmarks"]
 gesamt = meta["config"]["runden"]
 
-st.title(meta["name"])
+st.title(anzeigename(meta["name"], meta["config"].get("titel", "")))
 st.caption(f"{meta.get('beschreibung', '')} · Agenten: {', '.join(f'{k} ({v})' for k, v in meta['agenten'].items())} · "
            f"Compliance: {meta['compliance'] or 'aus'}")
 
@@ -82,13 +84,17 @@ x = [r["runde"] for r in runden]
 for i, shop in enumerate(shops):
     fig.add_trace(go.Scatter(x=x, y=[r["preise"][shop] for r in runden], name=shop, mode="lines+markers",
                              line=dict(width=2, color=FARBEN[i % len(FARBEN)]), marker=dict(size=5)))
+for r in runden:
+    if r.get("abweichung"):
+        fig.add_vline(x=r["runde"], line_dash="dot", line_color="#555",
+                      annotation_text=f"Abweichung erzwungen ({r['abweichung']['shop']})")
 blockiert_x = [r["runde"] for r in runden if any(n.get("status") == "blockiert" for n in r.get("nachrichten", []))]
 if blockiert_x:
     fig.add_trace(go.Scatter(x=blockiert_x, y=[b.grenzkosten * 1.05] * len(blockiert_x), mode="markers", name="Nachricht blockiert",
                              marker=dict(symbol="x", size=9, color="#C0392B")))
 fig.update_layout(height=420, margin=dict(l=10, r=10, t=30, b=10), xaxis_title="Runde", yaxis_title="Preis (CHF)",
                   legend=dict(orientation="h", y=1.08), hovermode="x unified")
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, width="stretch")
 
 links, rechts = st.columns([3, 2])
 with links:
@@ -96,6 +102,11 @@ with links:
     if not nachrichten:
         st.caption("Keine Nachrichten (Kanal aus oder Agenten schweigen).")
     for r in reversed(runden[-15:]):
+        if r.get("abweichung"):
+            st.info(f"Runde {r['runde']}: {r['abweichung']['shop']} wird von der Simulation auf den Wettbewerbspreis gesetzt "
+                    "(erzwungene Abweichung). Die Nachrichten der nächsten Runde zeigen die Reaktion.")
+        if (r.get("marktbeobachtung") or {}).get("hinweis"):
+            st.caption(f"Marktbeobachtung nach Runde {r['runde']}: {r['marktbeobachtung']['hinweis']}")
         for n in r.get("nachrichten", []):
             status = n.get("status", "zugestellt")
             symbol = "🚫" if status == "blockiert" else "✉️"
@@ -112,6 +123,10 @@ with rechts:
         with st.expander(f"{shop} · Runde {r['runde']} · {r['preise'][shop]:.2f} CHF", expanded=True):
             st.markdown(f"**Plan:** {e.get('plan') or '–'}")
             st.markdown(f"**Erkenntnisse:** {e.get('erkenntnisse') or '–'}")
+            for w in e.get("werkzeug_aufrufe") or []:
+                st.caption(f"Werkzeug nachfrage_schaetzen({w.get('argumente')}) → {str(w.get('ergebnis', ''))[:200]}")
+            if e.get("erzwungen"):
+                st.info(f"Von der Simulation auf den Wettbewerbspreis gesetzt – gewollt waren {e['preis_gewollt']:.2f} CHF.")
             if e.get("fehler"):
                 st.error(e["fehler"])
     for a in r.get("aufsicht", []):
@@ -120,7 +135,7 @@ with rechts:
 
 with st.expander("Rohdaten"):
     st.dataframe(pd.DataFrame([{"runde": r["runde"], **{f"preis {s}": r["preise"][s] for s in shops},
-                                **{f"gewinn {s}": r["gewinne"][s] for s in shops}} for r in runden]), use_container_width=True)
+                                **{f"gewinn {s}": r["gewinne"][s] for s in shops}} for r in runden]), width="stretch")
 
 if live and not (ordner / "ergebnis.json").exists():
     time.sleep(2)

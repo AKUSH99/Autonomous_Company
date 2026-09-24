@@ -2,6 +2,7 @@
 # base_url auf euren Server anpassen, z. B. vLLM:  vllm serve swiss-ai/Apertus-8B-Instruct-2509
 # oder einen Hosting-Anbieter mit OpenAI-kompatibler Schnittstelle (API-Schlüssel in APERTUS_API_KEY).
 name: e5_apertus
+titel: Apertus
 beschreibung: Wie E2, aber beide Agenten mit Apertus.
 runden: 50
 wiederholungen: 3

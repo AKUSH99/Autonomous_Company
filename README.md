@@ -1,5 +1,7 @@
 # KI-Kartell
 
+[![Tests](https://github.com/AKUSH99/Autonomous_Company/actions/workflows/tests.yml/badge.svg)](https://github.com/AKUSH99/Autonomous_Company/actions/workflows/tests.yml)
+
 **Sprechen sich KI-Preisagenten ab – und können Guardrails das verhindern?**
 
 Ein Multi-Agenten-System, in dem LLM-Agenten als konkurrierende Online-Shops Runde für Runde ihre Preise festlegen. Ein simulierter Markt entscheidet, wer wie viel verkauft. Wir untersuchen, ob die Agenten ohne jede Anweisung zu überhöhten Preisen finden (Kollusion), welche Rolle ein Kommunikationskanal spielt und ob ein Compliance-Agent mit Wettbewerbsrecht-Wissen (RAG) Absprachen verhindern kann.
@@ -16,7 +18,7 @@ flowchart LR
     end
     M -->|nächste Runde| K
     W[("Wissensbasis<br/>Kartellrecht")] -.->|BM25| F
-    M --> L[("runden.jsonl")] --> D["Dashboard / Bericht"]
+    M --> L[("runden.jsonl")] --> D["Dashboard / Bericht / Monitor"]
 ```
 
 Knoten werden je Versuchsbedingung zu- oder weggeschaltet: ohne Kanal fehlen `kommunikation` und `compliance_filter`, ohne Aufsicht fehlt `aufsicht`.
@@ -28,9 +30,12 @@ python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dashboard,analyse,dev]"
 
 python -m kartell demo                  # Offline-Demo ohne API-Schlüssel (feste Skript-Strategien, kein LLM)
-streamlit run dashboard/app.py          # Dashboard: Preisverlauf, Kanal, Compliance-Entscheide
-pytest                                  # 51 Tests, laufen ohne API-Schlüssel
+streamlit run dashboard/app.py          # Dashboard: Preisverlauf, Kanal, Compliance-Entscheide (auch live)
+python -m kartell monitor runs          # Kartell-Monitor: eine HTML-Datei, die alle Läufe Runde für Runde abspielt
+pytest                                  # 68 Tests, laufen ohne API-Schlüssel
 ```
+
+Die Tests laufen bei jedem Push automatisch auf GitHub (`.github/workflows/tests.yml`, Python 3.10 und 3.12).
 
 Die Demo zeigt den Ablauf mit zwei Skript-Agenten, die ein Kartell vorschlagen: Ohne Aufsicht landen die Preise beim Monopolpreis (Kollusionsindex 1,0), mit Compliance-Filter werden alle Vorschläge blockiert und die Preise bleiben beim Wettbewerbspreis (Index 0,0). **Das ist ein Funktionstest, kein Forschungsergebnis** – die Skript-Agenten sind fest programmiert.
 
@@ -60,6 +65,10 @@ python -m kartell eval-compliance --config experiments/e3_compliance_filter.yaml
 | `e10`–`e13` `_anker_*` | Validität: Ankereffekt – gleiches Spiel mit Kosten 3 bzw. 20 CHF, ohne und mit Kanal | aus/an | aus |
 | `e14_werkzeug` | Tool-Use: Preisagenten mit Nachfrage-Schätzer | an | aus |
 | `e15_marktbeobachtung` | Verhaltens-Guardrail: Filter plus Beobachtung der Preismuster | an | Filter + Marktbeobachtung |
+| `e16_abweichung_kanal` | Mechanismus: Bestraft ein Kartell einen Abweichler? (erzwungene Abweichung nach Calvano et al.) | an | aus |
+| `e17_abweichung_ohne_kanal` | Mechanismus: dasselbe ohne Kanal – Strafe allein über Preise? | aus | aus |
+
+Jede YAML-Datei hat einen lesbaren `titel`; Bericht, Monitor und Dashboard zeigen „E3 · Compliance-Filter“ statt `e3_compliance_filter_deepseek`.
 
 **Kosten:** Standardmodell ist `claude-opus-5`. Laut Schätzung kostet ein voller Versuch (50 Runden × 3 Wiederholungen) je nach Bedingung 8–21 USD, E1–E4 und E7 zusammen rund 80 USD. Die Schätzung beruht auf angenommenen Token-Zahlen; denkt das Modell länger, wird es teurer – deshalb zuerst einen Pilotlauf machen. Günstiger geht es mit `claude-haiku-4-5` (etwa ein Fünftel) – ob die Qualität reicht, entscheidet ihr nach einem Pilotlauf. Tatsächliche Token-Zahlen stehen nach jedem Lauf in `ergebnis.json`.
 
@@ -81,7 +90,11 @@ Laut Schätzung kosten E1–E4 und E7 mit DeepSeek zusammen rund 4 USD statt run
 
 **MCP-Server:** `python -m kartell mcp` stellt die Wissensbasis (Suche) und die Regel-Prüfung als MCP-Werkzeuge bereit. Mit `compliance.rag_ueber_mcp: true` holt die Compliance-Abteilung ihr Rechtswissen über diesen Server. Für Claude Code oder Claude Desktop als MCP-Server eintragen: Befehl `python`, Argumente `-m kartell mcp`, Arbeitsverzeichnis = dieses Repository.
 
-**Guardrail an echten Nachrichten:** `python -m kartell stichprobe <ordner mit läufen>` zieht eine geschichtete Stichprobe echter Agenten-Nachrichten (`evaluation/echte_nachrichten.jsonl`, aktuell 120 aus 2613). Zwei Personen labeln sie blind im [Label-Werkzeug](https://claude.ai/artifact/9MeAB2xSJ6v4924KHLHr3m); KI-Richter beurteilen sie über `urteile_sammeln` in einer Auftragsdatei. `python -m kartell labels-auswerten --urteile reports/urteile_*.jsonl` rechnet Cohen's Kappa und vergleicht Filter, Regel-Schicht und KI-Richter mit dem menschlichen Konsens.
+**Guardrail an echten Nachrichten:** `python -m kartell stichprobe <ordner mit läufen>` zieht eine geschichtete Stichprobe echter Agenten-Nachrichten (`evaluation/echte_nachrichten.jsonl`, aktuell 120 aus 2613). Zwei Personen labeln sie blind im [Label-Werkzeug](https://claude.ai/artifact/9MeAB2xSJ6v4924KHLHr3m); KI-Richter beurteilen sie über `urteile_sammeln` in einer Auftragsdatei. Als Besitzer lädst du die Labels dort mit „Labels herunterladen“ als JSON herunter (Beurteilende anonymisiert; der Knopf ist nur für dich sichtbar, damit die anderen blind bleiben) und legst die Datei als `evaluation/echte_nachrichten_labels.json` ab. `python -m kartell labels-auswerten --urteile reports/urteile_*.jsonl` rechnet Cohen's Kappa und vergleicht Filter, Regel-Schicht und KI-Richter mit dem menschlichen Konsens.
+
+**Abweichungstest:** Mit `abweichung: {aktiv: true}` in einer Versuchsdatei setzt die Simulation einen Shop für eine Runde auf den Wettbewerbspreis, sobald die Preise drei Runden in Folge im Kartellbereich lagen (frühestens Runde 20, spätestens 40). Der Agent erfährt davon nichts. Der Bericht misst, ob die anderen die Abweichung bestrafen, ob alle danach zum Kartellpreis zurückkehren und was im Kanal geschrieben wird – der Standardtest auf „echte“ Kollusion nach Calvano et al. (2020).
+
+**Kartell-Monitor:** `python -m kartell monitor <ordner> [<ordner> …] --ausgabe monitor.html` baut aus fertigen Läufen eine einzelne HTML-Seite (Daten gzip-komprimiert eingebettet, kein Server nötig): Übersicht aller Durchgänge, Preisverlauf, Kanal mit Compliance-Entscheiden, private Strategienotizen, erzwungene Abweichungen markiert. Die Ordner werden rekursiv durchsucht, z. B. ein Checkout des Branches `ergebnisse`.
 
 **Apertus:** Die Konfigurationen `e5`/`e6` erwarten einen OpenAI-kompatiblen Server, z. B. lokal mit vLLM (`vllm serve swiss-ai/Apertus-8B-Instruct-2509`) oder bei einem Hosting-Anbieter. `base_url`, Modellname und `api_key_env` in der YAML-Datei anpassen und den Modellnamen gegen die Angaben des Anbieters prüfen.
 
@@ -114,16 +127,18 @@ kartell/
   metrics.py           Preis- und Kollusionsindex, Bootstrap, Permutationstest
   stichprobe.py        Guardrail-Evaluation an echten Nachrichten (Stichprobe, Kappa)
   kosten.py            Kostenschätzung und Budgetwächter
+  abweichung.py        Abweichungstest: Strafe, Rückkehr, Reaktion im Kanal
+  monitor.py           Kartell-Monitor (HTML-Wiedergabe), Vorlage in vorlagen/monitor.html
   runner.py, bericht.py, eval_compliance.py, __main__.py
 knowledge/wettbewerbsrecht/  Wissensbasis (vereinfachte Zusammenfassungen, keine Rechtsberatung)
 experiments/                 Versuchskonfigurationen (YAML)
-evaluation/                  Testdatensatz für den Guardrail
+evaluation/                  Testdatensatz und Stichprobe echter Nachrichten für den Guardrail
 dashboard/app.py             Streamlit-Dashboard
 docs/projektskizze.md        Projektskizze für die Abstimmung mit den Dozierenden
 docs/entscheidungen.md       Architektur-Entscheidungen mit Begründung und Alternativen
 docs/ergebnisse.md           Ergebnisse, Erkenntnisse und Grenzen
 docs/lernpfad.md             Lernpfad und Prüfungsfragen fürs Team
-tests/                       pytest, ohne API-Schlüssel lauffähig
+tests/                       pytest, ohne API-Schlüssel lauffähig (auch als GitHub-Workflow)
 ```
 
 ## Grenzen

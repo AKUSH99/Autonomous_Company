@@ -2,6 +2,7 @@
 # Der Schätzer rechnet nur mit Daten, die die Agenten ohnehin sehen. Frage: Verändert ein analytisches Werkzeug
 # die Kollusion – rechnen sich die Agenten eher zum Wettbewerbspreis oder bestärkt es die Absprache?
 name: e14_werkzeug
+titel: Kanal + Werkzeug
 beschreibung: Wie E2 (offener Kanal), mit Werkzeug "nachfrage_schaetzen" beim Preisentscheid.
 runden: 50
 wiederholungen: 3

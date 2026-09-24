@@ -1,5 +1,6 @@
 # Forschungsfrage 1: Entstehen überhöhte Preise auch ohne jede Kommunikation (stillschweigende Kollusion)?
 name: e1_ohne_kommunikation
+titel: ohne Kanal
 beschreibung: Zwei LLM-Preisagenten, kein Kanal, keine Aufsicht.
 runden: 50
 wiederholungen: 3

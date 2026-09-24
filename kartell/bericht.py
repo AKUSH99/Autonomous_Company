@@ -5,6 +5,7 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
+from .config import anzeigename
 from .market import Benchmarks
 from .metrics import bootstrap_differenz, mittelwert_und_streuung, permutationstest, zusammenfassung
 
@@ -41,6 +42,10 @@ def lade_lauf(ordner: Path) -> dict | None:
             "abbruch": ergebnis.get("abbruch"), "kosten_usd": ergebnis.get("kosten_usd_geschaetzt")}
 
 
+def titel(name: str, gruppe: list[dict]) -> str:
+    return anzeigename(name, gruppe[0]["meta"]["config"].get("titel", ""))
+
+
 def lade_laeufe(wurzel: str | Path) -> list[dict]:
     return [l for o in sorted(Path(wurzel).iterdir()) if o.is_dir() and (l := lade_lauf(o))]
 
@@ -68,7 +73,7 @@ def erstelle_bericht(wurzel: str | Path, ausgabe: str | Path = "reports") -> Pat
         kosten = [l["kosten_usd"] for l in gruppe if l["kosten_usd"] is not None]
         b = gruppe[0]["benchmarks"]
         start = mittelwert_und_streuung(x.get("startpreis", 0.0) for x in k)
-        zeilen.append(f"| {name} | {len(gruppe)} | {'–'.join(map(str, runden[::max(1, len(runden) - 1)]))} | {modelle} | "
+        zeilen.append(f"| {titel(name, gruppe)} | {len(gruppe)} | {'–'.join(map(str, runden[::max(1, len(runden) - 1)]))} | {modelle} | "
                       f"{b.grenzkosten:.2f} / {b.nash_preis:.2f} / {b.monopol_preis:.2f} | {start[0]:.2f} | "
                       f"{preis[0]:.2f} ± {preis[1]:.2f} | "
                       f"{round(pi[0], 2) + 0.0:+.2f} ± {pi[1]:.2f} | {round(ki[0], 2) + 0.0:+.2f} ± {ki[1]:.2f} | "
@@ -104,7 +109,7 @@ def erstelle_bericht(wurzel: str | Path, ausgabe: str | Path = "reports") -> Pat
                 for shop in l["runden"][0]["preise"]:
                     ax.plot(x, [r["preise"][shop] for r in l["runden"]], lw=1.4, alpha=0.8,
                             label=f"W{l['meta']['wiederholung']} {shop}")
-            ax.set_title(name)
+            ax.set_title(titel(name, gruppe))
             ax.set_xlabel("Runde")
             ax.set_ylabel("Preis (CHF)")
             ax.legend(fontsize=7, ncol=3, frameon=False)
@@ -113,7 +118,7 @@ def erstelle_bericht(wurzel: str | Path, ausgabe: str | Path = "reports") -> Pat
             datei = ausgabe / f"{name}.png"
             fig.savefig(datei, dpi=140)
             plt.close(fig)
-            zeilen += [f"## {name}", "", f"![Preisverlauf {name}]({datei.name})", ""]
+            zeilen += [f"## {titel(name, gruppe)}", "", f"![Preisverlauf {name}]({datei.name})", ""]
         if abweichung:
             datei = _impulsgrafik(abweichung, ausgabe, plt)
             if datei:
@@ -198,16 +203,16 @@ def _abweichungstest(gruppen: dict[str, list[dict]]) -> list[str]:
         z = fasse_zusammen([l["runden"] for l in gruppe])
         n = z["mit_abweichung"]
         if not n:
-            zeilen.append(f"| {name} | {z['laeufe']} | 0 (Kartellphase nie erreicht) | – | – | – | – | – |")
+            zeilen.append(f"| {titel(name, gruppe)} | {z['laeufe']} | 0 (Kartellphase nie erreicht) | – | – | – | – | – |")
             continue
         imp = z["impuls"]
-        zeilen.append(f"| {name} | {z['laeufe']} | {n} | {z['strafe']} von {n} | {z['rueckkehr']} von {n} | "
+        zeilen.append(f"| {titel(name, gruppe)} | {z['laeufe']} | {n} | {z['strafe']} von {n} | {z['rueckkehr']} von {n} | "
                       f"{z['strafe_und_rueckkehr']} von {n} | {z['verbale_reaktion']} von {n} | "
                       f"{imp[1]['andere'] * 100:+.1f} % / {imp[2]['andere'] * 100:+.1f} % |")
-        zitate += [(name, t) for t in z["zitate"]]
+        zitate += [(titel(name, gruppe).split(' · ')[0], t) for t in z["zitate"]]
     if zitate:
         zeilen += ["", "Reaktionen im Kanal direkt nach der Abweichung:", ""]
-        zeilen += [f"> „{t[:300]}“ ({name.split('_')[0].upper()})" for name, t in zitate[:6]]
+        zeilen += [f"> „{t[:300]}“ ({kuerzel})" for kuerzel, t in zitate[:6]]
     return zeilen + [""]
 
 
@@ -222,8 +227,8 @@ def _impulsgrafik(gruppen: dict[str, list[dict]], ausgabe: Path, plt) -> Path | 
             continue
         k = list(range(-FENSTER_VOR, FENSTER_NACH + 1))
         f = farben[i % len(farben)]
-        ax.plot(k, [z["impuls"][x]["andere"] * 100 for x in k], color=f, lw=2, label=f"{name}: andere (n={z['mit_abweichung']})")
-        ax.plot(k, [z["impuls"][x]["abweichler"] * 100 for x in k], color=f, lw=1.2, ls="--", label=f"{name}: Abweichler")
+        ax.plot(k, [z["impuls"][x]["andere"] * 100 for x in k], color=f, lw=2, label=f"{titel(name, gruppe)}: andere (n={z['mit_abweichung']})")
+        ax.plot(k, [z["impuls"][x]["abweichler"] * 100 for x in k], color=f, lw=1.2, ls="--", label=f"{titel(name, gruppe)}: Abweichler")
         gezeichnet = True
     if not gezeichnet:
         plt.close(fig)

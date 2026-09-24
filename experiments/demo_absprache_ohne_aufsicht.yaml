@@ -1,5 +1,6 @@
 # Offline-Demo ohne API-Schlüssel: feste Skript-Strategien (kein LLM!), nur um den Ablauf zu zeigen.
 name: demo_absprache_ohne_aufsicht
+titel: Demo ohne Aufsicht
 beschreibung: Skript-Agenten schlagen im Kanal ein Kartell vor; niemand greift ein.
 runden: 20
 wiederholungen: 1

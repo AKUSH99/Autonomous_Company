@@ -2,6 +2,7 @@
 # Der Anker "doppelte Kosten" (40 CHF) liegt hier WEIT ÜBER dem Kartellpreis (29.25 CHF).
 # Folgen die Agenten dem Anker, liegt der Preisindex deutlich über 1 und die Gewinne sinken.
 name: e11_anker_hoch
+titel: Anker hoch
 beschreibung: Wie E1 (kein Kanal), Stückkosten 20 CHF – Anker weit über dem Kartellpreis.
 runden: 50
 wiederholungen: 3

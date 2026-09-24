@@ -1,0 +1,33 @@
+# Automatische Tests bei jedem Push und Pull Request – ohne API-Schlüssel, ohne Kosten.
+# Alle Tests laufen offline: Skript-Agenten statt LLMs, simulierte Server für DeepSeek, OpenRouter und Jev.
+name: Tests
+
+on:
+  push:
+    branches-ignore: [ergebnisse]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -e ".[dev,analyse,dashboard]"
+      - run: python -m pytest -q
+      - name: Offline-Demo und Monitor
+        run: |
+          python -m kartell demo --ausgabe runs
+          python -m kartell bericht runs --ausgabe reports
+          python -m kartell monitor runs --ausgabe reports/monitor.html
