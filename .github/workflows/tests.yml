@@ -2,10 +2,12 @@
 # Alle Tests laufen offline: Skript-Agenten statt LLMs, simulierte Server für DeepSeek, OpenRouter und Jev.
 name: Tests
 
+# Push auf main und jeder Pull Request (Branches mit offenem PR laufen so nur einmal pro Push).
 on:
   push:
-    branches-ignore: [ergebnisse]
+    branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
