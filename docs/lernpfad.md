@@ -11,6 +11,7 @@ pip install -e ".[dashboard,analyse,dev]"
 python -m kartell demo          # zwei feste Skript-Agenten: einmal ohne, einmal mit Filter
 pytest                          # alle Tests, ohne API-Schlüssel
 streamlit run dashboard/app.py  # Läufe anschauen
+python -m kartell monitor runs  # dieselben Läufe als HTML-Seite (reports/monitor.html)
 ```
 
 Dann den [Kartell-Monitor](https://claude.ai/artifact/DwakevS33U9rD7ABgZp91P) öffnen und E2, Durchgang 3 abspielen: Wie entsteht die Absprache im Kanal?
@@ -56,15 +57,18 @@ Lesen: `kartell/bericht.py`, `kartell/stichprobe.py`, `docs/ergebnisse.md`.
 - Permutationstest: bei 3 gegen 3 Läufen ist p = 0.10 das Minimum – darum die Wiederholungen w4–w6.
 - Ankereffekt: „2 × Kosten“ liegt im Grundmodell fast beim Kartellpreis; E10–E13 trennen das.
 - Guardrail an echten Nachrichten: zwei Personen labeln blind, Kappa misst, wie einig ihr euch seid.
+- Abweichungstest (`kartell/abweichung.py`, E16/E17): Hohe Preise allein beweisen kein Kartell. Erst wenn ein Abweichler bestraft wird und danach alle zum hohen Preis zurückkehren, hält sich das Kartell durch Belohnung und Drohung – so prüfen Calvano et al. (2020) ihre Q-Learning-Agenten.
+
+**Verstanden, wenn ihr erklären könnt:** Warum ist „Strafe, dann Rückkehr“ ein stärkerer Beleg als ein hoher Kollusionsindex? Warum erfährt der abweichende Agent nichts von der Abweichung?
 
 ## Wer übernimmt was
 
 | Rolle | Module | Kernfragen für die Prüfung |
 |---|---|---|
-| Markt und Auswertung | `market.py`, `metrics.py`, `bericht.py`, `stichprobe.py` | Nash vs. Monopol, Kollusionsindex, Permutationstest, Kappa |
+| Markt und Auswertung | `market.py`, `metrics.py`, `bericht.py`, `stichprobe.py`, `abweichung.py` | Nash vs. Monopol, Kollusionsindex, Permutationstest, Kappa, Abweichungstest |
 | Agenten und Orchestrierung | `graph.py`, `agents/pricing.py`, `agents/prompts.py`, `agents/werkzeuge.py` | LangGraph-Ablauf, Prompt-Validität, Tool-Use, Guardrails im Agenten |
 | Compliance, RAG, MCP | `agents/compliance.py`, `rag.py`, `mcp_server.py`, `agents/marktbeobachtung.py`, `knowledge/` | Zwei Schichten, Fail-safe, BM25, MCP, Verhaltens-Guardrail |
-| Modelle, Betrieb, Demo | `llm/`, `kosten.py`, `runner.py`, `.github/workflows/`, `dashboard/` | Backends, Kosten und Budgetwächter, GitHub Actions, Demo |
+| Modelle, Betrieb, Demo | `llm/`, `kosten.py`, `runner.py`, `monitor.py`, `.github/workflows/`, `dashboard/` | Backends, Kosten und Budgetwächter, GitHub Actions, Tests, Monitor und Demo |
 
 ## Typische Prüfungsfragen
 
@@ -77,4 +81,5 @@ Lesen: `kartell/bericht.py`, `kartell/stichprobe.py`, `docs/ergebnisse.md`.
 7. Wofür nutzt ihr MCP, und was wäre die Alternative gewesen?
 8. Warum habt ihr DeepSeek statt Claude verwendet, und was bedeutet das für den Datenschutz?
 9. Was passiert, wenn das Modell ausfällt oder das Guthaben zu Ende geht?
-10. Was würdet ihr mit mehr Zeit und Budget als Nächstes untersuchen?
+10. Wie unterscheidet ihr ein echtes Kartell von zufällig hohen Preisen? (Abweichungstest)
+11. Was würdet ihr mit mehr Zeit und Budget als Nächstes untersuchen?
