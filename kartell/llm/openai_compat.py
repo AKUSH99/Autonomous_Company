@@ -32,6 +32,10 @@ def _json_aus_text(text: str) -> dict:
     return json.loads(text)
 
 
+# Gratismodelle teilen sich beim Anbieter einen Pool; „temporarily rate-limited upstream“ ist dort normal.
+# Mit Taktbremse (anfragen_pro_minute) wird deshalb geduldig wiederholt – nie aber beim Tageslimit.
+GEDULD_S = (20, 45, 90)
+
 _TAKT_SPERRE = threading.Lock()
 _NAECHSTE_ANFRAGE: dict[str, float] = {}
 
@@ -69,6 +73,16 @@ class OpenAICompatClient:
                 "type": "json_schema",
                 "json_schema": {"name": schema.__name__, "schema": schema.model_json_schema()},
             }
+        wartezeiten = list(GEDULD_S) if self.spec.anfragen_pro_minute else []
+        while True:
+            try:
+                return self._erstelle(kwargs, werkzeug_kwargs)
+            except openai.RateLimitError as e:
+                if not wartezeiten or "per-day" in str(e):
+                    raise
+                time.sleep(wartezeiten.pop(0))
+
+    def _erstelle(self, kwargs: dict, werkzeug_kwargs: dict | None):
         if self.spec.anfragen_pro_minute:
             _warte_auf_takt(self.spec.base_url or "", self.spec.anfragen_pro_minute)
         try:
@@ -100,9 +114,12 @@ class OpenAICompatClient:
                 antwort = self._anfrage(messages, schema, werkzeug_kwargs)
             except openai.APIError as e:
                 raise LLMFehler(f"{self.spec.model}: {e}", tokens_in, tokens_out) from e
-            if antwort.usage:
+            if getattr(antwort, "usage", None):
                 tokens_in += antwort.usage.prompt_tokens or 0
                 tokens_out += antwort.usage.completion_tokens or 0
+            if not getattr(antwort, "choices", None):  # manche Anbieter melden Fehler als Antwort ohne choices
+                raise LLMFehler(f"{self.spec.model}: leere Antwort ohne choices ({str(getattr(antwort, 'error', '') or '')[:200]})",
+                                tokens_in, tokens_out)
             wahl = antwort.choices[0]
             aufrufe = getattr(wahl.message, "tool_calls", None) or []
             if aufrufe and werkzeug_runden < MAX_WERKZEUG_RUNDEN:

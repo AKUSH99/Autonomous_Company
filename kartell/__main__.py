@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from .config import OPENROUTER_URL, ComplianceConfig, LLMSpec, kurz, lade_config, mit_modell, voreinstellung
+from .config import OPENROUTER_URL, ComplianceConfig, LLMSpec, kurz, lade_config, mit_denken, mit_modell, voreinstellung
 
 
 def _lade(args):
@@ -247,6 +247,8 @@ def _auftrag(args) -> None:
         cfg = lade_config(eintrag["config"])
         temperatur = eintrag.get("compliance_temperatur", auftrag.get("compliance_temperatur"))
         cfg = mit_modell(cfg, eintrag_modell, eintrag.get("compliance_modell", richter), temperatur) if eintrag_modell else cfg
+        if eintrag.get("denken", auftrag.get("denken")):
+            cfg = mit_denken(cfg, eintrag.get("denken", auftrag.get("denken")))
         cfg.runden = eintrag.get("runden", cfg.runden)
         cfg.wiederholungen = eintrag.get("wiederholungen", cfg.wiederholungen)
         neu = fuehre_experiment_aus(cfg, args.ausgabe, waechter, eintrag.get("zeitlimit_min", auftrag.get("zeitlimit_min")),

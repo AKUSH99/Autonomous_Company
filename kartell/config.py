@@ -161,6 +161,8 @@ VOREINSTELLUNGEN: dict[str, LLMSpec] = {
 
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1"
+# Denkmodus über OpenRouters einheitlichen Parameter `reasoning` – pro Lauf in der Auftragsdatei wählbar (`denken:`).
+DENKEN = {"aus": {"reasoning": {"enabled": False}}, "niedrig": {"reasoning": {"effort": "low"}}, "standard": None}
 
 
 def voreinstellung(name: str) -> LLMSpec:
@@ -177,6 +179,18 @@ def voreinstellung(name: str) -> LLMSpec:
         return LLMSpec(provider="openai_compat", model=modell, base_url=OPENROUTER_URL, api_key_env="OPENROUTER_API_KEY",
                        max_tokens=8000, anfragen_pro_minute=16 if modell.endswith(":free") else None)
     raise ValueError(f"Unbekanntes Modell '{name}'. Erlaubt: {', '.join(VOREINSTELLUNGEN)} oder openrouter:<modell-id>")
+
+
+def mit_denken(cfg: ExperimentConfig, stufe: str) -> ExperimentConfig:
+    """Setzt den Denkmodus aller Preisagenten (aus, niedrig, standard) – zusätzlich zu vorhandenen extra_body-Feldern."""
+    if stufe not in DENKEN:
+        raise ValueError(f"Unbekannte Denkstufe '{stufe}'. Erlaubt: {', '.join(DENKEN)}")
+    neu = cfg.model_copy(deep=True)
+    zusatz = DENKEN[stufe] or {}
+    setze = lambda s: s.model_copy(update={"extra_body": ({k: v for k, v in (s.extra_body or {}).items() if k != "reasoning"} | zusatz) or None})
+    neu.agenten.llm = setze(neu.agenten.llm)
+    neu.agenten.abweichende_llm = {i: setze(s) for i, s in neu.agenten.abweichende_llm.items()}
+    return neu
 
 
 def kurz(name: str) -> str:
