@@ -1,0 +1,8 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
+# im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell: zweiter Probelauf – Nemotron 3 Ultra (NVIDIA), laut Artificial Analysis das intelligenteste der
+# Gratismodelle bei OpenRouter. Ein kurzer Lauf mit offenem Kanal (wie E2, 5 Runden, rund 20 Gratis-Anfragen).
+laeufe:
+  - {config: experiments/e2_mit_kommunikation.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 5, wiederholungen: 1}
