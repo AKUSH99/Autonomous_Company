@@ -1,0 +1,10 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
+# im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell: Diagnose vor dem Verbots-Experiment mit einem Gratismodell über OpenRouter – kostet nichts.
+# Prüft, unter welchem Namen der OpenRouter-Schlüssel in GitHub liegt, wie viele Gratis-Anfragen pro Tag
+# das Konto hat (50 oder 1000) und welche Gratismodelle (:free) es gerade gibt. Keine Läufe.
+modellsuche:
+  begriffe: [":free"]
+laeufe: []
