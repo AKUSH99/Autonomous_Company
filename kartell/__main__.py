@@ -200,7 +200,7 @@ def _auftrag(args) -> None:
 
     from .bericht import erstelle_bericht
     from .eval_compliance import evaluiere, lade_testset
-    from .kosten import Budgetwaechter, guthaben_usd
+    from .kosten import Budgetwaechter, guthaben_usd, openrouter_konto
     from .runner import fuehre_experiment_aus
     import os
     auftrag = yaml.safe_load(Path(args.datei).read_text(encoding="utf-8"))
@@ -209,6 +209,13 @@ def _auftrag(args) -> None:
     modell, richter = auftrag.get("modell"), auftrag.get("compliance_modell")
     berichte = Path(args.berichte)
     berichte.mkdir(parents=True, exist_ok=True)
+    konto = openrouter_konto()
+    if konto:
+        (berichte / "openrouter_konto.json").write_text(json.dumps(konto, indent=2), encoding="utf-8")
+        print(f"OpenRouter-Konto: {konto['gratis_anfragen_pro_tag']} Anfragen pro Tag an Gratismodelle "
+              f"({'nie Guthaben gekauft' if konto.get('is_free_tier') else 'Guthaben schon einmal gekauft'}); {json.dumps(konto)}")
+    elif os.environ.get("OPENROUTER_API_KEY"):
+        print("OpenRouter-Konto: Abfrage fehlgeschlagen – Schlüssel ungültig oder OpenRouter nicht erreichbar.")
     if auftrag.get("modellsuche"):
         _modellsuche(auftrag["modellsuche"], berichte)
     spec = voreinstellung(modell) if modell else LLMSpec()

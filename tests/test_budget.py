@@ -82,3 +82,22 @@ def test_wiederholungen_fortsetzen(tmp_path):
     cfg.runden, cfg.wiederholungen = 2, 2
     fuehre_experiment_aus(cfg, tmp_path, erste_wiederholung=4)
     assert sorted(p.name[-2:] for p in tmp_path.iterdir()) == ["w4", "w5"]
+
+
+def test_openrouter_konto(monkeypatch):
+    import httpx
+
+    from kartell.kosten import openrouter_konto
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    assert openrouter_konto() is None
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-test")
+
+    def client(antwort):
+        return httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200, json={"data": antwort})))
+
+    k = openrouter_konto(client=client({"label": "sk-or-v1-abc...xyz", "is_free_tier": True, "usage": 0}))
+    assert k["gratis_anfragen_pro_tag"] == 50 and "label" not in k
+    k = openrouter_konto(client=client({"is_free_tier": False, "free_model_daily_requests": {"used": 12, "limit": 1000}}))
+    assert k["gratis_anfragen_pro_tag"] == 1000 and k["free_model_daily_requests"]["used"] == 12
+    fehler = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(401, json={"error": "nein"})))
+    assert openrouter_konto(client=fehler) is None

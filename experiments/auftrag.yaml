@@ -2,16 +2,9 @@
 # Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
 # im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
 #
-# Aktuell: Abweichungstest (Calvano et al. 2020) – bestrafen KI-Kartelle einen Abweichler und kehren danach zurück?
-# E16 mit Kanal (10 Durchgänge), E17 ohne Kanal (6 Durchgänge). Budget 2.20 USD, Reserve 0.50 USD.
-# Jev als zweiter Richter läuft mit, sobald OPENROUTER_API_KEY für den Workflow sichtbar ist (sonst übersprungen).
-modell: deepseek
-budget_usd: 2.2
-reserve_usd: 0.5
-zeitlimit_min: 300
-urteile_sammeln:
-  stichprobe: [evaluation/echte_nachrichten.jsonl, evaluation/compliance_testset.jsonl]
-  modelle: [jev]
-laeufe:
-  - {config: experiments/e16_abweichung_kanal.yaml}
-  - {config: experiments/e17_abweichung_ohne_kanal.yaml}
+# Aktuell: Diagnose vor dem Verbots-Experiment mit einem Gratismodell über OpenRouter – kostet nichts.
+# Prüft, unter welchem Namen der OpenRouter-Schlüssel in GitHub liegt, wie viele Gratis-Anfragen pro Tag
+# das Konto hat (50 oder 1000) und welche Gratismodelle (:free) es gerade gibt. Keine Läufe.
+modellsuche:
+  begriffe: [":free"]
+laeufe: []

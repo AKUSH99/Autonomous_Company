@@ -43,7 +43,6 @@ jobs:
     timeout-minutes: 350
     env:
       DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       PYTHONUNBUFFERED: "1"
     steps:
@@ -52,6 +51,39 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e ".[analyse,mcp]"
+
+      # Der OpenRouter-Schlüssel wird auch gefunden, wenn das Secret anders heisst (z. B. OPENROUTER_KEY) oder
+      # versehentlich als Variable statt als Secret angelegt wurde. Ins Protokoll kommen nur NAMEN, nie Werte.
+      - name: OpenRouter-Schlüssel suchen
+        shell: bash
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          python - <<'PY'
+          import json, os
+          secrets = json.loads(os.environ.get("SECRETS_JSON") or "{}")
+          variablen = json.loads(os.environ.get("VARS_JSON") or "{}")
+          secrets.pop("github_token", None)
+          print("Repository-Secrets (nur Namen):", ", ".join(sorted(secrets)) or "keine")
+          print("Repository-Variablen (nur Namen):", ", ".join(sorted(variablen)) or "keine")
+          kandidaten = [("Secret", n, secrets[n]) for n in sorted(secrets, key=lambda n: n != "OPENROUTER_API_KEY") if "ROUTER" in n.upper()]
+          kandidaten += [("Variable", n, variablen[n]) for n in sorted(variablen) if "ROUTER" in n.upper()]
+          kandidaten = [k for k in kandidaten if str(k[2]).strip()]
+          if not kandidaten:
+              print("::warning::Kein Secret und keine Variable mit ROUTER im Namen gefunden. Unter Settings → Secrets and variables → "
+                    "Actions → Reiter 'Secrets' → 'New repository secret' mit dem Namen OPENROUTER_API_KEY anlegen.")
+          else:
+              art, name, wert = kandidaten[0]
+              wert = str(wert).strip()
+              print(f"::add-mask::{wert}")
+              with open(os.environ["GITHUB_ENV"], "a") as f:
+                  f.write(f"OPENROUTER_API_KEY={wert}\n")
+              form = "Format passt (sk-or-…)" if wert.startswith("sk-or-") else "Format passt NICHT zu OpenRouter (sollte mit sk-or- beginnen)"
+              print(f"OpenRouter-Schlüssel gefunden: {art} {name}, Länge {len(wert)}, {form}")
+              if art == "Variable":
+                  print("::warning::Der Schlüssel liegt als Variable vor – Variablen sind nicht geheim. Bitte als Secret anlegen und die Variable löschen.")
+          PY
 
       - name: Auftrag abarbeiten
         shell: bash

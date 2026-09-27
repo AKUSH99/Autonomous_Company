@@ -79,6 +79,32 @@ def guthaben_usd(spec: LLMSpec) -> float | None:
         return None
 
 
+def openrouter_konto(basis: str = "https://openrouter.ai/api/v1", client=None) -> dict | None:
+    """Stufe des OpenRouter-Kontos: wie viele Anfragen an Gratismodelle (:free) pro Tag möglich sind.
+
+    GET /key liefert u. a. `is_free_tier` (nie Guthaben gekauft: 50 Gratis-Anfragen pro Tag, sonst 1000) und je nach
+    Stand der API `free_model_daily_requests` mit `used` und `limit`. Das Feld `label` (Teil des Schlüssels) wird
+    nicht übernommen. None ohne Schlüssel oder bei Fehlern.
+    """
+    import os
+
+    import httpx
+    schluessel = os.environ.get("OPENROUTER_API_KEY", "")
+    if not schluessel:
+        return None
+    try:
+        r = (client or httpx).get(f"{basis.rstrip('/')}/key", headers={"Authorization": f"Bearer {schluessel}"}, timeout=20)
+        r.raise_for_status()
+        daten = r.json().get("data", {})
+    except (httpx.HTTPError, ValueError, AttributeError):
+        return None
+    konto = {k: daten.get(k) for k in ("is_free_tier", "free_model_daily_requests", "usage", "limit", "limit_remaining")
+             if k in daten}
+    tages = daten.get("free_model_daily_requests") or {}
+    konto["gratis_anfragen_pro_tag"] = tages.get("limit") or (50 if daten.get("is_free_tier") else 1000)
+    return konto
+
+
 class Budgetwaechter:
     """Stoppt Läufe, bevor ein Budget überschritten wird – über alle Läufe eines Auftrags hinweg.
 
