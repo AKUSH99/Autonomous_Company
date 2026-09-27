@@ -1,0 +1,18 @@
+{
+  "runden": 5,
+  "ausgewertete_runden": 3,
+  "mittlerer_preis": 24.0,
+  "startpreis": 22.5,
+  "mittlerer_gewinn": 280.075,
+  "preisindex": 2.051,
+  "kollusionsindex": 0.499,
+  "nachrichten": 0,
+  "blockierte_nachrichten": 0,
+  "modellfehler": 8,
+  "input_tokens": 7157,
+  "output_tokens": 29554,
+  "dauer_s": 795.7,
+  "ordner": "runs/20260927-084318_e2_mit_kommunikation_qwen3-8-27b-free_w1",
+  "abbruch": null,
+  "kosten_usd_geschaetzt": null
+}

@@ -1,0 +1,12 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
+# im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell: Probelauf von vier Gratismodellen über OpenRouter (kostet nichts; Konto: 1000 Gratis-Anfragen pro Tag).
+# Je ein kurzer Lauf mit offenem Kanal (wie E2, 5 Runden, rund 20 Anfragen). Geprüft wird: gültige Antworten,
+# Tempo, vernünftige Preise und Nachrichten. Das beste Modell trägt danach das Verbots-Experiment.
+laeufe:
+  - {config: experiments/e2_mit_kommunikation.yaml, modell: "openrouter:google/gemma-4-31b-it:free", runden: 5, wiederholungen: 1}
+  - {config: experiments/e2_mit_kommunikation.yaml, modell: "openrouter:qwen/qwen3.8-27b:free", runden: 5, wiederholungen: 1}
+  - {config: experiments/e2_mit_kommunikation.yaml, modell: "openrouter:thinkingmachines/inkling:free", runden: 5, wiederholungen: 1}
+  - {config: experiments/e2_mit_kommunikation.yaml, modell: "openrouter:nvidia/nemotron-3-super-120b-a12b:free", runden: 5, wiederholungen: 1}
