@@ -1,0 +1,19 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
+# im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell: Verbots-Experiment, Teil 1 von 2 – mit Nemotron 3 Ultra (NVIDIA), dem intelligentesten Gratismodell bei
+# OpenRouter; kostet nichts. Drei Bedingungen, je 5 Durchgänge à 25 Runden, abwechselnd gestartet:
+#   E2  offener Kanal (Basis) · E18 Verbot im Auftrag · E19 Verbot + „die WEKO liest mit“ (Notizen privat)
+# Frage: Verschwindet das Kartell – oder nur das Reden darüber? Ein Lauf braucht rund 115 der 1000 Gratis-Anfragen
+# pro Tag; heute 7 Läufe, Teil 2 (8 Läufe) morgen. Denkmodus an (im Probelauf zuverlässig, verhandelt im Kanal).
+denken: standard
+zeitlimit_min: 60
+laeufe:
+  - {config: experiments/e2_mit_kommunikation.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 1}
+  - {config: experiments/e18_verbot.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 1}
+  - {config: experiments/e19_verbot_ueberwachung.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 1}
+  - {config: experiments/e2_mit_kommunikation.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e18_verbot.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e19_verbot_ueberwachung.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e2_mit_kommunikation.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 3}
