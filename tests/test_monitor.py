@@ -47,3 +47,9 @@ def test_monitor_mit_abweichung(tmp_path, capsys):
     assert len(markiert) == 1
     abweichler = markiert[0]["abweichung"]["shop"]
     assert markiert[0]["entscheide"][abweichler]["erzwungen"] and markiert[0]["entscheide"][abweichler]["preis_gewollt"]
+
+
+def test_modellname():
+    from kartell.monitor import modellname
+    assert modellname("openai_compat:deepseek-flash") == "deepseek-flash"
+    assert modellname("openai_compat:nvidia/nemotron-3-ultra-550b-a55b:free") == "nemotron-3-ultra-550b-a55b"

@@ -92,9 +92,14 @@ def lade(ordner: Path) -> dict | None:
     return {"name": meta["name"], "titel": meta["config"].get("titel", ""), "beschreibung": meta.get("beschreibung", ""),
             "wiederholung": meta["wiederholung"], "start": meta.get("start", ""), "benchmarks": meta["benchmarks"],
             "kanal": meta["config"]["kommunikation"]["aktiv"], "max_zeichen": meta["config"]["kommunikation"]["max_zeichen"],
-            "compliance": meta.get("compliance") is not None, "modell": next(iter(meta["agenten"].values())).split(":")[-1],
+            "compliance": meta.get("compliance") is not None, "modell": modellname(next(iter(meta["agenten"].values()))),
             "ki": ergebnis["kollusionsindex"], "pi": ergebnis["preisindex"], "abbruch": ergebnis.get("abbruch"),
             "runden": runden}
+
+
+def modellname(kurzname: str) -> str:
+    """'openai_compat:deepseek-flash' -> 'deepseek-flash', 'openai_compat:nvidia/nemotron-3-ultra-550b-a55b:free' -> 'nemotron-3-ultra-550b-a55b'."""
+    return kurzname.split(":", 1)[-1].removesuffix(":free").split("/")[-1]
 
 
 def _reihenfolge(name: str) -> tuple:
