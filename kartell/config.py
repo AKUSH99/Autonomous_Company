@@ -173,8 +173,9 @@ def voreinstellung(name: str) -> LLMSpec:
         return VOREINSTELLUNGEN[name]
     if name.startswith("openrouter:") and len(name) > len("openrouter:"):
         modell = name.split(":", 1)[1]
+        # 8000 Tokens: Denk-Modelle brauchen Platz vor der eigentlichen Antwort (Gratismodelle zählen Anfragen, nicht Tokens)
         return LLMSpec(provider="openai_compat", model=modell, base_url=OPENROUTER_URL, api_key_env="OPENROUTER_API_KEY",
-                       max_tokens=4000, anfragen_pro_minute=16 if modell.endswith(":free") else None)
+                       max_tokens=8000, anfragen_pro_minute=16 if modell.endswith(":free") else None)
     raise ValueError(f"Unbekanntes Modell '{name}'. Erlaubt: {', '.join(VOREINSTELLUNGEN)} oder openrouter:<modell-id>")
 
 
