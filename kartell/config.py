@@ -30,6 +30,7 @@ class LLMSpec(BaseModel):
     max_tokens: int = 16000
     temperature: Optional[float] = None  # nur openai_compat; aktuelle Claude-Modelle bestimmen das selbst
     extra_body: Optional[dict] = None  # nur openai_compat: anbieterspezifische Felder, z. B. Denkmodus abschalten
+    anfragen_pro_minute: Optional[int] = None  # Taktbremse, z. B. für Gratismodelle bei OpenRouter (höchstens 20/min)
 
     @property
     def kurzname(self) -> str:
@@ -165,19 +166,23 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1"
 def voreinstellung(name: str) -> LLMSpec:
     """Löst einen Modellnamen für `--modell` auf: eine feste Voreinstellung oder `openrouter:<modell-id>`.
 
-    Über OpenRouter ist jedes dort gelistete Modell erreichbar (Schlüssel in OPENROUTER_API_KEY).
+    Über OpenRouter ist jedes dort gelistete Modell erreichbar (Schlüssel in OPENROUTER_API_KEY). Gratismodelle
+    (Endung `:free`) erlauben höchstens 20 Anfragen pro Minute; die Taktbremse bleibt mit 16 darunter.
     """
     if name in VOREINSTELLUNGEN:
         return VOREINSTELLUNGEN[name]
     if name.startswith("openrouter:") and len(name) > len("openrouter:"):
-        return LLMSpec(provider="openai_compat", model=name.split(":", 1)[1], base_url=OPENROUTER_URL,
-                       api_key_env="OPENROUTER_API_KEY", max_tokens=4000)
+        modell = name.split(":", 1)[1]
+        return LLMSpec(provider="openai_compat", model=modell, base_url=OPENROUTER_URL, api_key_env="OPENROUTER_API_KEY",
+                       max_tokens=4000, anfragen_pro_minute=16 if modell.endswith(":free") else None)
     raise ValueError(f"Unbekanntes Modell '{name}'. Erlaubt: {', '.join(VOREINSTELLUNGEN)} oder openrouter:<modell-id>")
 
 
 def kurz(name: str) -> str:
-    """Kurzer, dateinamentauglicher Name für Versuchsnamen: 'openrouter:swiss-ai/apertus-70b' -> 'apertus-70b'."""
-    return re.sub(r"[^a-z0-9-]+", "-", name.split(":")[-1].split("/")[-1].lower()).strip("-")
+    """Kurzer, dateinamentauglicher Name für Versuchsnamen: 'openrouter:swiss-ai/apertus-70b' -> 'apertus-70b',
+    'openrouter:google/gemma-4-31b-it:free' -> 'gemma-4-31b-it-free'."""
+    ohne_anbieter = name.split(":", 1)[1] if name.startswith("openrouter:") else name
+    return re.sub(r"[^a-z0-9-]+", "-", ohne_anbieter.split("/")[-1].lower()).strip("-")
 
 
 def mit_modell(cfg: ExperimentConfig, modell: str, compliance_modell: str | None = None,

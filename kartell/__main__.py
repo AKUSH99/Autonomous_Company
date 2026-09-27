@@ -220,7 +220,12 @@ def _auftrag(args) -> None:
         _modellsuche(auftrag["modellsuche"], berichte)
     spec = voreinstellung(modell) if modell else LLMSpec()
     richter_spec = voreinstellung(richter).model_copy(update={"temperature": 0.0}) if richter else spec
-    for s in {spec.kurzname: spec, richter_spec.kurzname: richter_spec}.values():
+    zu_pruefen = {spec.kurzname: spec, richter_spec.kurzname: richter_spec}
+    for eintrag in auftrag.get("laeufe", []):  # einzelne Läufe dürfen ein anderes Modell nutzen (z. B. Probelauf mehrerer Modelle)
+        if eintrag.get("modell"):
+            s = voreinstellung(eintrag["modell"])
+            zu_pruefen[s.kurzname] = s
+    for s in zu_pruefen.values():
         _pruefe_modell(s, berichte)
     waechter = None
     if auftrag.get("budget_usd"):
@@ -229,18 +234,26 @@ def _auftrag(args) -> None:
         print(f"Budget {waechter.budget:.2f} USD ({quelle})")
     if auftrag.get("urteile_sammeln"):  # zuerst: kostet wenig und soll nicht am Budget der Läufe scheitern
         _urteile_sammeln(auftrag["urteile_sammeln"], berichte)
-    ergebnisse = []
+    ergebnisse, ausgefallen = [], set()
     for eintrag in auftrag.get("laeufe", []):
+        eintrag_modell = eintrag.get("modell", modell)
         if waechter and waechter.erschoepft:
             print(f"Budget erschöpft – {eintrag['config']} entfällt.")
             continue
+        if eintrag_modell in ausgefallen:
+            # Z. B. Tageslimit eines Gratismodells erreicht: weitere Läufe würden nur weitere Anfragen verbrennen.
+            print(f"Modell {eintrag_modell} ausgefallen – {eintrag['config']} entfällt (später erneut starten).")
+            continue
         cfg = lade_config(eintrag["config"])
         temperatur = eintrag.get("compliance_temperatur", auftrag.get("compliance_temperatur"))
-        cfg = mit_modell(cfg, modell, richter, temperatur) if modell else cfg
+        cfg = mit_modell(cfg, eintrag_modell, eintrag.get("compliance_modell", richter), temperatur) if eintrag_modell else cfg
         cfg.runden = eintrag.get("runden", cfg.runden)
         cfg.wiederholungen = eintrag.get("wiederholungen", cfg.wiederholungen)
-        ergebnisse += fuehre_experiment_aus(cfg, args.ausgabe, waechter, eintrag.get("zeitlimit_min", auftrag.get("zeitlimit_min")),
-                                            eintrag.get("erste_wiederholung", 1))
+        neu = fuehre_experiment_aus(cfg, args.ausgabe, waechter, eintrag.get("zeitlimit_min", auftrag.get("zeitlimit_min")),
+                                    eintrag.get("erste_wiederholung", 1))
+        if any((e.get("abbruch") or {}).get("art") == "ModellAusfall" for e in neu):
+            ausgefallen.add(eintrag_modell)
+        ergebnisse += neu
     if auftrag.get("guardrail_evaluation") and not (waechter and waechter.erschoepft):
         testset = auftrag.get("guardrail_testset", "evaluation/compliance_testset.jsonl")
         r = evaluiere(ComplianceConfig(llm=richter_spec.model_copy(update={"temperature": 0.0})), lade_testset(testset))

@@ -116,3 +116,21 @@ def test_openai_compat_abgeschnittene_antwort_meldet_ursache_und_tokens():
         c.strukturiert("S", "N", PreisEntscheid)
     assert len(aufrufe) == 1  # keine sinnlose Wiederholung
     assert (fehler.value.input_tokens, fehler.value.output_tokens) == (900, 4000)  # Kosten bleiben sichtbar
+
+
+def test_taktbremse_haelt_abstand(monkeypatch):
+    from kartell.llm import openai_compat
+    wartezeiten = []
+    monkeypatch.setattr(openai_compat.time, "sleep", lambda s: wartezeiten.append(round(s, 1)))
+    monkeypatch.setattr(openai_compat.time, "monotonic", lambda: 100.0)
+    openai_compat._NAECHSTE_ANFRAGE.clear()
+    for _ in range(3):
+        openai_compat._warte_auf_takt("https://openrouter.ai/api/v1", 20)
+    assert wartezeiten == [3.0, 6.0]  # erste Anfrage sofort, dann je 3 s Abstand
+
+
+def test_gratismodelle_bekommen_taktbremse():
+    from kartell.config import voreinstellung
+    assert voreinstellung("openrouter:meta-llama/llama-3.3-70b-instruct:free").anfragen_pro_minute == 16
+    assert voreinstellung("openrouter:meta-llama/llama-3.3-70b-instruct").anfragen_pro_minute is None
+    assert voreinstellung("deepseek").anfragen_pro_minute is None

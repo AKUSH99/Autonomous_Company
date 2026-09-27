@@ -9,6 +9,8 @@ from __future__ import annotations
 import json
 import os
 import re
+import threading
+import time
 
 import openai
 from pydantic import ValidationError
@@ -28,6 +30,20 @@ def _json_aus_text(text: str) -> dict:
             raise ValueError("Kein JSON-Objekt in der Antwort.")
         text = text[start:ende + 1]
     return json.loads(text)
+
+
+_TAKT_SPERRE = threading.Lock()
+_NAECHSTE_ANFRAGE: dict[str, float] = {}
+
+
+def _warte_auf_takt(schluessel: str, pro_minute: int) -> None:
+    """Hält Anfragen an denselben Anbieter mindestens 60/pro_minute Sekunden auseinander – auch über Threads hinweg."""
+    with _TAKT_SPERRE:
+        jetzt = time.monotonic()
+        start = max(jetzt, _NAECHSTE_ANFRAGE.get(schluessel, jetzt))
+        _NAECHSTE_ANFRAGE[schluessel] = start + 60 / pro_minute
+    if start > jetzt:
+        time.sleep(start - jetzt)
 
 
 class OpenAICompatClient:
@@ -53,6 +69,8 @@ class OpenAICompatClient:
                 "type": "json_schema",
                 "json_schema": {"name": schema.__name__, "schema": schema.model_json_schema()},
             }
+        if self.spec.anfragen_pro_minute:
+            _warte_auf_takt(self.spec.base_url or "", self.spec.anfragen_pro_minute)
         try:
             return self.client.chat.completions.create(**kwargs)
         except openai.BadRequestError:

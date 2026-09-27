@@ -1,6 +1,8 @@
 """Auftragsdatei: mehrere Läufe nacheinander, danach der Bericht – ohne API-Schlüssel mit den Skript-Agenten."""
 import json
 
+import pytest
+
 from kartell.__main__ import main
 
 
@@ -69,3 +71,45 @@ def test_auftrag_wie_auf_github_mit_simuliertem_modell(tmp_path, monkeypatch):
     markt = [json.loads(z) for z in (laeufe["e15_marktbeobachtung_deepseek_w1"] / "runden.jsonl").read_text().splitlines()]
     assert any(r["marktbeobachtung"]["hinweis"] for r in markt)  # gleiche Preise ab Runde 1 → Hinweis
     assert "Vergleiche" in (tmp_path / "reports" / "bericht.md").read_text(encoding="utf-8")
+
+
+def test_auftrag_mit_modell_je_lauf_und_stopp_nach_ausfall(tmp_path, monkeypatch, capsys):
+    """Probelauf mehrerer Gratismodelle: jeder Lauf nennt sein Modell; fällt eines aus, entfallen nur seine weiteren Läufe."""
+    import kartell.__main__ as cli
+    from kartell.agents import pricing
+    from kartell.agents.schemas import KanalNachricht, PreisEntscheid
+    from kartell.config import kurz
+    from kartell.llm import LLMAntwort, LLMFehler
+
+    geprueft = []
+
+    class Simuliert:
+        def __init__(self, spec):
+            self.name, self.spec = spec.kurzname, spec
+
+        def strukturiert(self, system, nutzer, schema, werkzeuge=None):
+            if "kaputt" in self.spec.model:
+                raise LLMFehler("429 Tageslimit erreicht")
+            objekt = PreisEntscheid(beobachtungen="b", plan="p", erkenntnisse="e", preis=16.0) if schema is PreisEntscheid \
+                else KanalNachricht(ueberlegung="u", nachricht="")
+            return LLMAntwort(objekt, 10, 5)
+
+    monkeypatch.setattr(cli, "_pruefe_modell", lambda spec, berichte: geprueft.append(spec.model))
+    monkeypatch.setattr(pricing, "erstelle_client", Simuliert)
+    auftrag = tmp_path / "auftrag.yaml"
+    auftrag.write_text(
+        "laeufe:\n"
+        "  - {config: experiments/e2_mit_kommunikation.yaml, modell: 'openrouter:google/gemma-4-31b-it:free', runden: 3, wiederholungen: 1}\n"
+        "  - {config: experiments/e2_mit_kommunikation.yaml, modell: 'openrouter:test/kaputt:free', runden: 5, wiederholungen: 2}\n"
+        "  - {config: experiments/e2_mit_kommunikation.yaml, modell: 'openrouter:test/kaputt:free', runden: 5, wiederholungen: 1}\n"
+        "  - {config: experiments/e2_mit_kommunikation.yaml, modell: 'openrouter:qwen/qwen3.8-27b:free', runden: 3, wiederholungen: 1}\n",
+        encoding="utf-8")
+    with pytest.raises(SystemExit):
+        cli.main(["auftrag", str(auftrag), "--ausgabe", str(tmp_path / "runs"), "--berichte", str(tmp_path / "reports")])
+    ausgabe = capsys.readouterr().out
+    assert {"google/gemma-4-31b-it:free", "test/kaputt:free", "qwen/qwen3.8-27b:free"} <= set(geprueft)
+    namen = sorted(o.name.split("_", 1)[1] for o in (tmp_path / "runs").iterdir())
+    assert namen == ["e2_mit_kommunikation_gemma-4-31b-it-free_w1", "e2_mit_kommunikation_kaputt-free_w1",
+                     "e2_mit_kommunikation_qwen3-8-27b-free_w1"]
+    assert "weitere Wiederholungen" in ausgabe and "entfällt" in ausgabe
+    assert kurz("openrouter:google/gemma-4-31b-it:free") == "gemma-4-31b-it-free"

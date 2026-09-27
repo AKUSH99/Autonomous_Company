@@ -77,4 +77,7 @@ def fuehre_experiment_aus(cfg: ExperimentConfig, ausgabe: str | Path = "runs", w
             print(f"  Budget erschöpft – Wiederholung {seed} von {cfg.name} entfällt.")
             break
         ergebnisse.append(fuehre_lauf_aus(cfg, seed, ausgabe, waechter=waechter, zeitlimit_min=zeitlimit_min))
+        if (ergebnisse[-1].get("abbruch") or {}).get("art") == "ModellAusfall":
+            print(f"  Modell ausgefallen – weitere Wiederholungen von {cfg.name} entfallen.")
+            break
     return ergebnisse
