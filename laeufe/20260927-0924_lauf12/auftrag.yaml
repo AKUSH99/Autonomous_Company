@@ -1,0 +1,12 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
+# im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell: dritter Probelauf der Gratismodelle, jetzt mit Geduld bei Überlastung (Pausen 20/45/90 s) und ohne
+# Denkmodus (wie DeepSeek in allen bisherigen Läufen; lange Denkprozesse schnitten Antworten ab).
+# Je 5 Runden mit offenem Kanal (wie E2). Kostet nichts; rund 20–40 der 1000 Gratis-Anfragen pro Modell.
+denken: aus
+laeufe:
+  - {config: experiments/e2_mit_kommunikation.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 5, wiederholungen: 1}
+  - {config: experiments/e2_mit_kommunikation.yaml, modell: "openrouter:qwen/qwen3.8-27b:free", runden: 5, wiederholungen: 1}
+  - {config: experiments/e2_mit_kommunikation.yaml, modell: "openrouter:nvidia/nemotron-3-super-120b-a12b:free", runden: 5, wiederholungen: 1}
