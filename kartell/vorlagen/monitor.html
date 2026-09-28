@@ -469,7 +469,9 @@ function zeichneKundschaft(l) {
   const satz = Math.abs(s) < 0.05 ? "Die Preise liegen beim Wettbewerbsniveau – die Kundschaft zahlt nicht drauf."
     : s > 0 ? `Jede Kundin, jeder Kunde hat in dieser Runde <b>${chf(s)} CHF</b> weniger vom Einkauf als bei Wettbewerb${prozent !== null ? ` (${prozent} % weniger)` : ""}.`
     : `Die Preise liegen unter dem Wettbewerbsniveau – die Kundschaft spart <b>${chf(-s)} CHF</b> pro Person.`;
-  const personen = (l.personen || []).map((p) => {
+  const ki = r.kunden_ki && r.kunden_ki.entscheide && r.kunden_ki.entscheide.length ? r.kunden_ki.entscheide : null;
+  const personen = ki ? ki.map((e) => `<li><span>${esc(e.name)}</span><span class="wahl" style="color:${e.kauf === "nichts" ? "var(--muted)" : farbe(l, e.kauf)}">${e.kauf === "nichts" ? "kauft nichts" : `kauft bei ${esc(e.kauf)}`}</span><span class="typ">„${esc(e.grund)}“</span></li>`).join("")
+    : (l.personen || []).map((p) => {
     const netto = p.w.map((w, i) => w - r.preise[namen[i]]);
     const best = netto.indexOf(Math.max(...netto));
     const wahl = netto[best] > p.w0 ? `kauft bei ${esc(namen[best])}` : "kauft nichts – zu teuer";
@@ -478,7 +480,7 @@ function zeichneKundschaft(l) {
   $("kundschaft").innerHTML = `
     <div class="kunden-balken" role="img" aria-label="Marktanteile">${teile.map((t) => `<i style="width:${t.anteil * 100}%;background:${t.farbe}"></i>`).join("")}</div>
     <div class="kunden-legende">${teile.map((t) => `<span><i class="punkt" style="background:${t.farbe}"></i>${esc(t.name)} ${Math.round(t.anteil * 100)} %</span>`).join("")}</div>
-    <p class="schaden">${satz}</p>
+    <p class="schaden">${ki ? "Hier entscheidet eine KI für jede Person – mit eigener Begründung. " : ""}${satz}</p>
     <ul class="personen">${personen}</ul>`;
 }
 
