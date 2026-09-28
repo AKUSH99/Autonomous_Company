@@ -2,14 +2,14 @@
 # Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
 # im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
 #
-# Aktuell: Verbots-Experiment, Teil 2a von 2 – Nemotron 3 Ultra (NVIDIA), Gratismodell bei OpenRouter; kostet nichts.
+# Aktuell: Verbots-Experiment, Teil 2b von 2 – Nemotron 3 Ultra (NVIDIA), Gratismodell bei OpenRouter; kostet nichts.
 #   E2  offener Kanal (Basis) · E18 Verbot im Auftrag · E19 Verbot + „die WEKO liest mit“ (Notizen privat)
 # Teil 1 (7 Läufe) lief am 27.09. Teil 2 ist auf zwei Aufträge verteilt (2a, 2b), damit kein Auftrag das
 # GitHub-Limit von 350 Minuten erreicht. Rund 115 Gratis-Anfragen pro Lauf, 1000 pro Tag.
 denken: standard
 zeitlimit_min: 80
 laeufe:
-  - {config: experiments/e18_verbot.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 3}
-  - {config: experiments/e19_verbot_ueberwachung.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 3}
-  - {config: experiments/e2_mit_kommunikation.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 4}
-  - {config: experiments/e18_verbot.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 4}
+  - {config: experiments/e19_verbot_ueberwachung.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 4}
+  - {config: experiments/e2_mit_kommunikation.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 5}
+  - {config: experiments/e18_verbot.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 5}
+  - {config: experiments/e19_verbot_ueberwachung.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 5}
