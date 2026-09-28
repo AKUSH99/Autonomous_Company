@@ -3,10 +3,11 @@
 Ablauf:
   1. `stichprobe`: geschichtete Stichprobe aus allen Läufen ziehen – Nachrichten aus Läufen ohne Filter (nie geprüft)
      sowie blockierte und zugestellte Nachrichten aus Läufen mit Filter. Doppelte Texte werden entfernt.
-  2. Zwei Personen labeln die Stichprobe unabhängig und ohne das Filterurteil zu sehen (Label-Werkzeug).
-  3. `urteile_sammeln` (im Auftrag): LLM-Richter beurteilen dieselben Nachrichten – ohne Zugriff auf die Labels.
-  4. `labels-auswerten`: Übereinstimmung der Menschen (Cohen's Kappa), dann Filter, Regel-Schicht und LLM-Richter
-     gegen das menschliche Konsens-Label (Precision, Recall, Fehlalarmquote).
+  2. `urteile_sammeln` (im Auftrag): mehrere KI-Richter beurteilen dieselben Nachrichten.
+  3. `richter-vergleich`: Regel-Schicht, Filter und KI-Richter untereinander vergleichen (Kappa, Mehrheit, strittige
+     Fälle). Das misst Einigkeit, nicht Richtigkeit – unser Weg, weil es keine menschlichen Labels gibt (Entscheid 28).
+  Optional, falls doch Menschen labeln (Label-Werkzeug): `labels-auswerten` rechnet Kappa zwischen den Menschen und
+  misst Filter, Regel-Schicht und KI-Richter am menschlichen Konsens (Precision, Recall, Fehlalarmquote).
 """
 from __future__ import annotations
 
@@ -154,4 +155,79 @@ def werte_labels_aus(stichprobe: list[dict], labels: list[dict], urteile: dict[s
             p = {u["id"]: u.get("p_unzulaessig") for u in gueltig}
             if all(p.get(i) is not None for i in mit):
                 ergebnis[f"richter_{name}"]["auc"] = round(auc([konsens[i] for i in mit], [p[i] for i in mit]), 3)
+    return ergebnis
+
+
+def fleiss_kappa(urteile: list[list[bool]]) -> float:
+    """Einigkeit mehrerer Richter jenseits des Zufalls (Fleiss): je Nachricht die Urteile aller Richter, gleich viele."""
+    if not urteile or len(urteile[0]) < 2:
+        return float("nan")
+    k = len(urteile[0])
+    p_ja = sum(sum(z) for z in urteile) / (len(urteile) * k)
+    einig = [(sum(z) * (sum(z) - 1) + (k - sum(z)) * (k - sum(z) - 1)) / (k * (k - 1)) for z in urteile]
+    erwartet = p_ja ** 2 + (1 - p_ja) ** 2
+    return 1.0 if erwartet == 1 else (sum(einig) / len(einig) - erwartet) / (1 - erwartet)
+
+
+def vergleiche_richter(stichprobe: list[dict], urteile: dict[str, list[dict]], wiederholungen: dict[str, list[dict]] | None = None,
+                       min_gemeinsam: int = 10) -> dict:
+    """Richter untereinander vergleichen, wenn es keine menschlichen Labels gibt.
+
+    Das misst Einigkeit, nicht Richtigkeit: Wenn alle Richter denselben Fehler machen, sieht man ihn hier nicht.
+    Richter: die Regel-Schicht, der Filter so, wie er in den Läufen entschied (nur Nachrichten aus Läufen mit Filter),
+    und jedes KI-Modell aus `urteile`. Urteile mit Fehler zählen nicht – auch nicht, wenn die Regel-Schicht einsprang.
+    Referenz ist die Mehrheit der KI-Richter (nur Nachrichten mit klarer Mehrheit). Weil die KI-Richter den Befund der
+    Regel-Schicht im Prompt sehen, wird die Einigkeit zusätzlich für Nachrichten ohne Regel-Treffer ausgewiesen.
+    `wiederholungen`: zweite Durchgänge eines Modells – nur für den paarweisen Vergleich (Beständigkeit), nicht für die Mehrheit.
+    """
+    nach_id = {n["id"]: n for n in stichprobe}
+    regel = {i: regel_pruefung(n["text"]).verdacht for i, n in nach_id.items()}
+    gueltig = lambda liste: {u["id"]: u["status"] == "blockiert" for u in liste
+                             if u.get("status") in ("blockiert", "zugestellt") and not u.get("fehler") and u["id"] in nach_id}
+    ki = {name: gueltig(liste) for name, liste in urteile.items()}
+    richter = {"regel_schicht": regel,
+               "filter_in_den_laeufen": {i: n["filter_urteil"] == "blockiert" for i, n in nach_id.items()
+                                         if n.get("filter_urteil") in ("blockiert", "zugestellt")}} | ki
+    richter |= {name: gueltig(liste) for name, liste in (wiederholungen or {}).items()}
+    ergebnis: dict = {"nachrichten": len(stichprobe), "hinweis": "Einigkeit, nicht Richtigkeit – keine menschlichen Labels",
+                      "richter": {name: {"n": len(u), "blockiert": sum(u.values()),
+                                         "quote": round(sum(u.values()) / len(u), 3) if u else None}
+                                  for name, u in richter.items()}}
+    paare = []
+    namen = list(richter)
+    for i, a in enumerate(namen):
+        for b in namen[i + 1:]:
+            gemeinsam = [x for x in richter[a] if x in richter[b]]
+            if len(gemeinsam) < min_gemeinsam:
+                continue
+            ua, ub = [richter[a][x] for x in gemeinsam], [richter[b][x] for x in gemeinsam]
+            ohne = [x for x in gemeinsam if not regel[x]]
+            paare.append({"a": a, "b": b, "n": len(gemeinsam),
+                          "uebereinstimmung": round(sum(x == y for x, y in zip(ua, ub)) / len(gemeinsam), 3),
+                          "kappa": round(cohens_kappa(ua, ub), 3),
+                          "n_ohne_regeltreffer": len(ohne),
+                          "uebereinstimmung_ohne_regeltreffer": round(sum(richter[a][x] == richter[b][x] for x in ohne) / len(ohne), 3) if ohne else None})
+    ergebnis["paare"] = paare
+    if len(ki) >= 2:
+        alle = [x for x in nach_id if all(x in u for u in ki.values())]
+        ergebnis["ki_richter"] = {"namen": list(ki), "n_alle_geurteilt": len(alle),
+                                  "fleiss_kappa": round(fleiss_kappa([[u[x] for u in ki.values()] for x in alle]), 3) if alle else None,
+                                  "alle_einig": sum(len({u[x] for u in ki.values()}) == 1 for x in alle)}
+        mehrheit, strittig = {}, []
+        for x in nach_id:
+            stimmen = [u[x] for u in ki.values() if x in u]
+            if len(stimmen) < 2:
+                continue
+            ja = sum(stimmen)
+            if ja * 2 != len(stimmen):
+                mehrheit[x] = ja * 2 > len(stimmen)
+            if 0 < ja < len(stimmen):
+                strittig.append({"id": x, "text": nach_id[x]["text"], "regel_schicht": regel[x],
+                                 "urteile": {name: ("blockiert" if u[x] else "zugestellt") for name, u in ki.items() if x in u}})
+        ergebnis["mehrheit"] = {"n": len(mehrheit), "blockiert": sum(mehrheit.values())}
+        for name in ("regel_schicht", "filter_in_den_laeufen"):
+            mit = [x for x in mehrheit if x in richter[name]]
+            if mit:
+                ergebnis[f"{name}_gegen_mehrheit"] = kennzahlen([mehrheit[x] for x in mit], [richter[name][x] for x in mit]) | {"n": len(mit)}
+        ergebnis["strittig"] = strittig
     return ergebnis

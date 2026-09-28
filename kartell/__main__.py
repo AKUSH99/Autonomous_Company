@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from .config import OPENROUTER_URL, ComplianceConfig, LLMSpec, kurz, lade_config, mit_denken, mit_modell, voreinstellung
+from .config import DENKEN, OPENROUTER_URL, ComplianceConfig, LLMSpec, kurz, lade_config, mit_denken, mit_modell, voreinstellung
 
 
 def _lade(args):
@@ -150,14 +150,27 @@ def _urteile_sammeln(auftrag: dict, berichte) -> None:
             pruefe = richter.pruefe
         else:
             spec = voreinstellung(name).model_copy(update={"temperature": 0.0})
-            _pruefe_modell(spec, berichte)
+            if auftrag.get("denken"):
+                zusatz = DENKEN[auftrag["denken"]] or {}
+                spec = spec.model_copy(update={"extra_body": ({k: v for k, v in (spec.extra_body or {}).items() if k != "reasoning"} | zusatz) or None})
+            try:
+                _pruefe_modell(spec, berichte)
+            except SystemExit as e:  # ein ausgefallener Richter soll die anderen nicht verhindern
+                print(f"Richter {name} übersprungen: {e}")
+                continue
             richter, pruefe = None, ComplianceAbteilung(ComplianceConfig(modus="filter", llm=spec)).pruefe_nachricht
         for datei_pfad in dateien:
             eintraege = lade_jsonl(datei_pfad)
-            zeilen = []
+            zeilen, fehler_in_folge = [], 0
             for i, n in enumerate(eintraege, 1):
-                u = pruefe((n.get("quelle") or {}).get("von", "Shop X"), n["text"])
-                zeilen.append({"id": n.get("id", f"T{i:03d}"), "status": u["status"], "kategorie": u.get("kategorie"),
+                if fehler_in_folge >= 5:  # z. B. Tageslimit erreicht: keine Anfragen mehr verbrennen
+                    u = {"status": "fehler", "fehler": "übersprungen nach 5 Fehlern in Folge"}
+                else:
+                    u = pruefe((n.get("quelle") or {}).get("von", "Shop X"), n["text"])
+                # Springt bei einem LLM-Fehler die Regel-Schicht ein, ist das kein Urteil dieses Richters.
+                status = "fehler" if u.get("fehler") else u["status"]
+                fehler_in_folge = fehler_in_folge + 1 if status == "fehler" else 0
+                zeilen.append({"id": n.get("id", f"T{i:03d}"), "status": status, "kategorie": u.get("kategorie"),
                                "begruendung": u.get("begruendung"), "p_unzulaessig": u.get("p_unzulaessig"),
                                "fehler": u.get("fehler")})
             stamm = Path(datei_pfad).stem
@@ -175,6 +188,21 @@ def _urteile_sammeln(auftrag: dict, berichte) -> None:
             print(f"Urteile {name} über {stamm}: {json.dumps(zusammenfassung, ensure_ascii=False)} → {ziel}")
         if richter is not None and richter.erste_rohantwort is not None:
             (berichte / f"rohantwort_{kurz(name)}.json").write_text(json.dumps(richter.erste_rohantwort, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _richter_vergleich(args) -> None:
+    from pathlib import Path
+
+    from .stichprobe import lade_jsonl, vergleiche_richter
+
+    def lies(angaben):  # "name=pfad" oder nur "pfad" (Name aus dem Dateinamen)
+        paare = [a.split("=", 1) if "=" in a else (Path(a).stem.removeprefix("urteile_"), a) for a in angaben or []]
+        return {name: lade_jsonl(pfad) for name, pfad in paare}
+    r = vergleiche_richter(lade_jsonl(args.stichprobe), lies(args.urteile), lies(args.wiederholung))
+    print(json.dumps({k: v for k, v in r.items() if k != "strittig"}, ensure_ascii=False, indent=2))
+    print(f"{len(r.get('strittig', []))} strittige Nachrichten (vollständig in der Ausgabedatei)")
+    if args.ausgabe:
+        Path(args.ausgabe).write_text(json.dumps(r, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def _labels_auswerten(args) -> None:
@@ -348,6 +376,13 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--urteile", nargs="*", help="urteile_<modell>.jsonl aus einem Auftrag")
     s.add_argument("--ausgabe", help="Ergebnis zusätzlich als JSON speichern")
     s.set_defaults(fn=_labels_auswerten)
+
+    s = sub.add_parser("richter-vergleich", help="Ohne menschliche Labels: Regel-Schicht, Filter und KI-Richter untereinander vergleichen")
+    s.add_argument("--stichprobe", default="evaluation/echte_nachrichten.jsonl")
+    s.add_argument("--urteile", nargs="+", required=True, help="urteile_<modell>.jsonl oder name=pfad, je ein Modell")
+    s.add_argument("--wiederholung", nargs="*", help="zweiter Durchgang eines Modells als name=pfad (nur Beständigkeit)")
+    s.add_argument("--ausgabe", help="Ergebnis inkl. strittiger Nachrichten als JSON speichern")
+    s.set_defaults(fn=_richter_vergleich)
 
     s = sub.add_parser("mcp", help="MCP-Server mit Wissensbasis und Regel-Prüfung starten (stdio)")
     s.add_argument("--wissensbasis", help="Ordner mit Markdown-Dateien (Standard: knowledge/wettbewerbsrecht)")

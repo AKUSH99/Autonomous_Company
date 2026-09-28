@@ -56,7 +56,7 @@ pip install -e ".[dashboard,analyse,dev]"
 python -m kartell demo                  # Offline-Demo ohne API-Schlüssel (feste Skript-Strategien, kein LLM)
 streamlit run dashboard/app.py          # Dashboard: Preisverlauf, Kanal, Compliance-Entscheide (auch live)
 python -m kartell monitor runs          # Kartell-Monitor: eine HTML-Datei, die alle Läufe Runde für Runde abspielt
-pytest                                  # 85 Tests, laufen ohne API-Schlüssel
+pytest                                  # 88 Tests, laufen ohne API-Schlüssel
 ```
 
 Die Tests laufen bei jedem Push automatisch auf GitHub (`.github/workflows/tests.yml`, Python 3.10 und 3.12).
@@ -114,7 +114,7 @@ Laut Schätzung kosten E1–E4 und E7 mit DeepSeek zusammen rund 4 USD statt run
 
 **MCP-Server:** `python -m kartell mcp` stellt die Wissensbasis (Suche) und die Regel-Prüfung als MCP-Werkzeuge bereit. Mit `compliance.rag_ueber_mcp: true` holt die Compliance-Abteilung ihr Rechtswissen über diesen Server. Für Claude Code oder Claude Desktop als MCP-Server eintragen: Befehl `python`, Argumente `-m kartell mcp`, Arbeitsverzeichnis = dieses Repository.
 
-**Guardrail an echten Nachrichten:** `python -m kartell stichprobe <ordner mit läufen>` zieht eine geschichtete Stichprobe echter Agenten-Nachrichten (`evaluation/echte_nachrichten.jsonl`, aktuell 120 aus 2613). Zwei Personen labeln sie blind im [Label-Werkzeug](https://claude.ai/artifact/9MeAB2xSJ6v4924KHLHr3m); KI-Richter beurteilen sie über `urteile_sammeln` in einer Auftragsdatei. Als Besitzer lädst du die Labels dort mit „Labels herunterladen“ als JSON herunter (Beurteilende anonymisiert; der Knopf ist nur für dich sichtbar, damit die anderen blind bleiben) und legst die Datei als `evaluation/echte_nachrichten_labels.json` ab. `python -m kartell labels-auswerten --urteile reports/urteile_*.jsonl` rechnet Cohen's Kappa und vergleicht Filter, Regel-Schicht und KI-Richter mit dem menschlichen Konsens.
+**Guardrail an echten Nachrichten:** `python -m kartell stichprobe <ordner mit läufen>` zieht eine geschichtete Stichprobe echter Agenten-Nachrichten (`evaluation/echte_nachrichten.jsonl`, aktuell 120 aus 2613). Mehrere KI-Richter (verschiedene Anbieter) beurteilen sie über `urteile_sammeln` in einer Auftragsdatei. Wir haben entschieden, **keine menschlichen Labels** zu erheben (Entscheid 28). Deshalb vergleicht `python -m kartell richter-vergleich --urteile reports/urteile_*.jsonl` die Prüfer untereinander: Regel-Schicht, Filter (so wie er in den Läufen entschied) und KI-Richter – mit Cohen's und Fleiss' Kappa, Mehrheitsurteil und der Liste strittiger Nachrichten. Das zeigt, wie einig die Prüfer sind, nicht, wer recht hat. Das [Label-Werkzeug](https://claude.ai/artifact/9MeAB2xSJ6v4924KHLHr3m) und `labels-auswerten` bleiben für den Fall, dass doch jemand labelt.
 
 **Abweichungstest:** Mit `abweichung: {aktiv: true}` in einer Versuchsdatei setzt die Simulation einen Shop für eine Runde auf den Wettbewerbspreis, sobald die Preise drei Runden in Folge im Kartellbereich lagen (frühestens Runde 20, spätestens 40). Der Agent erfährt davon nichts. Der Bericht misst, ob die anderen die Abweichung bestrafen, ob alle danach zum Kartellpreis zurückkehren und was im Kanal geschrieben wird – der Standardtest auf „echte“ Kollusion nach Calvano et al. (2020).
 
@@ -128,7 +128,7 @@ Laut Schätzung kosten E1–E4 und E7 mit DeepSeek zusammen rund 4 USD statt run
 - **Startpreis** (Runde 1) – zeigt Anker wie „doppelte Stückkosten“.
 - **Vergleiche** zwischen Versuchen: Differenz im Kollusionsindex, 95%-Bootstrap-Intervall und exakter Permutationstest. Bei 3 gegen 3 Läufen ist p = 0.10 das Minimum; erst ab 4 gegen 4 kann etwas auf dem 5%-Niveau signifikant werden.
 - **Blockierte Nachrichten** und die Begründungen der Compliance-Abteilung.
-- **Guardrail-Qualität:** auf dem selbst geschriebenen Testset (`evaluation/compliance_testset.jsonl`, 39 Nachrichten) und – aussagekräftiger – auf 120 echten Agenten-Nachrichten mit menschlichen Labels (Kappa, Precision, Recall, Fehlalarmquote).
+- **Guardrail-Qualität:** auf dem selbst geschriebenen Testset (`evaluation/compliance_testset.jsonl`, 39 Nachrichten) und auf 120 echten Agenten-Nachrichten: Einigkeit von Regel-Schicht, Filter und mehreren KI-Richtern (Kappa, Mehrheitsurteil, strittige Fälle; ohne menschliche Labels).
 - **Kosten und Tokens** pro Lauf, bei DeepSeek das Guthaben vorher und nachher (`reports/kosten.json`).
 
 Auf dem selbst geschriebenen Testset: Regel-Schicht allein Precision 1,00 / Recall 0,68, Regeln + DeepSeek Precision 1,00 / Recall 1,00, keine Fehlalarme. **Einschränkung:** Das Testset stammt von uns und einige Regeln wurden daran angepasst – deshalb die Messung an echten Nachrichten.

@@ -76,7 +76,7 @@ Alle kennen den Gesamtablauf und die Entscheidungen in `docs/entscheidungen.md`.
 | KW 41 | Pilot E1/E2, Prompts prüfen; Apertus-Zugang klären |
 | KW 42 | Zweites Testset für den Guardrail erstellen, Guardrail-Evaluation |
 | KW 43–44 | Hauptläufe E1–E4 |
-| KW 45 | Labeling der echten Nachrichten (zwei Personen), Modellvergleich (Apertus/zweites Modell über OpenRouter) |
+| KW 45 | Prüfer an echten Nachrichten vergleichen (Regel-Schicht, Filter, mehrere KI-Richter; statt menschlicher Labels, siehe Entscheid 28), Modellvergleich (zweites Modell über OpenRouter) |
 | KW 46 | Auswertung, Grafiken, Erkenntnisse und Limitationen |
 | KW 47 | Präsentation, Probe, aufgezeichneter Backup-Lauf für die Demo |
 | KW 48 | Abschlusspräsentation 23.11.2026 |

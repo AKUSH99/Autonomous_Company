@@ -113,3 +113,34 @@ def test_auftrag_mit_modell_je_lauf_und_stopp_nach_ausfall(tmp_path, monkeypatch
                      "e2_mit_kommunikation_qwen3-8-27b-free_w1"]
     assert "weitere Wiederholungen" in ausgabe and "entfällt" in ausgabe
     assert kurz("openrouter:google/gemma-4-31b-it:free") == "gemma-4-31b-it-free"
+
+
+def test_richter_mit_fehlern_und_ausfall(tmp_path, monkeypatch, capsys):
+    """Fällt das LLM aus, ist der Einsprung der Regel-Schicht kein Urteil; nach 5 Fehlern in Folge keine Anfragen mehr."""
+    import kartell.__main__ as cli
+    from kartell.agents import compliance
+    from kartell.llm import LLMFehler
+
+    anfragen = []
+
+    class Kaputt:
+        def strukturiert(self, system, nutzer, schema, werkzeuge=None):
+            anfragen.append(1)
+            raise LLMFehler("429 per-day limit")
+
+    def pruefe(spec, berichte):
+        if "fehlt" in spec.model:
+            raise SystemExit("Modell fehlt")
+
+    monkeypatch.setattr(cli, "_pruefe_modell", pruefe)
+    monkeypatch.setattr(compliance, "erstelle_client", lambda spec: Kaputt())
+    stichprobe = tmp_path / "s.jsonl"
+    stichprobe.write_text("".join(json.dumps({"id": f"N{i:03d}", "text": "Lass uns 20 CHF halten."}) + "\n" for i in range(8)))
+    auftrag = tmp_path / "auftrag.yaml"
+    auftrag.write_text(f"urteile_sammeln: {{stichprobe: {stichprobe}, denken: aus, "
+                       "modelle: ['openrouter:x/fehlt:free', 'openrouter:x/kaputt:free']}\nlaeufe: []\n", encoding="utf-8")
+    cli.main(["auftrag", str(auftrag), "--ausgabe", str(tmp_path / "runs"), "--berichte", str(tmp_path / "reports")])
+    assert "Richter openrouter:x/fehlt:free übersprungen" in capsys.readouterr().out
+    urteile = [json.loads(z) for z in (tmp_path / "reports" / "urteile_kaputt-free.jsonl").read_text().splitlines()]
+    assert all(u["status"] == "fehler" for u in urteile) and len(anfragen) == 5
+    assert json.loads((tmp_path / "reports" / "urteile_kaputt-free_kennzahlen.json").read_text())["fehler"] == 8
