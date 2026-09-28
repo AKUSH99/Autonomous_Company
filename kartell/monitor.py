@@ -16,6 +16,8 @@ from datetime import datetime
 from pathlib import Path
 
 from .config import anzeigename
+from .kunden import konsumentenrente, kundschaft
+from .market import LogitMarkt, MarktParameter
 
 VORLAGE = Path(__file__).parent / "vorlagen" / "monitor.html"
 PLATZHALTER = "/*__DATEN_GZ__*/"
@@ -89,12 +91,39 @@ def lade(ordner: Path) -> dict | None:
     runden = [schlank(json.loads(z)) for z in (ordner / "runden.jsonl").read_text(encoding="utf-8").splitlines() if z.strip()]
     if not runden or "kollusionsindex" not in ergebnis:
         return None
+    parameter = MarktParameter(**meta["config"]["markt"])
+    markt, shops = LogitMarkt(parameter), list(runden[0]["preise"])
+    rente_nash = konsumentenrente(markt, [markt.nash_preis()] * len(shops))
+    for r in runden:  # Kundschaft je Runde: wer kauft wo, und was kosten die Preise gegenüber Wettbewerb
+        preise = [r["preise"][s] for s in shops]
+        anteile = markt.anteile(preise)
+        r["kunden"] = {"anteile": [round(float(a), 3) for a in anteile] + [round(float(1 - anteile.sum()), 3)],
+                       "schaden": round((rente_nash - konsumentenrente(markt, preise)) / parameter.beta, 2)}
+    personen = [{"name": x.name, "typ": x.typ(shops), "w": x.zahlungsbereitschaft, "w0": x.ohne_kauf}
+                for x in auswahl(kundschaft(parameter, shops, anzahl=100), shops)]
     return {"name": meta["name"], "titel": meta["config"].get("titel", ""), "beschreibung": meta.get("beschreibung", ""),
             "wiederholung": meta["wiederholung"], "start": meta.get("start", ""), "benchmarks": meta["benchmarks"],
             "kanal": meta["config"]["kommunikation"]["aktiv"], "max_zeichen": meta["config"]["kommunikation"]["max_zeichen"],
             "compliance": meta.get("compliance") is not None, "modell": modellname(next(iter(meta["agenten"].values()))),
             "ki": ergebnis["kollusionsindex"], "pi": ergebnis["preisindex"], "abbruch": ergebnis.get("abbruch"),
-            "runden": runden}
+            "runden": runden, "personen": personen,
+            "rente_nash_pro_kunde": round((rente_nash - parameter.beta * parameter.alpha * parameter.a0) / parameter.beta, 2)}
+
+
+def auswahl(leute: list, shops: list[str], anzahl: int = 8) -> list:
+    """Gemischte Gruppe für die Anzeige: abwechselnd Fans jedes Shops und Schnäppchenjagd, in fester Reihenfolge."""
+    gruppen: dict[str, list] = {}
+    for x in leute:
+        typ = x.typ(shops)
+        schluessel = "schnaeppchen" if typ.startswith("Schnäppchen") else shops[max(range(len(shops)), key=lambda i: x.zahlungsbereitschaft[i])]
+        gruppen.setdefault(schluessel, []).append(x)
+    reihenfolge = [g for g in [*shops[:3], "schnaeppchen"] if g in gruppen]
+    gewaehlt = []
+    while len(gewaehlt) < anzahl and any(gruppen[g] for g in reihenfolge):
+        for g in reihenfolge:
+            if gruppen[g] and len(gewaehlt) < anzahl:
+                gewaehlt.append(gruppen[g].pop(0))
+    return gewaehlt
 
 
 def modellname(kurzname: str) -> str:

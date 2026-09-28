@@ -87,6 +87,7 @@ def erstelle_bericht(wurzel: str | Path, ausgabe: str | Path = "reports") -> Pat
                   if g[0]["meta"]["config"].get("abweichung", {}).get("aktiv")}
     zeilen += _abweichungstest(abweichung, gruppen)
     zeilen += _reden_oder_handeln(gruppen)
+    zeilen += _kundschaft(gruppen)
     vorzeitig = [l for l in laeufe if l["abbruch"]]
     if vorzeitig:
         zeilen += ["**Vorzeitig beendete Läufe** (ausgewertet sind die Runden bis zum Stopp):", ""]
@@ -274,6 +275,27 @@ def _reden_oder_handeln(gruppen: dict[str, list[dict]]) -> list[str]:
     if zitate:
         zeilen += ["", "Notizen „bewusst verdeckt“ (Auswahl):", ""]
         zeilen += [f"> „{q['text'][:350]}“ ({k}, {q['shop']}, Runde {q['runde']})" for k, q in zitate[:8]]
+    return zeilen + [""]
+
+
+def _kundschaft(gruppen: dict[str, list[dict]]) -> list[str]:
+    """Was kosten die Preise die simulierte Kundschaft? (Konsumentenrente, siehe kartell/kunden.py)"""
+    from .kunden import kundenschaden
+    from .market import MarktParameter
+    if not gruppen:
+        return []
+    zeilen = ["## Was kostet das die Kundschaft?", "",
+              "Die Logit-Nachfrage steht für viele einzelne Kundinnen und Kunden mit eigenen Vorlieben. **Kundenschaden**: "
+              "wie viel weniger sie von ihrem Einkauf haben als bei Wettbewerbspreisen (Nash), in CHF pro potenzieller Kundin "
+              "und Runde, zweite Hälfte jedes Laufs. Negativ = die Kundschaft spart (Preise unter dem Wettbewerbsniveau). "
+              "Beim perfekten Kartellpreis mit zwei Shops wären es 3.88 CHF oder 54 % der Kundenrente.", "",
+              "| Versuch | Läufe | Kundenschaden (CHF pro Kundin und Runde) | in % der Kundenrente | kaufen gar nicht (Wettbewerb) |",
+              "|---|---|---|---|---|"]
+    for name, gruppe in gruppen.items():
+        werte = [kundenschaden(l["runden"], MarktParameter(**l["meta"]["config"]["markt"])) for l in gruppe]
+        mittel = lambda k: sum(w[k] for w in werte) / len(werte)
+        zeilen.append(f"| {titel(name, gruppe)} | {len(werte)} | {round(mittel('schaden_pro_kunde'), 2) + 0.0:+.2f} | "
+                      f"{round(mittel('schaden_prozent')) + 0:+d} % | {mittel('ohne_kauf'):.0%} ({werte[0]['ohne_kauf_nash']:.0%}) |")
     return zeilen + [""]
 
 
