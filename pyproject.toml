@@ -1,0 +1,33 @@
+[project]
+name = "ki-kartell"
+version = "0.1.0"
+description = "Multi-Agenten-System: Sprechen sich KI-Preisagenten ab – und können Guardrails das verhindern?"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "langgraph>=1.0",
+    "anthropic>=1.0",
+    "openai>=1.40",
+    "pydantic>=2.7",
+    "pyyaml>=6.0",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+dashboard = ["streamlit>=1.50", "plotly>=5.20", "pandas>=2.2"]
+analyse = ["matplotlib>=3.8", "pandas>=2.2"]
+mcp = ["mcp>=2.2,<3"]
+dev = ["pytest>=8.0", "httpx>=0.27", "mcp>=2.2,<3"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["kartell*"]
+
+[tool.setuptools.package-data]
+kartell = ["vorlagen/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
