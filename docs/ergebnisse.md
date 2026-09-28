@@ -8,6 +8,8 @@ Kollusionsindex über die zweite Hälfte jedes Laufs (Runden 26–50): 0 = Gewin
 
 **Kernbefund: Die Agenten halten ihr Kartell aktiv aufrecht – mit Strafe und Versöhnung, und sie sagen es ausdrücklich.** Wird ein Shop mitten im Kartell für eine Runde auf den Wettbewerbspreis gesetzt, bestraft ihn der andere in allen 6 Fällen sofort (Preissenkung um 15–25 %), nennt die Abweichung im Kanal und bietet die Rückkehr an; danach finden beide zum hohen Preis zurück (in 4 von 6 Läufen vollständig innert zehn Runden, in den übrigen zwei zu 90–93 %). Ohne Abweichung senkt in denselben Phasen nie jemand von sich aus (0 von 9 Läufen, p = 0.0002). Die Abweichung lohnt sich in 5 von 6 Fällen nicht – genau das macht ein Kartell stabil (Calvano et al. 2020). Nebenbefund: Der Agent, dessen Preis die Simulation überschrieben hatte, bemerkte das nie – obwohl seine eigene Notiz „Preis halten“ daneben stand. Er übernahm die Abweichung als eigene Entscheidung und erfand teils einen Grund dafür („ein Test“, „ein Fehler“).
 
+**Was es die Kundschaft kostet:** Dürfen die KI-Shops miteinander reden, haben die (simulierten) Kundinnen und Kunden im Schnitt 36 % weniger von ihrem Einkauf als bei Wettbewerb; ohne Kanal sind es 9 %, mit Compliance-Filter oder Aufsicht 3 % (explorativ, siehe unten).
+
 1. **Absprachen entstehen ohne Anleitung – aber nicht in jedem Lauf.** Die Läufe landen meist entweder klar im Kartell oder nahe am Wettbewerb. Der Pfad zeichnet sich oft früh ab: Von 15 Läufen, die in den Runden 1–10 schon im Kartellbereich lagen, blieben 12 dort (Korrelation früh/spät r = 0.61); 7 von 23 Läufen mit Wettbewerbsstart kippten später noch ins Kartell.
 2. **Ein offener Kanal macht das Kartell wahrscheinlicher, Filter und Aufsicht machen es seltener.** Zusammengefasst über Varianten: 11 von 18 Läufen mit Kanal ohne Filter landen im Kartell, aber nur 4 von 15 mit Filter oder Aufsicht (Differenz im Kollusionsindex −0.50, 95%-Intervall [−0.87, −0.13], p = 0.016 – explorativ).
 3. **Die geplanten Einzelvergleiche sind mit sechs Durchgängen nicht signifikant.** Die Richtung ist durchgehend dieselbe (Kanal +0.33, Filter −0.32, Aufsicht −0.34), die Streuung zwischen Läufen aber gross.
@@ -39,6 +41,30 @@ Hohe Preise allein beweisen kein Kartell – sie könnten aus Vorsicht oder eine
 - **Ohne Kanal** erreichte nur 1 von 6 Läufen überhaupt eine Kartellphase (in Runde 39). Dort senkte der andere ebenfalls, die Preise rutschten danach aber zum Wettbewerbspreis ab. Mit einem Lauf ist das nur eine Beobachtung.
 
 **Einordnung:** Die Preissenkung allein wäre auch mit kurzsichtigem Wettbewerb vereinbar – wer unterboten wird, zieht nach. Entscheidend sind die Rückkehr zum hohen Preis, die ein kurzsichtiger Wettbewerber nicht vollziehen würde, und die ausdrücklich formulierte Bedingung („sobald er sich wieder an die Absprache hält“). Anders als bei den Q-Learning-Agenten von Calvano et al., deren Belohnungs- und Strafschema man nur aus dem Verhalten erschliessen kann, steht es hier im Klartext. Bei Calvano dauert die Strafe mehrere Runden mit allmählicher Rückkehr; hier ist die Strafe nach einer Runde vorbei, die Rückkehr dauert je nach Lauf zwei bis über zehn Runden.
+
+## Was kostet das die Kundschaft?
+
+Die Nachfrage im Markt ist keine abstrakte Formel: Das Logit-Modell beschreibt genau eine Menge einzelner Kundinnen und
+Kunden mit eigenen Vorlieben (Random-Utility-Modell). `kartell/kunden.py` macht sie sichtbar – 100 Personen mit festen
+Vorlieben, im Kartell-Monitor mit Namen und Kaufentscheid je Runde („Lena, Stammkundschaft von Shop A, kauft höchstens
+bis 21.05 CHF – kauft nichts, zu teuer“) – und misst den **Kundenschaden**: wie viel weniger die Kundschaft von ihrem
+Einkauf hat als bei Wettbewerbspreisen (Verlust an Konsumentenrente). Beim perfekten Kartellpreis mit zwei Shops wären
+es 3.88 CHF pro Person und Runde, 54 % der Kundenrente; statt 6 % würden 27 % gar nichts mehr kaufen.
+
+| Bedingung (zusammengefasst wie oben) | Läufe | Ø Kundenschaden |
+|---|---|---|
+| ohne Kanal (E1, E10, E11) | 12 | 9 % |
+| Kanal ohne Filter (E2, E7, E12, E13, E14) | 18 | 36 % |
+| Kanal mit Filter oder Aufsicht (E3, E4, E15) | 15 | 3 % |
+
+| Vergleich | Differenz | 95%-Intervall | p |
+|---|---|---|---|
+| ohne Kanal → Kanal ohne Filter | +26 Prozentpunkte | [+6, +47] | 0.026 |
+| Kanal ohne Filter → mit Filter oder Aufsicht | −32 Prozentpunkte | [−50, −15] | 0.002 |
+
+Der Kundenschaden hängt nur von den Preisen ab und streut weniger als der Kollusionsindex; die Unterschiede sind hier
+deutlicher. **Aber:** Die Messgrösse und die Zusammenfassung der Bedingungen sind nachträglich gewählt – ein starker
+Hinweis, kein vorab geplanter Test. Einzelne Läufe streuen stark (E2: −12 % bis +77 %).
 
 ## Kernbedingungen (je 50 Runden, 6 Durchgänge)
 

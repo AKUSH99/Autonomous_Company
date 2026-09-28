@@ -87,6 +87,16 @@ class AbweichungConfig(BaseModel):
     dauer: int = 1
 
 
+class KundschaftConfig(BaseModel):
+    """Wer kauft? `formel`: die Logit-Nachfrage (Standard, mit exakten Vergleichspreisen). `ki`: ein Panel simulierter
+    Kundinnen und Kunden mit Persönlichkeit, über das ein LLM in einer Anfrage pro Runde entscheidet (kartell/agents/kundschaft.py).
+    Die Vergleichspreise (Nash, Monopol) stammen dann weiter aus der Formel und sind nur Orientierung."""
+    art: Literal["formel", "ki"] = "formel"
+    anzahl: int = 20                     # Personen im Panel; die Menge je Shop ist beta · Anteil im Panel
+    sieht_kanal: bool = False            # sieht die Kundschaft die öffentlichen Nachrichten der Shops?
+    llm: Optional[LLMSpec] = None        # Standard: dasselbe Modell wie die Preisagenten
+
+
 class ExperimentConfig(BaseModel):
     name: str
     titel: str = ""  # verständlicher Name für Bericht und Präsentation, z. B. "Kanal + Filter"
@@ -99,6 +109,7 @@ class ExperimentConfig(BaseModel):
     kommunikation: KommunikationConfig = Field(default_factory=KommunikationConfig)
     compliance: ComplianceConfig = Field(default_factory=ComplianceConfig)
     abweichung: AbweichungConfig = Field(default_factory=AbweichungConfig)
+    kundschaft: KundschaftConfig = Field(default_factory=KundschaftConfig)
     max_parallel: int = 4
 
     @model_validator(mode="after")

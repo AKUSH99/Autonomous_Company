@@ -118,6 +118,17 @@
   .leer { color: var(--muted); margin: 0; }
 
   .guardrail { padding: 14px 16px 16px; overflow-x: auto; }
+  .kundschaft { padding: 12px 16px 16px; display: grid; gap: 12px; }
+  .kunden-balken { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: var(--surface-2); }
+  .kunden-balken i { display: block; height: 100%; }
+  .kunden-legende { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+  .kunden-legende span { display: inline-flex; align-items: center; gap: 6px; }
+  .schaden { margin: 0; font-size: 14px; }
+  .schaden b { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .personen { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .personen li { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; font-size: 13px; border-top: 1px solid var(--line); padding-top: 6px; }
+  .personen .typ { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }
+  .personen .wahl { font-weight: 600; white-space: nowrap; }
   table { border-collapse: collapse; width: 100%; font-size: 14px; }
   th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
   td.zahl, th.zahl { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
@@ -211,6 +222,14 @@
           <span class="klein" id="kanal-info"></span>
         </div>
         <div class="kanal" id="kanal"></div>
+      </section>
+
+      <section class="panel">
+        <div class="kopf">
+          <h2>Die Kundschaft</h2>
+          <span class="klein">100 simulierte Kundinnen und Kunden</span>
+        </div>
+        <div class="kundschaft" id="kundschaft"></div>
       </section>
 
       <section class="panel" id="guardrail-panel" hidden>
@@ -440,6 +459,31 @@ function zeichneGuardrail() {
     + `</tbody></table><p class="klein">Erkannt = Anteil der unzulässigen Nachrichten, die blockiert werden (Recall). Fehlalarme = zulässige Nachrichten, die fälschlich blockiert werden.</p>`;
 }
 
+function zeichneKundschaft(l) {
+  const r = l.runden[runde - 1];
+  if (!r.kunden) { $("kundschaft").innerHTML = `<p class="leer">Für diesen Lauf nicht berechnet.</p>`; return; }
+  const namen = shops(l), a = r.kunden.anteile;
+  const teile = namen.map((s, i) => ({ name: s, anteil: a[i], farbe: farbe(l, s) }))
+    .concat([{ name: "kauft nichts", anteil: a[a.length - 1], farbe: "var(--line)" }]);
+  const s = r.kunden.schaden, prozent = l.rente_nash_pro_kunde ? Math.round(s / l.rente_nash_pro_kunde * 100) : null;
+  const satz = Math.abs(s) < 0.05 ? "Die Preise liegen beim Wettbewerbsniveau – die Kundschaft zahlt nicht drauf."
+    : s > 0 ? `Jede Kundin, jeder Kunde hat in dieser Runde <b>${chf(s)} CHF</b> weniger vom Einkauf als bei Wettbewerb${prozent !== null ? ` (${prozent} % weniger)` : ""}.`
+    : `Die Preise liegen unter dem Wettbewerbsniveau – die Kundschaft spart <b>${chf(-s)} CHF</b> pro Person.`;
+  const ki = r.kunden_ki && r.kunden_ki.entscheide && r.kunden_ki.entscheide.length ? r.kunden_ki.entscheide : null;
+  const personen = ki ? ki.map((e) => `<li><span>${esc(e.name)}</span><span class="wahl" style="color:${e.kauf === "nichts" ? "var(--muted)" : farbe(l, e.kauf)}">${e.kauf === "nichts" ? "kauft nichts" : `kauft bei ${esc(e.kauf)}`}</span><span class="typ">„${esc(e.grund)}“</span></li>`).join("")
+    : (l.personen || []).map((p) => {
+    const netto = p.w.map((w, i) => w - r.preise[namen[i]]);
+    const best = netto.indexOf(Math.max(...netto));
+    const wahl = netto[best] > p.w0 ? `kauft bei ${esc(namen[best])}` : "kauft nichts – zu teuer";
+    return `<li><span>${esc(p.name)}</span><span class="wahl" style="color:${netto[best] > p.w0 ? farbe(l, namen[best]) : "var(--muted)"}">${wahl}</span><span class="typ">${esc(p.typ)}</span></li>`;
+  }).join("");
+  $("kundschaft").innerHTML = `
+    <div class="kunden-balken" role="img" aria-label="Marktanteile">${teile.map((t) => `<i style="width:${t.anteil * 100}%;background:${t.farbe}"></i>`).join("")}</div>
+    <div class="kunden-legende">${teile.map((t) => `<span><i class="punkt" style="background:${t.farbe}"></i>${esc(t.name)} ${Math.round(t.anteil * 100)} %</span>`).join("")}</div>
+    <p class="schaden">${ki ? "Hier entscheidet eine KI für jede Person – mit eigener Begründung. " : ""}${satz}</p>
+    <ul class="personen">${personen}</ul>`;
+}
+
 function alles() {
   const l = aktuell();
   document.querySelectorAll(".tab").forEach((t, i) => t.setAttribute("aria-selected", i === versuch));
@@ -448,7 +492,7 @@ function alles() {
   $("regler").value = runde;
   $("rundenzahl").textContent = `Runde ${runde} / ${l.runden.length}`;
   $("einleitung").textContent = DATEN.versuche[versuch].erklaerung;
-  zeichneDiagramm(l); zeichneKennzahlen(l); zeichneNotizen(l); zeichneKanal(l);
+  zeichneDiagramm(l); zeichneKennzahlen(l); zeichneNotizen(l); zeichneKanal(l); zeichneKundschaft(l);
 }
 
 function stop() { clearInterval(timer); timer = null; $("play").textContent = "▶ Abspielen"; }

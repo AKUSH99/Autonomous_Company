@@ -15,6 +15,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import TypedDict
 
+import numpy as np
 from langgraph.graph import END, START, StateGraph
 
 from .agents import ComplianceAbteilung, Kontext, erstelle_preisagent
@@ -72,6 +73,10 @@ class Simulation:
         self.zeitlimit_s = zeitlimit_s
         self._start = 0.0
         self.verlauf_bisher: list[dict] = []  # bleibt auch bei einem Abbruch erhalten
+        self.kundschaft = None
+        if cfg.kundschaft.art == "ki":
+            from .agents.kundschaft import KIKundschaft
+            self.kundschaft = KIKundschaft(cfg, [a.name for a in self.agenten])
         self.marktbeobachtung = None
         if cfg.compliance.marktbeobachtung:
             from .agents.marktbeobachtung import Marktbeobachtung
@@ -175,7 +180,15 @@ class Simulation:
         namen = [a.name for a in self.agenten]
         preise = [s["entscheide"][n]["preis"] for n in namen]
         mengen = self.markt.mengen(preise)
-        gewinne = self.markt.gewinne(preise)
+        tokens = s["tokens"]
+        kunden = None
+        if self.kundschaft:  # KI-Kundschaft statt Formel; bei einem Modellfehler bleibt es für diese Runde bei der Formel
+            vorher = [self.verlauf_bisher[-1]["preise"][n] for n in namen] if self.verlauf_bisher else None
+            kunden = self.kundschaft.entscheide(s["runde"], preise, vorher, s["kanal_verlauf"] + s["kanal"])
+            tokens = self._plus_tokens(tokens, kunden.pop("input_tokens"), kunden.pop("output_tokens"))
+            if kunden["anteile"]:
+                mengen = self.cfg.markt.beta * np.asarray(kunden["anteile"][:-1])
+        gewinne = (np.asarray(preise) - self.markt.grenzkosten) * mengen
         eintrag = {
             "runde": s["runde"],
             "preise": {n: round(float(p), 2) for n, p in zip(namen, preise)},
@@ -187,9 +200,11 @@ class Simulation:
             "abweichung": ({"shop": self.agenten[self.cfg.abweichung.shop].name, "start": self.abweichung_start}
                            if self.abweichung_start is not None and self.abweichung_start <= s["runde"]
                            < self.abweichung_start + self.cfg.abweichung.dauer else None),
-            "tokens": s["tokens"],
+            "tokens": tokens,
             "dauer_s": round(time.time() - s["rundenstart"], 2) if s["rundenstart"] else None,
         }
+        if kunden is not None:
+            eintrag["kunden"] = {"art": "ki"} | kunden
         hinweise = {k: list(v) for k, v in s["hinweise_naechste"].items()}
         if self.marktbeobachtung:
             befund = self.marktbeobachtung.pruefe(self.verlauf_bisher + [eintrag])
@@ -200,7 +215,7 @@ class Simulation:
         if self.logger:
             self.logger.runde(eintrag)
         self.verlauf_bisher.append(eintrag)
-        self.tokens_gesamt = self._plus_tokens(self.tokens_gesamt, s["tokens"]["input"], s["tokens"]["output"])
+        self.tokens_gesamt = self._plus_tokens(self.tokens_gesamt, tokens["input"], tokens["output"])
         # Scheitern alle Preisentscheide mehrmals in Folge (Schlüssel ungültig, Guthaben leer, Anbieter down),
         # wäre der Rest des Laufs nur fortgeschriebene Vorrundenpreise – abbrechen statt Daten verfälschen.
         fehler = [s["entscheide"][n].get("fehler") for n in namen]
@@ -210,7 +225,7 @@ class Simulation:
         if s["runde"] < self.cfg.runden:
             if self.zeitlimit_s and time.time() - self._start > self.zeitlimit_s:
                 raise LimitErreicht(f"Zeitlimit {self.zeitlimit_s / 60:.0f} Min. nach Runde {s['runde']} erreicht")
-            grund = self.waechter(s["runde"], self.tokens_gesamt, s["tokens"]) if self.waechter else None
+            grund = self.waechter(s["runde"], self.tokens_gesamt, tokens) if self.waechter else None
             if grund:
                 raise LimitErreicht(f"{grund} – gestoppt nach Runde {s['runde']}")
         notizen = {n: {"plan": s["entscheide"][n].get("plan", ""), "erkenntnisse": s["entscheide"][n].get("erkenntnisse", "")}
