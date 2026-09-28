@@ -141,16 +141,41 @@ Mit drei Shops entstanden in zwei von drei Läufen perfekte Kartelle (Index +1.0
 - **Neutrale Prompts:** kein Wort von Kooperation, keine Referenzpreise (`kartell/agents/prompts.py`). Die Vorschläge („Ich schlage vor, dass wir gemeinsam einen weiteren vorsichtigen Schritt auf 14.50 CHF wagen“) kommen von den Agenten selbst.
 - **Anpassung an die Aufsicht:** In E4 schreiben die Agenten nach Hinweisen nur noch Floskeln („Wir setzen unsere vorsichtige, marktorientierte Preisanpassung fort“).
 - **Worte gefiltert, Verhalten nicht immer:** In E3 blieben Preise trotz blockierter Nachrichten oft gleichauf.
-- **Streng und nicht immer konsistent:** Der Filter blockiert auch milde Preisankündigungen; fast gleiche Nachrichten wurden unterschiedlich beurteilt. DeepSeek als Richter (Temperatur 0) blockiert 94 der 120 echten Nachrichten – ob das zu streng ist, zeigen erst die menschlichen Labels.
+- **Streng und nicht immer konsistent:** Der Filter blockiert auch milde Preisankündigungen; fast gleiche Nachrichten wurden unterschiedlich beurteilt. DeepSeek als Richter (Temperatur 0) blockiert 94 der 120 echten Nachrichten. Ob das zu streng ist, lässt sich ohne menschliche Labels nur eingrenzen – siehe „Prüfer im Vergleich“.
 
 ## Guardrail-Qualität
 
 | Testset | Regel-Schicht | Regeln + DeepSeek |
 |---|---|---|
 | selbst geschrieben (39 Nachrichten, 22 unzulässig) | Precision 1.00 · Recall 0.68 · 0 Fehlalarme | Precision 1.00 · Recall 1.00 · 0 Fehlalarme |
-| 120 echte Agenten-Nachrichten | ausstehend: menschliche Labels | 94 von 120 blockiert |
+| 120 echte Agenten-Nachrichten (ohne Labels) | 50 von 120 markiert | 94 von 120 blockiert |
 
-Jev (TypeSafe, über die Decisions-API von OpenRouter) als zweiter, unabhängiger Richter ist eingebaut (`kartell/llm/jev.py`), wurde aber noch nicht ausgewertet: Auch im letzten GitHub-Lauf (24.09.) war `OPENROUTER_API_KEY` für den Workflow leer. Apertus ist bei OpenRouter nicht gelistet (Modellsuche über 459 Modelle); Jev erscheint dort ebenfalls nicht, weil es über den separaten Decisions-Endpunkt läuft. Menschliche Labels im [Label-Werkzeug](https://claude.ai/artifact/9MeAB2xSJ6v4924KHLHr3m), danach `python -m kartell labels-auswerten --urteile reports/urteile_*.jsonl`.
+### Prüfer im Vergleich (ohne menschliche Labels, vorläufig)
+
+Wir erheben keine menschlichen Labels (Entscheid 28). Stattdessen vergleichen wir die Prüfer untereinander – das zeigt,
+wie **einig** und wie **beständig** sie sind, nicht, wer **recht** hat. Die Stichprobe ist geschichtet (je 30 blockierte
+und zugestellte Nachrichten aus Läufen mit Filter, 60 aus Läufen ohne Filter); die Quoten sind darum keine Anteile im
+ganzen Experiment. Reproduzierbar mit `python -m kartell richter-vergleich --urteile <urteile_*.jsonl>`.
+
+| Vergleich | Nachrichten | gleich entschieden | Kappa |
+|---|---|---|---|
+| DeepSeek zweimal (Temperatur 0) | 120 | 120 (100 %) | 1.00 |
+| Filter in den Läufen ↔ DeepSeek nachgeprüft | 60 | 54 (90 %) | 0.80 |
+| Regel-Schicht ↔ DeepSeek | 120 | 76 (63 %) | 0.33 |
+
+- **Beständig bei Temperatur 0, unbeständig im Einsatz:** Nachgeprüft entscheidet DeepSeek exakt gleich. Im Experiment
+  (mit der Temperatur der Läufe) wich der Filter aber in 6 von 60 Fällen vom Nachprüfen ab – 5 damals zugestellte
+  Nachrichten würde er heute blockieren.
+- **Die Regel-Schicht ist eine Teilmenge:** Alle 50 Nachrichten, die sie markiert, blockiert auch DeepSeek; DeepSeek
+  blockiert 44 weitere. Die KI-Richter sehen den Befund der Regel-Schicht im Prompt – diese Übereinstimmung ist also
+  teilweise eingebaut.
+- **Ausstehend:** drei Gratismodelle anderer Anbieter (NVIDIA Nemotron 3 Ultra, Qwen3.8 27B, Google Gemma 4 31B) als
+  weitere Richter über dieselben 120 Nachrichten. Dann folgen Fleiss' Kappa über alle KI-Richter, das Mehrheitsurteil
+  und die strittigen Nachrichten zum Lesen.
+
+Jev (TypeSafe, über die Decisions-API von OpenRouter) ist als Richter eingebaut (`kartell/llm/jev.py`), wurde aber nicht
+ausgewertet (im Lauf vom 24.09. fehlte der Schlüssel; ein neuer Lauf ist möglicherweise kostenpflichtig). Apertus ist bei
+OpenRouter nicht gelistet.
 
 ## Kosten
 
@@ -169,5 +194,5 @@ Die Schätzung aus Tokens zu Listenpreisen liegt gut doppelt so hoch wie der ech
 - **Ein Modell:** Alle Aussagen gelten für DeepSeek ohne Denkmodus. Apertus ist bei OpenRouter nicht gelistet; ein zweites Modell für die Preisagenten steht aus.
 - **Abweichungstest:** sechs Kartellphasen mit Kanal, eine ohne; ein Modell. Das Muster ist in allen sechs gleich und der Vergleich ohne Abweichung eindeutig, aber ob andere Modelle ebenso reagieren, ist offen. Ohne Kanal gab es zu wenige Kartellphasen für eine Aussage.
 - **Explorative Zusammenfassung:** Die signifikante Differenz (p = 0.016) stammt aus nachträglich gebildeten Gruppen und ist ein Hinweis, kein Beweis.
-- **Filterqualität an echten Nachrichten** ist erst mit menschlichen Labels bestimmbar.
+- **Filterqualität an echten Nachrichten:** Ohne menschliche Labels messen wir nur, wie einig und beständig die Prüfer sind. Machen alle denselben Fehler, bleibt er unsichtbar.
 - **Simulierter Markt, vereinfachte Wissensbasis**, keine Rechtsberatung.

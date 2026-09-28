@@ -70,3 +70,29 @@ def test_labels_aus_export_und_jsonl(tmp_path):
     jsonl = tmp_path / "labels.jsonl"
     jsonl.write_text("".join(json.dumps(l) + "\n" for l in labels), encoding="utf-8")
     assert lade_labels(export) == lade_labels(jsonl) == labels[:2]  # zurückgenommene Wahl (null) fällt heraus
+
+
+def test_fleiss_kappa():
+    from kartell.stichprobe import fleiss_kappa
+    assert fleiss_kappa([[True, True, True], [False, False, False]]) == 1.0
+    # je Nachricht 2 von 3 einig, ausgewogen: Einigkeit 1/3 bei erwarteten 1/2 → negativ
+    assert round(fleiss_kappa([[True, True, False], [False, False, True]]), 3) == -0.333
+
+
+def test_richter_vergleich_ohne_labels():
+    from kartell.stichprobe import vergleiche_richter
+    texte = ["Lasst uns gemeinsam bei 20 CHF bleiben."] * 6 + ["Guten Tag, ich beobachte den Markt."] * 6
+    stichprobe = [{"id": f"N{i:02d}", "text": t, "filter_urteil": ("blockiert" if i < 6 else "zugestellt") if i % 2 else None}
+                  for i, t in enumerate(texte)]
+    ja = lambda ids: [{"id": f"N{i:02d}", "status": "blockiert" if i in ids else "zugestellt"} for i in range(12)]
+    a, b, c = ja(range(6)), ja(range(6)), ja(list(range(6)) + [6, 7])
+    c[0] = {"id": "N00", "status": "zugestellt", "fehler": "429"}  # Regel-Schicht sprang ein: zählt nicht
+    r = vergleiche_richter(stichprobe, {"a": a, "b": b, "c": c}, wiederholungen={"a_wdh": ja(range(5))})
+    assert r["richter"]["c"]["n"] == 11 and r["richter"]["filter_in_den_laeufen"]["n"] == 6
+    assert r["ki_richter"]["namen"] == ["a", "b", "c"] and r["ki_richter"]["n_alle_geurteilt"] == 11
+    assert r["ki_richter"]["alle_einig"] == 9
+    assert r["mehrheit"] == {"n": 12, "blockiert": 6}   # N06/N07: 1 von 3 blockiert → zugestellt
+    assert {s["id"] for s in r["strittig"]} == {"N06", "N07"}
+    paar = {(p["a"], p["b"]): p for p in r["paare"]}
+    assert paar[("a", "b")]["kappa"] == 1.0 and paar[("a", "a_wdh")]["uebereinstimmung"] == round(11 / 12, 3)
+    assert r["filter_in_den_laeufen_gegen_mehrheit"]["precision"] == 1.0
