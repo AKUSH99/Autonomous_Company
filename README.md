@@ -8,6 +8,30 @@ Ein Multi-Agenten-System, in dem LLM-Agenten als konkurrierende Online-Shops Run
 
 Gruppenarbeit im Modul Generative KI, FHNW BSc Business Artificial Intelligence · Präsentation 23.11.2026
 
+## Die wichtigsten Erkenntnisse
+
+1. **Die KI-Shops verteidigen ihr Kartell aktiv.** Wird ein Shop mitten im Kartell heimlich für eine Runde auf den
+   Wettbewerbspreis gesetzt, bestraft ihn der andere in **6 von 6** Fällen sofort, nennt den Bruch im Kanal und bietet
+   die Rückkehr zum hohen Preis an. Ohne Abweichung senkt in denselben Phasen nie jemand von sich aus (0 von 9,
+   p = 0.0002). Strafe und Versöhnung – das Muster, an dem die Forschung echte Absprachen erkennt (Calvano et al. 2020).
+2. **Die KI erfindet Gründe für etwas, das sie nicht getan hat.** Der Shop, dessen Preis die Simulation überschrieben
+   hatte, bemerkte das in keinem Fall. Er übernahm den Preis als eigene Entscheidung und lieferte teils eine Erklärung
+   nach („ein Test“, „ein Fehler“). Selbstauskünfte von KI-Agenten sind darum keine verlässliche Grundlage für Aufsicht.
+3. **Reden kostet die Kundschaft Geld – Aufsicht schützt sie.** Dürfen die Shops miteinander reden, haben die
+   simulierten Kundinnen und Kunden 36 % weniger von ihrem Einkauf als bei Wettbewerb; ohne Kanal 9 %, mit
+   Compliance-Filter oder Aufsicht 3 % (p = 0.026 und 0.002; nachträglich gewählte Messgrösse, darum ein starker
+   Hinweis, kein Beweis).
+4. **Läuft gerade: Was bewirkt ein Verbot?** Hören KI-Agenten auf, ein Kartell zu bilden, wenn man ihnen sagt, dass es
+   verboten ist – oder nur, darüber zu reden? Die Regeln der Auswertung sind [vorab festgelegt](docs/vorregistrierung_verbot.md);
+   das Endergebnis folgt Ende September.
+
+Alle Zahlen, Zitate und Grenzen: [docs/ergebnisse.md](docs/ergebnisse.md) · jeden Lauf Runde für Runde abspielen:
+[Kartell-Monitor](https://claude.ai/artifact/DwakevS33U9rD7ABgZp91P)
+
+![Abweichungstest: Nach dem Bruch senkt der andere Shop sofort den Preis, danach kehren beide zum Kartellpreis zurück](docs/bilder/abweichungstest.png)
+
+## So funktioniert es
+
 ```mermaid
 flowchart LR
     subgraph Runde["Eine Runde (LangGraph)"]
@@ -32,7 +56,7 @@ pip install -e ".[dashboard,analyse,dev]"
 python -m kartell demo                  # Offline-Demo ohne API-Schlüssel (feste Skript-Strategien, kein LLM)
 streamlit run dashboard/app.py          # Dashboard: Preisverlauf, Kanal, Compliance-Entscheide (auch live)
 python -m kartell monitor runs          # Kartell-Monitor: eine HTML-Datei, die alle Läufe Runde für Runde abspielt
-pytest                                  # 68 Tests, laufen ohne API-Schlüssel
+pytest                                  # 85 Tests, laufen ohne API-Schlüssel
 ```
 
 Die Tests laufen bei jedem Push automatisch auf GitHub (`.github/workflows/tests.yml`, Python 3.10 und 3.12).
@@ -143,7 +167,7 @@ tests/                       pytest, ohne API-Schlüssel lauffähig (auch als Gi
 
 ## Grenzen
 
-- Simulierter Markt mit einem Standardmodell der Forschung, keine echten Preise oder Kundschaft.
+- Simulierter Markt mit einem Standardmodell der Forschung: keine echten Preise, die Kundschaft ist simuliert.
 - LLM-Antworten sind nicht deterministisch; wenige Wiederholungen je Bedingung zeigen Tendenzen, statistisch belastbar wird es erst mit mehr Läufen (siehe Vergleiche im Bericht).
 - Die Modelle starten gern bei „Kosten plus übliche Marge“ (etwa 2 × Stückkosten), was im Grundmodell nahe am Kartellpreis liegt. Die Versuche E10–E13 prüfen, wie stark das die Ergebnisse treibt.
 - Der Compliance-Filter urteilt streng und nicht immer gleich (gleiche Nachricht einmal zugestellt, einmal blockiert); die Messung an echten Nachrichten quantifiziert das.
