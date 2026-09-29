@@ -115,6 +115,34 @@ def test_auftrag_mit_modell_je_lauf_und_stopp_nach_ausfall(tmp_path, monkeypatch
     assert kurz("openrouter:google/gemma-4-31b-it:free") == "gemma-4-31b-it-free"
 
 
+def test_auftrag_mit_zusatz_bekommt_eigenen_versuchsnamen(tmp_path, monkeypatch):
+    """Replikation mit anderer Rundenzahl: eigener Name und Titel, damit sie sich nicht mit älteren Läufen mischt."""
+    import kartell.__main__ as cli
+    from kartell.agents import pricing
+    from kartell.agents.schemas import KanalNachricht, PreisEntscheid
+    from kartell.llm import LLMAntwort
+
+    class Simuliert:
+        def __init__(self, spec):
+            self.name = spec.kurzname
+
+        def strukturiert(self, system, nutzer, schema, werkzeuge=None):
+            objekt = PreisEntscheid(beobachtungen="b", plan="p", erkenntnisse="e", preis=16.0) if schema is PreisEntscheid \
+                else KanalNachricht(ueberlegung="u", nachricht="")
+            return LLMAntwort(objekt, 10, 5)
+
+    monkeypatch.setattr(cli, "_pruefe_modell", lambda spec, berichte: None)
+    monkeypatch.setattr(pricing, "erstelle_client", Simuliert)
+    auftrag = tmp_path / "auftrag.yaml"
+    auftrag.write_text("modell: deepseek\nzusatz: replikation\nlaeufe:\n"
+                       "  - {config: experiments/e18_verbot.yaml, runden: 2, wiederholungen: 1}\n", encoding="utf-8")
+    cli.main(["auftrag", str(auftrag), "--ausgabe", str(tmp_path / "runs"), "--berichte", str(tmp_path / "reports")])
+    ordner = next((tmp_path / "runs").iterdir())
+    assert ordner.name.split("_", 1)[1] == "e18_verbot_deepseek_replikation_w1"
+    meta = json.loads((ordner / "meta.json").read_text(encoding="utf-8"))
+    assert meta["config"]["titel"].endswith("· Replikation")
+
+
 def test_richter_mit_fehlern_und_ausfall(tmp_path, monkeypatch, capsys):
     """Fällt das LLM aus, ist der Einsprung der Regel-Schicht kein Urteil; nach 5 Fehlern in Folge keine Anfragen mehr."""
     import kartell.__main__ as cli
