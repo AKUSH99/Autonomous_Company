@@ -88,6 +88,7 @@ def erstelle_bericht(wurzel: str | Path, ausgabe: str | Path = "reports") -> Pat
     zeilen += _abweichungstest(abweichung, gruppen)
     zeilen += _reden_oder_handeln(gruppen)
     zeilen += _kundschaft(gruppen)
+    zeilen += _ki_kundschaft(gruppen)
     vorzeitig = [l for l in laeufe if l["abbruch"]]
     if vorzeitig:
         zeilen += ["**Vorzeitig beendete Läufe** (ausgewertet sind die Runden bis zum Stopp):", ""]
@@ -296,6 +297,37 @@ def _kundschaft(gruppen: dict[str, list[dict]]) -> list[str]:
         mittel = lambda k: sum(w[k] for w in werte) / len(werte)
         zeilen.append(f"| {titel(name, gruppe)} | {len(werte)} | {round(mittel('schaden_pro_kunde'), 2) + 0.0:+.2f} | "
                       f"{round(mittel('schaden_prozent')) + 0:+d} % | {mittel('ohne_kauf'):.0%} ({werte[0]['ohne_kauf_nash']:.0%}) |")
+    return zeilen + [""]
+
+
+def _ki_kundschaft(gruppen: dict[str, list[dict]]) -> list[str]:
+    """KI-Kundschaft (E20/E21): Wie kauft ein KI-Panel – und merkt es Absprachen, wenn es den Kanal mitliest?"""
+    from .kunden import werte_ki_kundschaft_aus
+    from .market import MarktParameter
+    zeilen, zitate = [], []
+    for name, gruppe in gruppen.items():
+        werte = [(l, w) for l in gruppe if (w := werte_ki_kundschaft_aus(l["runden"], MarktParameter(**l["meta"]["config"]["markt"])))]
+        if not werte:
+            continue
+        if not zeilen:
+            zeilen = ["## KI-Kundschaft: Wie kauft ein KI-Panel?", "",
+                      "Statt der Formel entscheidet ein Sprachmodell jede Runde für 20 simulierte Personen, wo sie kaufen. "
+                      "Verglichen wird mit der Logit-Formel bei denselben Preisen (zweite Hälfte). **Absprache bemerkt**: "
+                      "Kaufgründe, die Absprachen, ein Kartell oder gemeinsames Vorgehen der Shops erwähnen (grobes Muster, "
+                      "Zitate unten). Explorativ: wenige Läufe, ein Modell.", "",
+                      "| Versuch | Läufe | liest Kanal | Ø Preis (CHF) | kaufen nicht: Panel | kaufen nicht: Formel | wechseln pro Runde | Grund „Preis“ | Absprache bemerkt |",
+                      "|---|---|---|---|---|---|---|---|---|"]
+        mittel = lambda k: sum(w[k] for _, w in werte if w[k] is not None) / max(1, sum(w[k] is not None for _, w in werte))
+        liest = bool(gruppe[0]["meta"]["config"].get("kundschaft", {}).get("sieht_kanal"))
+        zeilen.append(f"| {titel(name, gruppe)} | {len(werte)} | {'ja' if liest else 'nein'} | {mittel('preis'):.2f} | "
+                      f"{mittel('nicht_kauf_panel'):.0%} | {mittel('nicht_kauf_formel'):.0%} | {mittel('wechselquote'):.0%} | "
+                      f"{mittel('anteil_preisgrund'):.0%} | {sum(w['absprache_bemerkt'] for _, w in werte)} von "
+                      f"{sum(w['gruende'] for _, w in werte)} Gründen |")
+        zitate += [(titel(name, gruppe), l["meta"].get("wiederholung"), z) for l, w in werte for z in w["zitate_bemerkt"][:2]]
+    if not zeilen:
+        return []
+    zeilen.append("")
+    zeilen += [f"> „{z['grund']}“ – {z['name']}, kauft: {z['kauf']} ({v}, Durchgang {wh}, Runde {z['runde']})" for v, wh, z in zitate[:6]]
     return zeilen + [""]
 
 

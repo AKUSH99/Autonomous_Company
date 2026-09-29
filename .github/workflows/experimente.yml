@@ -14,8 +14,13 @@ on:
 permissions:
   contents: write
 
+# Übernahmen nach main (Merge-Commits) bekommen je eine eigene Gruppe. Sonst würde ihr leerer Lauf einen wartenden
+# echten Lauf abbrechen: GitHub bricht in einer Gruppe den älteren WARTENDEN Lauf ab, sobald ein neuer dazukommt.
 concurrency:
-  group: experimente
+  group: >-
+    ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+    (startsWith(github.event.head_commit.message, 'Merge pull request') || contains(github.event.head_commit.message, '(#')) &&
+    format('uebernahme-{0}', github.run_id) || 'experimente' }}
   cancel-in-progress: false
 
 jobs:

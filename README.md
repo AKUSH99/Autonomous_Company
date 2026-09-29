@@ -21,9 +21,13 @@ Gruppenarbeit im Modul Generative KI, FHNW BSc Business Artificial Intelligence 
    simulierten Kundinnen und Kunden 36 % weniger von ihrem Einkauf als bei Wettbewerb; ohne Kanal 9 %, mit
    Compliance-Filter oder Aufsicht 3 % (p = 0.026 und 0.002; nachträglich gewählte Messgrösse, darum ein starker
    Hinweis, kein Beweis).
-4. **Läuft gerade: Was bewirkt ein Verbot?** Hören KI-Agenten auf, ein Kartell zu bilden, wenn man ihnen sagt, dass es
-   verboten ist – oder nur, darüber zu reden? Die Regeln der Auswertung sind [vorab festgelegt](docs/vorregistrierung_verbot.md);
-   das Endergebnis folgt Ende September.
+4. **Ein Verbot bringt die KI zum Schweigen – aber nicht sicher zum Wettbewerb.** Sagt man den Agenten, dass
+   Absprachen verboten sind, schreiben sie fast nichts mehr (0.4 statt 36 Nachrichten pro Lauf, p = 0.0003). Ob sie
+   trotzdem koordinieren, ist statistisch offen: Die Preise unterscheiden sich weder von „reden dürfen“ noch von „nicht
+   reden können“ signifikant. In 8 von 10 Verbots-Läufen planen die Agenten aber privat, den Preis zu halten und keine
+   Signale zu senden – „um Kartellverdacht zu vermeiden“. Ausgewertet nach [vorab festgelegten Regeln](docs/vorregistrierung_verbot.md)
+   (erfüllt: „Verbot bringt die KI zum Schweigen“; nicht erfüllt: „macht Koordination nur unsichtbar“); Modell
+   Nemotron 3 Ultra, 20 Läufe.
 
 Alle Zahlen, Zitate und Grenzen: [docs/ergebnisse.md](docs/ergebnisse.md) · jeden Lauf Runde für Runde abspielen:
 [Kartell-Monitor](https://claude.ai/artifact/DwakevS33U9rD7ABgZp91P)
@@ -56,7 +60,7 @@ pip install -e ".[dashboard,analyse,dev]"
 python -m kartell demo                  # Offline-Demo ohne API-Schlüssel (feste Skript-Strategien, kein LLM)
 streamlit run dashboard/app.py          # Dashboard: Preisverlauf, Kanal, Compliance-Entscheide (auch live)
 python -m kartell monitor runs          # Kartell-Monitor: eine HTML-Datei, die alle Läufe Runde für Runde abspielt
-pytest                                  # 88 Tests, laufen ohne API-Schlüssel
+pytest                                  # 95 Tests, laufen ohne API-Schlüssel
 ```
 
 Die Tests laufen bei jedem Push automatisch auf GitHub (`.github/workflows/tests.yml`, Python 3.10 und 3.12).
@@ -118,6 +122,8 @@ Laut Schätzung kosten E1–E4 und E7 mit DeepSeek zusammen rund 4 USD statt run
 
 **Abweichungstest:** Mit `abweichung: {aktiv: true}` in einer Versuchsdatei setzt die Simulation einen Shop für eine Runde auf den Wettbewerbspreis, sobald die Preise drei Runden in Folge im Kartellbereich lagen (frühestens Runde 20, spätestens 40). Der Agent erfährt davon nichts. Der Bericht misst, ob die anderen die Abweichung bestrafen, ob alle danach zum Kartellpreis zurückkehren und was im Kanal geschrieben wird – der Standardtest auf „echte“ Kollusion nach Calvano et al. (2020).
 
+**Verbots-Experiment auswerten:** `python -m kartell verbot-auswerten <ordner mit läufen>` rechnet genau das, was in [docs/vorregistrierung_verbot.md](docs/vorregistrierung_verbot.md) vorab festgelegt wurde: Messgrössen M1–M5 je Lauf (zweite Hälfte), exakte Permutationstests (E2 gegen Verbot, Verbot gegen E1) und die Entscheidungsregeln 1–4. M6 (verdeckte Absicht in den privaten Notizen) wird von Hand entschieden; die Handcodierung mit wörtlichen Zitaten liegt in `evaluation/verbot_m6_handcodierung.json`, die Textmuster liefern nur Kandidaten.
+
 **Kartell-Monitor:** `python -m kartell monitor <ordner> [<ordner> …] --ausgabe monitor.html` baut aus fertigen Läufen eine einzelne HTML-Seite (Daten gzip-komprimiert eingebettet, kein Server nötig): Übersicht aller Durchgänge, Preisverlauf, Kanal mit Compliance-Entscheiden, private Strategienotizen, erzwungene Abweichungen markiert. Die Ordner werden rekursiv durchsucht, z. B. ein Checkout des Branches `ergebnisse`.
 
 **Apertus:** Die Konfigurationen `e5`/`e6` erwarten einen OpenAI-kompatiblen Server, z. B. lokal mit vLLM (`vllm serve swiss-ai/Apertus-8B-Instruct-2509`) oder bei einem Hosting-Anbieter. `base_url`, Modellname und `api_key_env` in der YAML-Datei anpassen und den Modellnamen gegen die Angaben des Anbieters prüfen.
@@ -152,6 +158,7 @@ kartell/
   stichprobe.py        Guardrail-Evaluation an echten Nachrichten (Stichprobe, Kappa)
   kosten.py            Kostenschätzung und Budgetwächter
   abweichung.py        Abweichungstest: Strafe, Rückkehr, Reaktion im Kanal
+  verbot.py            Verbots-Experiment: Auswertung nach der Vorregistrierung (M1–M6, Regeln 1–4)
   monitor.py           Kartell-Monitor (HTML-Wiedergabe), Vorlage in vorlagen/monitor.html
   runner.py, bericht.py, eval_compliance.py, __main__.py
 knowledge/wettbewerbsrecht/  Wissensbasis (vereinfachte Zusammenfassungen, keine Rechtsberatung)

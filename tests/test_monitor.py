@@ -53,3 +53,12 @@ def test_modellname():
     from kartell.monitor import modellname
     assert modellname("openai_compat:deepseek-flash") == "deepseek-flash"
     assert modellname("openai_compat:nvidia/nemotron-3-ultra-550b-a55b:free") == "nemotron-3-ultra-550b-a55b"
+
+
+def test_gleicher_versuch_mit_zwei_modellen_bekommt_modell_im_namen():
+    from kartell.monitor import eindeutige_namen
+    versuche = [{"kurz": "E1 · ohne Kanal", "durchgaenge": [{"modell": "deepseek-flash"}]},
+                {"kurz": "E1 · ohne Kanal", "durchgaenge": [{"modell": "nvidia/nemotron-3-ultra-550b-a55b:free"}]},
+                {"kurz": "E3 · Compliance-Filter", "durchgaenge": [{"modell": "deepseek-flash"}]}]
+    assert [v["kurz"] for v in eindeutige_namen(versuche)] == [
+        "E1 · ohne Kanal · DeepSeek", "E1 · ohne Kanal · Nemotron", "E3 · Compliance-Filter"]
