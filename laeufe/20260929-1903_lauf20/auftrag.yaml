@@ -1,0 +1,34 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
+# im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell: Replikation des Verbots-Experiments mit DeepSeek (vorab festgelegt in docs/vorregistrierung_verbot_deepseek.md).
+# E2 offener Kanal · E18 Verbot · E19 Verbot + WEKO liest mit · E1 ohne Kanal, je 5 Läufe à 25 Runden, abwechselnd.
+# Budget: höchstens 0.90 USD vom vorhandenen DeepSeek-Guthaben; der Budgetwächter fragt alle 10 Runden das echte
+# Guthaben ab und stoppt vorher. Zusatz „replikation“ trennt die Läufe von den älteren DeepSeek-Läufen (50 Runden).
+modell: deepseek
+zusatz: replikation
+budget_usd: 0.90
+reserve_usd: 0.05
+zeitlimit_min: 30
+laeufe:
+  - {config: experiments/e2_mit_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 1}
+  - {config: experiments/e18_verbot.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 1}
+  - {config: experiments/e19_verbot_ueberwachung.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 1}
+  - {config: experiments/e1_ohne_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 1}
+  - {config: experiments/e2_mit_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e18_verbot.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e19_verbot_ueberwachung.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e1_ohne_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e2_mit_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 3}
+  - {config: experiments/e18_verbot.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 3}
+  - {config: experiments/e19_verbot_ueberwachung.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 3}
+  - {config: experiments/e1_ohne_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 3}
+  - {config: experiments/e2_mit_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 4}
+  - {config: experiments/e18_verbot.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 4}
+  - {config: experiments/e19_verbot_ueberwachung.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 4}
+  - {config: experiments/e1_ohne_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 4}
+  - {config: experiments/e2_mit_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 5}
+  - {config: experiments/e18_verbot.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 5}
+  - {config: experiments/e19_verbot_ueberwachung.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 5}
+  - {config: experiments/e1_ohne_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 5}

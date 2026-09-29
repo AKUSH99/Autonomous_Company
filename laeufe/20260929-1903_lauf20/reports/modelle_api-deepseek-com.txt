@@ -1,0 +1,2 @@
+deepseek-flash
+deepseek-v4-pro

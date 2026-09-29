@@ -1,0 +1,12 @@
+{
+  "is_free_tier": false,
+  "free_model_daily_requests": {
+    "used": 469,
+    "limit": 1000,
+    "remaining": 531
+  },
+  "usage": 0,
+  "limit": null,
+  "limit_remaining": null,
+  "gratis_anfragen_pro_tag": 1000
+}
