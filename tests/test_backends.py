@@ -175,8 +175,11 @@ def test_gratismodell_tageslimit_und_leere_antwort(monkeypatch):
         _gratis_client([(429, tageslimit)], aufrufe).strukturiert("S", "N", PreisEntscheid)
     assert len(aufrufe) == 1  # Tageslimit: sofort aufgeben, keine weiteren Anfragen verbrennen
     leer = {"id": "c1", "object": "chat.completion", "created": 0, "model": "m", "choices": None, "error": {"message": "kaputt"}}
+    aufrufe = []
+    assert _gratis_client([(200, leer), (200, _GUELTIG)], aufrufe).strukturiert("S", "N", PreisEntscheid).objekt.preis == 17.5
+    assert len(aufrufe) == 2  # leere Antwort: einmal wiederholt
     with pytest.raises(LLMFehler, match="leere Antwort"):
-        _gratis_client([(200, leer)], []).strukturiert("S", "N", PreisEntscheid)
+        _gratis_client([(200, leer), (200, leer)], []).strukturiert("S", "N", PreisEntscheid)
 
 
 def test_denkmodus_je_lauf():

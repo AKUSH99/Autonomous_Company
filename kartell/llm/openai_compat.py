@@ -104,6 +104,7 @@ class OpenAICompatClient:
         letzter_fehler = ""
         protokoll: list[dict] = []
         werkzeug_runden = json_versuche = 0
+        leer_wiederholt = False
         definitionen = [{"type": "function", "function": {"name": w.name, "description": w.beschreibung,
                                                            "parameters": w.parameter.model_json_schema()}} for w in werkzeuge or []]
         while json_versuche < 2:
@@ -118,6 +119,11 @@ class OpenAICompatClient:
                 tokens_in += antwort.usage.prompt_tokens or 0
                 tokens_out += antwort.usage.completion_tokens or 0
             if not getattr(antwort, "choices", None):  # manche Anbieter melden Fehler als Antwort ohne choices
+                if self.spec.anfragen_pro_minute and not leer_wiederholt:
+                    # Gratismodelle: meist ein vorübergehender Upstream-Fehler – einmal nach kurzer Pause wiederholen
+                    leer_wiederholt = True
+                    time.sleep(GEDULD_S[0])
+                    continue
                 raise LLMFehler(f"{self.spec.model}: leere Antwort ohne choices ({str(getattr(antwort, 'error', '') or '')[:200]})",
                                 tokens_in, tokens_out)
             wahl = antwort.choices[0]

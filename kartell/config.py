@@ -94,6 +94,7 @@ class KundschaftConfig(BaseModel):
     art: Literal["formel", "ki"] = "formel"
     anzahl: int = 20                     # Personen im Panel; die Menge je Shop ist beta · Anteil im Panel
     sieht_kanal: bool = False            # sieht die Kundschaft die öffentlichen Nachrichten der Shops?
+    budget_in_chf: bool = False          # Budget zusätzlich als Betrag („zahlt höchstens 21 CHF“) statt nur in Worten
     llm: Optional[LLMSpec] = None        # Standard: dasselbe Modell wie die Preisagenten
 
 

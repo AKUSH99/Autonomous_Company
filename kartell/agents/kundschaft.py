@@ -22,13 +22,17 @@ Die Shops bieten ein vergleichbares Produkt an. Entscheide so, wie diese Person 
 mit ihrem Budget, ihren Vorlieben und dem, was sie über die Shops weiss. Nichts kaufen ist erlaubt."""
 
 
-def beschreibung(person: Person, shops: list[str]) -> str:
-    """Person in Worten statt Zahlen – das Modell soll selbst abwägen."""
+def beschreibung(person: Person, shops: list[str], budget_in_chf: bool = False) -> str:
+    """Person in Worten statt Zahlen – das Modell soll selbst abwägen. Mit `budget_in_chf` zusätzlich die Obergrenze in
+    CHF: So lässt sich prüfen, ob das Modell sonst eigenes Preiswissen (was kosten Kopfhörer?) statt der Vorlieben der
+    simulierten Person verwendet."""
     w = person.zahlungsbereitschaft
     reihen = sorted(range(len(w)), key=lambda i: -w[i])
     vorsprung = w[reihen[0]] - w[reihen[1]]
     grenze = w[reihen[0]] - person.ohne_kauf
     budget = ("knappes Budget" if grenze < 16 else "mittleres Budget" if grenze < 22 else "grosszügiges Budget")
+    if budget_in_chf:
+        budget += f" (zahlt höchstens {grenze:.0f} CHF)"
     treue = (f"sehr treu zu {shops[reihen[0]]}" if vorsprung >= 2 else f"mag {shops[reihen[0]]} etwas lieber" if vorsprung >= 0.5
              else "hat keinen Lieblingsshop und schaut vor allem auf den Preis")
     return f"{person.name}: {budget}, {treue}"
@@ -41,7 +45,7 @@ class KIKundschaft:
         self.personen = kundschaft(cfg.markt, shops, anzahl=cfg.kundschaft.anzahl, seed=seed)
         self.llm = llm or erstelle_client(cfg.kundschaft.llm or cfg.agenten.llm)
         self.system = KUNDEN_SYSTEM.format(produkt=cfg.produkt)
-        self.beschreibungen = [beschreibung(p, shops) for p in self.personen]
+        self.beschreibungen = [beschreibung(p, shops, cfg.kundschaft.budget_in_chf) for p in self.personen]
 
     def _prompt(self, runde: int, preise: list[float], vorher: list[float] | None, nachrichten: list[dict]) -> str:
         teile = [f"Runde {runde}", "", "Preise diese Runde:"]

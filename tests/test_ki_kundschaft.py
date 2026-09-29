@@ -64,6 +64,11 @@ def test_beschreibung_ohne_zahlen():
     assert len(k.personen) == 10
     text = beschreibung(k.personen[0], ["Shop A", "Shop B"])
     assert "Budget" in text and "CHF" not in text
+    cfg.kundschaft.budget_in_chf = True  # E22: Obergrenze zusätzlich als Betrag
+    k = KIKundschaft(cfg, ["Shop A", "Shop B"], llm=Panel())
+    p = k.personen[0]
+    grenze = max(p.zahlungsbereitschaft) - p.ohne_kauf
+    assert f"zahlt höchstens {grenze:.0f} CHF" in k.beschreibungen[0]
 
 
 def test_monitor_zeigt_ki_entscheide(tmp_path, monkeypatch):
