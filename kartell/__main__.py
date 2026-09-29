@@ -291,6 +291,10 @@ def _auftrag(args) -> None:
             cfg = mit_denken(cfg, eintrag.get("denken", auftrag.get("denken")))
         cfg.runden = eintrag.get("runden", cfg.runden)
         cfg.wiederholungen = eintrag.get("wiederholungen", cfg.wiederholungen)
+        if zusatz := eintrag.get("zusatz", auftrag.get("zusatz")):
+            # z. B. eine Replikation mit anderer Rundenzahl: eigener Versuchsname, damit sie sich nicht mit älteren Läufen mischt
+            cfg.name = f"{cfg.name}_{zusatz}"
+            cfg.titel = f"{cfg.titel} · {zusatz.capitalize()}" if cfg.titel else cfg.titel
         neu = fuehre_experiment_aus(cfg, args.ausgabe, waechter, eintrag.get("zeitlimit_min", auftrag.get("zeitlimit_min")),
                                     eintrag.get("erste_wiederholung", 1))
         if any((e.get("abbruch") or {}).get("art") == "ModellAusfall" for e in neu):
