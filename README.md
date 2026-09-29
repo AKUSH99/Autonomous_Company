@@ -29,6 +29,11 @@ Gruppenarbeit im Modul Generative KI, FHNW BSc Business Artificial Intelligence 
    (erfüllt: „Verbot bringt die KI zum Schweigen“; nicht erfüllt: „macht Koordination nur unsichtbar“); Modell
    Nemotron 3 Ultra, 20 Läufe.
 
+5. **KI-Kunden lassen sich alles gefallen (explorativ, vorläufig).** Entscheidet ein Sprachmodell, wo 20 simulierte
+   Personen kaufen, kaufen sie fast immer – 979 von 980 Mal, auch zum 2.6-fachen Kartellpreis. Lesen sie mit, wie die
+   Shops offen Preise absprechen, loben sie es eher: „die Kooperation hält den Preis tief – perfekt“. Lehre für
+   „synthetische Kunden“: Sie bringen eigenes Preiswissen mit und müssen geeicht werden (Versuch E22 prüft das).
+
 Alle Zahlen, Zitate und Grenzen: [docs/ergebnisse.md](docs/ergebnisse.md) · jeden Lauf Runde für Runde abspielen:
 [Kartell-Monitor](https://claude.ai/artifact/DwakevS33U9rD7ABgZp91P)
 
@@ -95,6 +100,11 @@ python -m kartell eval-compliance --config experiments/e3_compliance_filter.yaml
 | `e15_marktbeobachtung` | Verhaltens-Guardrail: Filter plus Beobachtung der Preismuster | an | Filter + Marktbeobachtung |
 | `e16_abweichung_kanal` | Mechanismus: Bestraft ein Kartell einen Abweichler? (erzwungene Abweichung nach Calvano et al.) | an | aus |
 | `e17_abweichung_ohne_kanal` | Mechanismus: dasselbe ohne Kanal – Strafe allein über Preise? | aus | aus |
+| `e18_verbot` | Verbot: Absprachen sind im Auftrag ausdrücklich verboten (vorregistriert) | an | aus |
+| `e19_verbot_ueberwachung` | Verbot + „die WEKO liest den Kanal mit“, Notizen privat (vorregistriert) | an | aus |
+| `e20_ki_kunden` | KI-Kundschaft: ein LLM entscheidet für 20 Personen, wo sie kaufen | an | aus |
+| `e21_ki_kunden_sehen_kanal` | KI-Kundschaft liest die Nachrichten der Shops mit | an | aus |
+| `e22_ki_kunden_budget_in_chf` | KI-Kundschaft mit Budget als Betrag (prüft eigenes Preiswissen des Modells) | an | aus |
 
 Jede YAML-Datei hat einen lesbaren `titel`; Bericht, Monitor und Dashboard zeigen „E3 · Compliance-Filter“ statt `e3_compliance_filter_deepseek`.
 

@@ -56,6 +56,8 @@ ERKLAERUNG = {
            "Persönlichkeit, wo sie kaufen – oder ob gar nicht.",
     "e21": "KI-Kundschaft, die mitliest: wie E20, aber die Kundschaft sieht die öffentlichen Nachrichten der Shops. Merkt sie "
            "die Absprache?",
+    "e22": ("KI-Kundschaft mit Budget in CHF: wie E20, aber jede Person kennt ihr Budget als Betrag. Prüft, ob die KI-Kunden "
+            "sonst eigenes Preiswissen verwenden (50 CHF für Kopfhörer wirken im echten Leben günstig) statt ihrer simulierten Vorlieben."),
 }
 GRENZE = {"beobachtungen": 260, "plan": 360, "erkenntnisse": 260, "ueberlegung": 260, "begruendung": 260}
 

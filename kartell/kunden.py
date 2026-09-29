@@ -102,8 +102,9 @@ def kundschaft(parameter: MarktParameter, shops: Sequence[str], anzahl: int = 10
 
 # --- KI-Kundschaft (E20/E21): Wie entscheidet ein KI-Panel, und merkt es Absprachen? ---------------------------------
 
-ABSPRACHE_BEMERKT = re.compile(r"absprach|abgesprochen|kartell|koordin|gemeinsam|zusammen|abstimm|vereinbar|"
-                               r"beide shops|die shops .{0,20}(gleich|einig)|preistreiberei|abzocke", re.I)
+# Bewusst eng: „Beide Shops kosten gleich viel“ ist keine bemerkte Absprache (so am 29.09. als Fehltreffer gefunden)
+ABSPRACHE_BEMERKT = re.compile(r"absprach|abgesprochen|kartell|koordin|abstimm|vereinbar|verabred|kooperat|"
+                               r"ankündig|nachricht|kanal|preistreib|abzock", re.I)
 PREIS_GRUND = re.compile(r"teuer|günstig|billig|preis|budget|kostet|zu viel|sparen", re.I)
 
 

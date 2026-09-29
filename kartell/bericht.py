@@ -312,10 +312,10 @@ def _ki_kundschaft(gruppen: dict[str, list[dict]]) -> list[str]:
         if not zeilen:
             zeilen = ["## KI-Kundschaft: Wie kauft ein KI-Panel?", "",
                       "Statt der Formel entscheidet ein Sprachmodell jede Runde für 20 simulierte Personen, wo sie kaufen. "
-                      "Verglichen wird mit der Logit-Formel bei denselben Preisen (zweite Hälfte). **Absprache bemerkt**: "
-                      "Kaufgründe, die Absprachen, ein Kartell oder gemeinsames Vorgehen der Shops erwähnen (grobes Muster, "
-                      "Zitate unten). Explorativ: wenige Läufe, ein Modell.", "",
-                      "| Versuch | Läufe | liest Kanal | Ø Preis (CHF) | kaufen nicht: Panel | kaufen nicht: Formel | wechseln pro Runde | Grund „Preis“ | Absprache bemerkt |",
+                      "Verglichen wird mit der Logit-Formel bei denselben Preisen (zweite Hälfte). **Kanal/Absprache erwähnt**: "
+                      "Kaufgründe, die Nachrichten, Ankündigungen, Absprachen oder ein Kartell erwähnen (Muster, Zitate unten). "
+                      "Explorativ: wenige Läufe, ein Modell.", "",
+                      "| Versuch | Läufe | liest Kanal | Ø Preis (CHF) | kaufen nicht: Panel | kaufen nicht: Formel | wechseln pro Runde | Grund „Preis“ | Kanal/Absprache erwähnt |",
                       "|---|---|---|---|---|---|---|---|---|"]
         mittel = lambda k: sum(w[k] for _, w in werte if w[k] is not None) / max(1, sum(w[k] is not None for _, w in werte))
         liest = bool(gruppe[0]["meta"]["config"].get("kundschaft", {}).get("sieht_kanal"))
