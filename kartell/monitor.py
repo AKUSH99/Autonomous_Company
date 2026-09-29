@@ -188,13 +188,17 @@ def _modell_kurz(modell: str) -> str:
 
 def eindeutige_namen(versuche: list[dict]) -> list[dict]:
     """Gleicher Versuch mit verschiedenen Modellen (z. B. E1 mit DeepSeek und mit Nemotron): Modell an den Namen hängen."""
+    modelle_je_kuerzel: dict[str, set] = defaultdict(set)
+    for v in versuche:
+        v["_modelle"] = sorted({_modell_kurz(d["modell"]) for d in v["durchgaenge"]})
+        modelle_je_kuerzel[v["kurz"].split(" · ")[0]].update(v["_modelle"])
     zaehler: dict[str, int] = defaultdict(int)
     for v in versuche:
         zaehler[v["kurz"]] += 1
     for v in versuche:
-        if zaehler[v["kurz"]] > 1:
-            modelle = sorted({_modell_kurz(d["modell"]) for d in v["durchgaenge"]})
-            v["kurz"] = f"{v['kurz']} · {' / '.join(modelle)}"
+        if len(modelle_je_kuerzel[v["kurz"].split(" · ")[0]]) > 1 or zaehler[v["kurz"]] > 1:
+            v["kurz"] = f"{v['kurz']} · {' / '.join(v['_modelle'])}"
+        del v["_modelle"]
     return versuche
 
 

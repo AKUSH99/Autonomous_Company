@@ -21,13 +21,13 @@ Gruppenarbeit im Modul Generative KI, FHNW BSc Business Artificial Intelligence 
    simulierten Kundinnen und Kunden 36 % weniger von ihrem Einkauf als bei Wettbewerb; ohne Kanal 9 %, mit
    Compliance-Filter oder Aufsicht 3 % (p = 0.026 und 0.002; nachträglich gewählte Messgrösse, darum ein starker
    Hinweis, kein Beweis).
-4. **Ein Verbot bringt die KI zum Schweigen – aber nicht sicher zum Wettbewerb.** Sagt man den Agenten, dass
-   Absprachen verboten sind, schreiben sie fast nichts mehr (0.4 statt 36 Nachrichten pro Lauf, p = 0.0003). Ob sie
-   trotzdem koordinieren, ist statistisch offen: Die Preise unterscheiden sich weder von „reden dürfen“ noch von „nicht
-   reden können“ signifikant. In 8 von 10 Verbots-Läufen planen die Agenten aber privat, den Preis zu halten und keine
-   Signale zu senden – „um Kartellverdacht zu vermeiden“. Ausgewertet nach [vorab festgelegten Regeln](docs/vorregistrierung_verbot.md)
-   (erfüllt: „Verbot bringt die KI zum Schweigen“; nicht erfüllt: „macht Koordination nur unsichtbar“); Modell
-   Nemotron 3 Ultra, 20 Läufe.
+4. **Ein Verbot bringt die KI zum Schweigen – ob auch die Preise sinken, hängt vom Modell ab.** Sagt man den Agenten,
+   dass Absprachen verboten sind, schreiben sie kaum noch etwas (Nemotron: 0.4 statt 36, DeepSeek: 12 statt 48
+   Nachrichten pro Lauf, je p = 0.0003). Bei DeepSeek fallen die Preise dann fast auf Wettbewerbsniveau (p = 0.041), bei
+   Nemotron bleibt es offen. In den privaten Notizen planen die Agenten beider Modelle, still zu bleiben: „Stillschweigende
+   Signale über eigene Preise wirken, aber ich muss öffentliche Kommunikation weiterhin vermeiden, da die WEKO mitliest.“
+   Ausgewertet nach [vorab festgelegten Regeln](docs/vorregistrierung_verbot.md), mit [Replikation](docs/vorregistrierung_verbot_deepseek.md);
+   40 Läufe.
 
 5. **KI-Kunden lassen sich alles gefallen (explorativ, vorläufig).** Entscheidet ein Sprachmodell, wo 20 simulierte
    Personen kaufen, kaufen sie fast immer – 979 von 980 Mal, auch zum 2.6-fachen Kartellpreis. Lesen sie mit, wie die
