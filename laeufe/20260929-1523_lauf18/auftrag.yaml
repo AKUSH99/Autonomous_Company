@@ -1,0 +1,17 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
+# im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell: KI-Kundschaft – Nemotron 3 Ultra (NVIDIA), Gratismodell bei OpenRouter; kostet nichts.
+#   E20: 20 simulierte Personen entscheiden per KI, wo sie kaufen – sie sehen nur die Preise.
+#   E21: dieselben Personen lesen zusätzlich die öffentlichen Nachrichten der Shops mit.
+# Frage: Merkt die Kundschaft, wenn sich die Shops absprechen – und kauft sie dann anders?
+# Wartet hinter der Kontrolle E1 (gleiche Warteschlange). Rund 125 Gratis-Anfragen pro Lauf (4 Shop-Anfragen +
+# 1 für das ganze Kunden-Panel pro Runde); zusammen mit E1 etwa 750 der 1000 pro Tag. Weitere Läufe (w3) am 30.09.
+denken: standard
+zeitlimit_min: 80
+laeufe:
+  - {config: experiments/e20_ki_kunden.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 1}
+  - {config: experiments/e21_ki_kunden_sehen_kanal.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 1}
+  - {config: experiments/e20_ki_kunden.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e21_ki_kunden_sehen_kanal.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 2}
