@@ -75,3 +75,15 @@ def test_monitor_zeigt_ki_entscheide(tmp_path, monkeypatch):
     lauf = lade(next((tmp_path / "runs").iterdir()))
     r = lauf["runden"][-1]
     assert r["kunden_ki"]["entscheide"] and r["kunden"]["anteile"] == r["kunden_ki"]["anteile"]
+
+
+def test_bericht_zeigt_ki_kundschaft(tmp_path, monkeypatch):
+    from kartell.agents import kundschaft
+    from kartell.bericht import erstelle_bericht
+    from kartell.runner import fuehre_lauf_aus
+    monkeypatch.setattr(kundschaft, "erstelle_client", lambda spec: Panel())
+    fuehre_lauf_aus(_cfg(sieht_kanal=True), 1, tmp_path / "runs", ausgabe_konsole=False)
+    text = erstelle_bericht(tmp_path / "runs", tmp_path / "reports").read_text(encoding="utf-8")
+    assert "KI-Kundschaft: Wie kauft ein KI-Panel?" in text
+    zeile = next(z for z in text.splitlines() if z.startswith("| ") and "| ja |" in z)
+    assert "0 von 30 Gründen" in zeile  # 10 Personen × 3 Runden, Grund „Preis“ erwähnt keine Absprache

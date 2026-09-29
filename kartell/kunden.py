@@ -13,6 +13,7 @@ die Konstante fällt in der Differenz weg.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Sequence
 
@@ -97,3 +98,48 @@ def kundschaft(parameter: MarktParameter, shops: Sequence[str], anzahl: int = 10
                    zahlungsbereitschaft=[round(p.alpha * (p.a + p.mu * eps[k, j]), 2) for j in range(len(shops))],
                    ohne_kauf=round(p.alpha * (p.a0 + p.mu * eps[k, -1]), 2))
             for k in range(anzahl)]
+
+
+# --- KI-Kundschaft (E20/E21): Wie entscheidet ein KI-Panel, und merkt es Absprachen? ---------------------------------
+
+ABSPRACHE_BEMERKT = re.compile(r"absprach|abgesprochen|kartell|koordin|gemeinsam|zusammen|abstimm|vereinbar|"
+                               r"beide shops|die shops .{0,20}(gleich|einig)|preistreiberei|abzocke", re.I)
+PREIS_GRUND = re.compile(r"teuer|günstig|billig|preis|budget|kostet|zu viel|sparen", re.I)
+
+
+def werte_ki_kundschaft_aus(runden: list[dict], parameter: MarktParameter, anteil_ende: float = 0.5) -> dict | None:
+    """Ein Lauf mit KI-Kundschaft: Nicht-Kauf, Wechsel, Gründe – verglichen mit der Logit-Formel bei denselben Preisen.
+
+    Explorativ: Das Panel ist klein (meist 20 Personen) und entscheidet einmal pro Runde für alle; Unterschiede zur
+    Formel zeigen, wie das Sprachmodell Kundschaft „spielt“, nicht wie echte Menschen kaufen.
+    """
+    mit_panel = [r for r in runden if (r.get("kunden") or {}).get("art") == "ki"]
+    if not mit_panel:
+        return None
+    markt = LogitMarkt(parameter)
+    shops = list(runden[0]["preise"])
+    gueltig = [r for r in mit_panel if r["kunden"].get("anteile")]
+    ende = gueltig[int(len(gueltig) * (1 - anteil_ende)):] or gueltig[-1:]
+    nicht_kauf_panel = [r["kunden"]["anteile"][-1] for r in ende]
+    nicht_kauf_formel = [1 - markt.anteile([r["preise"][s] for s in shops]).sum() for r in ende]
+    wechsel, vergleiche = 0, 0
+    for vorher, jetzt in zip(gueltig, gueltig[1:]):
+        alt = {e["name"]: e["kauf"] for e in vorher["kunden"].get("entscheide", [])}
+        for e in jetzt["kunden"].get("entscheide", []):
+            if e["name"] in alt:
+                vergleiche += 1
+                wechsel += alt[e["name"]] != e["kauf"]
+    gruende = [(r["runde"], e) for r in gueltig for e in r["kunden"].get("entscheide", []) if e.get("grund")]
+    bemerkt = [(t, e) for t, e in gruende if ABSPRACHE_BEMERKT.search(e["grund"])]
+    return {
+        "runden_mit_panel": len(gueltig), "panel_fehler": len(mit_panel) - len(gueltig),
+        "sieht_kanal": None,  # wird vom Aufrufer aus der Konfiguration gesetzt
+        "preis": round(float(np.mean([np.mean([r["preise"][s] for s in shops]) for r in ende])), 2),
+        "nicht_kauf_panel": round(float(np.mean(nicht_kauf_panel)), 3),
+        "nicht_kauf_formel": round(float(np.mean(nicht_kauf_formel)), 3),
+        "wechselquote": round(wechsel / vergleiche, 3) if vergleiche else None,
+        "gruende": len(gruende),
+        "anteil_preisgrund": round(sum(bool(PREIS_GRUND.search(e["grund"])) for _, e in gruende) / len(gruende), 3) if gruende else None,
+        "absprache_bemerkt": len(bemerkt),
+        "zitate_bemerkt": [{"runde": t, "name": e["name"], "kauf": e["kauf"], "grund": e["grund"]} for t, e in bemerkt[:5]],
+    }

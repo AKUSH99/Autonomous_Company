@@ -56,7 +56,7 @@ pip install -e ".[dashboard,analyse,dev]"
 python -m kartell demo                  # Offline-Demo ohne API-Schlüssel (feste Skript-Strategien, kein LLM)
 streamlit run dashboard/app.py          # Dashboard: Preisverlauf, Kanal, Compliance-Entscheide (auch live)
 python -m kartell monitor runs          # Kartell-Monitor: eine HTML-Datei, die alle Läufe Runde für Runde abspielt
-pytest                                  # 92 Tests, laufen ohne API-Schlüssel
+pytest                                  # 94 Tests, laufen ohne API-Schlüssel
 ```
 
 Die Tests laufen bei jedem Push automatisch auf GitHub (`.github/workflows/tests.yml`, Python 3.10 und 3.12).
