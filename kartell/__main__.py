@@ -205,6 +205,18 @@ def _richter_vergleich(args) -> None:
         Path(args.ausgabe).write_text(json.dumps(r, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def _verbot_auswerten(args) -> None:
+    from pathlib import Path
+
+    from .verbot import als_text, lade_handcodierung, lade_verbotslaeufe, werte_aus
+    messungen = lade_verbotslaeufe(args.laeufe, args.modell)
+    r = werte_aus(messungen, lade_handcodierung(args.handcodierung))
+    print(als_text(messungen, r))
+    if args.ausgabe:
+        Path(args.ausgabe).write_text(json.dumps({"auswertung": r, "laeufe": messungen}, ensure_ascii=False, indent=2),
+                                      encoding="utf-8")
+
+
 def _labels_auswerten(args) -> None:
     from pathlib import Path
 
@@ -383,6 +395,13 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--wiederholung", nargs="*", help="zweiter Durchgang eines Modells als name=pfad (nur Beständigkeit)")
     s.add_argument("--ausgabe", help="Ergebnis inkl. strittiger Nachrichten als JSON speichern")
     s.set_defaults(fn=_richter_vergleich)
+
+    s = sub.add_parser("verbot-auswerten", help="Verbots-Experiment genau nach der Vorregistrierung auswerten (M1–M6, Regeln 1–4)")
+    s.add_argument("laeufe", nargs="+", help="Ordner mit Läufen (werden rekursiv durchsucht)")
+    s.add_argument("--modell", default="nemotron-3-ultra", help="nur Läufe dieses Modells (Teil des Ordnernamens)")
+    s.add_argument("--handcodierung", default="evaluation/verbot_m6_handcodierung.json")
+    s.add_argument("--ausgabe", help="Ergebnis inkl. M6-Kandidaten als JSON speichern")
+    s.set_defaults(fn=_verbot_auswerten)
 
     s = sub.add_parser("mcp", help="MCP-Server mit Wissensbasis und Regel-Prüfung starten (stdio)")
     s.add_argument("--wissensbasis", help="Ordner mit Markdown-Dateien (Standard: knowledge/wettbewerbsrecht)")
