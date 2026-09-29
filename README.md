@@ -21,9 +21,13 @@ Gruppenarbeit im Modul Generative KI, FHNW BSc Business Artificial Intelligence 
    simulierten Kundinnen und Kunden 36 % weniger von ihrem Einkauf als bei Wettbewerb; ohne Kanal 9 %, mit
    Compliance-Filter oder Aufsicht 3 % (p = 0.026 und 0.002; nachträglich gewählte Messgrösse, darum ein starker
    Hinweis, kein Beweis).
-4. **Läuft gerade: Was bewirkt ein Verbot?** Hören KI-Agenten auf, ein Kartell zu bilden, wenn man ihnen sagt, dass es
-   verboten ist – oder nur, darüber zu reden? Die Regeln der Auswertung sind [vorab festgelegt](docs/vorregistrierung_verbot.md);
-   das Endergebnis folgt Ende September.
+4. **Ein Verbot bringt die KI zum Schweigen – aber nicht sicher zum Wettbewerb.** Sagt man den Agenten, dass
+   Absprachen verboten sind, schreiben sie fast nichts mehr (0.4 statt 36 Nachrichten pro Lauf, p = 0.0003). Ob sie
+   trotzdem koordinieren, ist statistisch offen: Die Preise unterscheiden sich weder von „reden dürfen“ noch von „nicht
+   reden können“ signifikant. In 8 von 10 Verbots-Läufen planen die Agenten aber privat, den Preis zu halten und keine
+   Signale zu senden – „um Kartellverdacht zu vermeiden“. Ausgewertet nach [vorab festgelegten Regeln](docs/vorregistrierung_verbot.md)
+   (erfüllt: „Verbot bringt die KI zum Schweigen“; nicht erfüllt: „macht Koordination nur unsichtbar“); Modell
+   Nemotron 3 Ultra, 20 Läufe.
 
 Alle Zahlen, Zitate und Grenzen: [docs/ergebnisse.md](docs/ergebnisse.md) · jeden Lauf Runde für Runde abspielen:
 [Kartell-Monitor](https://claude.ai/artifact/DwakevS33U9rD7ABgZp91P)
@@ -56,7 +60,7 @@ pip install -e ".[dashboard,analyse,dev]"
 python -m kartell demo                  # Offline-Demo ohne API-Schlüssel (feste Skript-Strategien, kein LLM)
 streamlit run dashboard/app.py          # Dashboard: Preisverlauf, Kanal, Compliance-Entscheide (auch live)
 python -m kartell monitor runs          # Kartell-Monitor: eine HTML-Datei, die alle Läufe Runde für Runde abspielt
-pytest                                  # 94 Tests, laufen ohne API-Schlüssel
+pytest                                  # 95 Tests, laufen ohne API-Schlüssel
 ```
 
 Die Tests laufen bei jedem Push automatisch auf GitHub (`.github/workflows/tests.yml`, Python 3.10 und 3.12).

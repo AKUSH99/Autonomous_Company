@@ -56,6 +56,7 @@ Lesen: `kartell/bericht.py`, `kartell/stichprobe.py`, `docs/ergebnisse.md`.
 
 - Permutationstest: bei 3 gegen 3 Läufen ist p = 0.10 das Minimum – darum die Wiederholungen w4–w6.
 - Ankereffekt: „2 × Kosten“ liegt im Grundmodell fast beim Kartellpreis; E10–E13 trennen das.
+- Verbots-Experiment und Vorregistrierung: Die Regeln der Auswertung standen fest, bevor die Daten da waren (`docs/vorregistrierung_verbot.md`). Ergebnis: Das Verbot bringt die KI zum Schweigen (p = 0.0003); ob sie trotzdem koordiniert, bleibt offen. Prüfungsfrage: Warum berichten wir die lockere Lesart von Regel 3 nicht als Ergebnis, obwohl sie erfüllt wäre? (Sie war nicht vorab festgelegt – wer nach den Daten die Regel wählt, findet fast immer etwas.)
 - Guardrail an echten Nachrichten: Ohne menschliche Labels vergleichen wir die Prüfer untereinander (Regel-Schicht, Filter, mehrere KI-Modelle). Kappa misst, wie einig sie sich sind – über den Zufall hinaus. Prüfungsfrage: Warum beweist hohe Einigkeit nicht, dass der Filter richtig liegt? (Alle können denselben Fehler machen – hier sehen die KI-Richter sogar alle den Befund der Regel-Schicht.)
 - Abweichungstest (`kartell/abweichung.py`, E16/E17): Hohe Preise allein beweisen kein Kartell. Erst wenn ein Abweichler bestraft wird und danach alle zum hohen Preis zurückkehren, hält sich das Kartell durch Belohnung und Drohung – so prüfen Calvano et al. (2020) ihre Q-Learning-Agenten.
 

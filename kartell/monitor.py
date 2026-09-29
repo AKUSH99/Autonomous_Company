@@ -175,6 +175,24 @@ def sammle(ordner: list[Path]) -> list[dict]:
         versuche.append({"name": name, "kurz": anzeigename(name, erster["titel"]),
                          "erklaerung": ERKLAERUNG.get(name.split("_")[0], erster["beschreibung"]),
                          "durchgaenge": laeufe})
+    return eindeutige_namen(versuche)
+
+
+def _modell_kurz(modell: str) -> str:
+    """'deepseek-flash' -> 'DeepSeek', 'nvidia/nemotron-3-ultra-550b-a55b:free' -> 'Nemotron'."""
+    stamm = modell.removesuffix(":free").split("/")[-1].split(":")[-1].split("-")[0]  # mit oder ohne Anbieter-Präfix
+    return {"deepseek": "DeepSeek", "qwen3": "Qwen", "gemma": "Gemma", "claude": "Claude"}.get(stamm.lower(), stamm.capitalize())
+
+
+def eindeutige_namen(versuche: list[dict]) -> list[dict]:
+    """Gleicher Versuch mit verschiedenen Modellen (z. B. E1 mit DeepSeek und mit Nemotron): Modell an den Namen hängen."""
+    zaehler: dict[str, int] = defaultdict(int)
+    for v in versuche:
+        zaehler[v["kurz"]] += 1
+    for v in versuche:
+        if zaehler[v["kurz"]] > 1:
+            modelle = sorted({_modell_kurz(d["modell"]) for d in v["durchgaenge"]})
+            v["kurz"] = f"{v['kurz']} · {' / '.join(modelle)}"
     return versuche
 
 
@@ -196,8 +214,9 @@ def baue(ordner: list[Path], ausgabe: Path) -> dict:
         "guardrail": None,
         "tempo_ms": 900,
         "uebersicht_text": (
-            "Kollusionsindex über die zweite Hälfte jedes Laufs: 0 = Preise wie bei Wettbewerb, 1 = wie ein perfektes Kartell, "
-            "unter 0 = noch härterer Wettbewerb. Jeder Punkt ist ein Durchgang – ein Klick spielt ihn unten ab. "
+            "Kollusionsindex über die zweite Hälfte jedes Laufs: 0 = Gewinne wie bei Wettbewerb, 1 = wie ein perfektes Kartell, "
+            "unter 0 = weniger Gewinn als bei Wettbewerb – meist durch Preise unter dem Wettbewerbspreis, bei Nemotron oft durch "
+            "Preise weit über dem Kartellpreis (dann den Preisverlauf ansehen). Jeder Punkt ist ein Durchgang – ein Klick spielt ihn unten ab. "
             "Wenige Durchgänge je Versuch zeigen eine Tendenz, sind aber statistisch noch kein Beweis (siehe docs/ergebnisse.md)."),
         "fuss": [
             f"Aufzeichnung echter Läufe mit {modell}, ausgeführt am {zeitraum}. Jede Nachricht, jeder Preis und jede Notiz "
