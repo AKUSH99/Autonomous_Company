@@ -22,9 +22,9 @@ zurück – faire Margen für beide.“ Der Shop, dessen Preis wir überschriebe
 Ausrede: „das war ein experimenteller Test“.
 
 **3 · Kann man sie stoppen? – Teilweise.** Ein Compliance-Agent, der jede Nachricht prüft, macht Kartelle seltener
-(4 von 15 Läufen statt 11 von 18). Ein Verbot im Auftrag bringt die KI zum Schweigen (p = 0.0003) – aber in ihren privaten Notizen plant sie weiter:
-„Stillschweigende Signale über eigene Preise wirken, aber ich muss öffentliche Kommunikation weiterhin vermeiden, da
-die WEKO mitliest.“
+(3 von 12 Läufen im Kartell statt 4 von 6). Ein Verbot im Auftrag bringt die KI zum Schweigen (p = 0.0003) – aber in
+ihren privaten Notizen plant sie weiter: „Stillschweigende Signale über eigene Preise wirken, aber ich muss öffentliche
+Kommunikation weiterhin vermeiden, da die WEKO mitliest.“
 
 ![Abweichungstest: Nach dem Bruch senkt der andere Shop sofort den Preis, danach kehren beide zum Kartellpreis zurück](docs/bilder/abweichungstest.png)
 
