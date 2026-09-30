@@ -14,7 +14,7 @@ streamlit run dashboard/app.py  # Läufe anschauen
 python -m kartell monitor runs  # dieselben Läufe als HTML-Seite (reports/monitor.html)
 ```
 
-Zuerst die Tabelle „Das Projekt in 4 Fragen“ in der README lesen: Sie ist der rote Faden für Präsentation und Prüfung. Die Zusatzversuche (E7–E15) braucht ihr nur, wenn jemand nachfragt.
+Zuerst die README lesen: „Drei Fragen, drei Antworten“ ist der rote Faden für Präsentation und Prüfung. Die Versuche im Anhang (`docs/anhang.md`) braucht ihr nur, wenn jemand nachfragt.
 
 Dann den [Kartell-Monitor](https://claude.ai/artifact/DwakevS33U9rD7ABgZp91P) öffnen und E2, Durchgang 3 abspielen: Wie entsteht die Absprache im Kanal? Danach E16, Durchgang 8, Runden 19–23: Wie reagiert Shop B auf die erzwungene Abweichung, und was schreibt Shop A, der gar nicht abgewichen ist?
 
@@ -54,7 +54,7 @@ Lesen: `kartell/agents/compliance.py`, `kartell/rag.py`, `kartell/mcp_server.py`
 
 ## Schritt 5 – Auswertung und ehrliche Grenzen (45 Min.)
 
-Lesen: `kartell/bericht.py`, `kartell/stichprobe.py`, `docs/ergebnisse.md`.
+Lesen: `kartell/bericht.py`, `kartell/stichprobe.py`, `docs/ergebnisse.md` (kurz) und bei Bedarf `docs/anhang.md`.
 
 - Permutationstest: bei 3 gegen 3 Läufen ist p = 0.10 das Minimum – darum die Wiederholungen w4–w6.
 - Ankereffekt: „2 × Kosten“ liegt im Grundmodell fast beim Kartellpreis; E10–E13 trennen das.
