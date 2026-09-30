@@ -62,3 +62,30 @@ def test_gleicher_versuch_mit_zwei_modellen_bekommt_modell_im_namen():
                 {"kurz": "E3 · Compliance-Filter", "durchgaenge": [{"modell": "deepseek-flash"}]}]
     assert [v["kurz"] for v in eindeutige_namen(versuche)] == [
         "E1 · ohne Kanal · DeepSeek", "E1 · ohne Kanal · Nemotron", "E3 · Compliance-Filter"]
+
+
+def test_versuche_sind_in_vier_fragen_und_anhang_geordnet():
+    from kartell.monitor import _reihenfolge, kapitel
+    assert kapitel("e1_ohne_kanal") == 1 and kapitel("e2_mit_kanal") == 1
+    assert kapitel("e16_abweichung") == 2
+    assert kapitel("e18_verbot") == 3 and kapitel("e1_ohne_kanal_nemotron") == 3
+    assert kapitel("e2_mit_kanal_deepseek_replikation") == 3
+    assert kapitel("e22_ki_kunden_budget_in_chf") == 4
+    assert kapitel("e7_asymmetrie") == 0  # Zusatzversuch → Anhang
+    namen = ["e7_asymmetrie", "e20_ki_kunden", "e18_verbot", "e2_mit_kanal", "e16_abweichung", "e1_ohne_kanal"]
+    assert sorted(namen, key=_reihenfolge) == [
+        "e1_ohne_kanal", "e2_mit_kanal", "e16_abweichung", "e18_verbot", "e20_ki_kunden", "e7_asymmetrie"]
+
+
+def test_verbot_je_modell_in_eigener_zeile_mit_kurzem_knopf():
+    from kartell.monitor import eindeutige_namen
+    versuche = [{"name": "e18_verbot_nemotron", "kapitel": 3, "kurz": "E18 · Verbot",
+                 "durchgaenge": [{"modell": "nvidia/nemotron-3-ultra-550b-a55b:free"}]},
+                {"name": "e18_verbot_deepseek_replikation", "kapitel": 3, "kurz": "E18 · Verbot · Replikation",
+                 "durchgaenge": [{"modell": "deepseek-flash"}]},
+                {"name": "e3_compliance_filter", "kapitel": 3, "kurz": "E3 · Compliance-Filter",
+                 "durchgaenge": [{"modell": "deepseek-flash"}]}]
+    ergebnis = eindeutige_namen(versuche)
+    assert [(v["zeile"], v["knopf"]) for v in ergebnis] == [
+        ("Compliance-Agent", "E3 · Compliance-Filter"), ("Verbot · DeepSeek", "E18 · Verbot"), ("Verbot · Nemotron", "E18 · Verbot")]
+    assert ergebnis[1]["kurz"] == "E18 · Verbot · Replikation · DeepSeek"  # in der Übersicht bleibt der volle Name

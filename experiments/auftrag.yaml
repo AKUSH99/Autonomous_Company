@@ -2,33 +2,12 @@
 # Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
 # im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
 #
-# Aktuell: Replikation des Verbots-Experiments mit DeepSeek (vorab festgelegt in docs/vorregistrierung_verbot_deepseek.md).
-# E2 offener Kanal · E18 Verbot · E19 Verbot + WEKO liest mit · E1 ohne Kanal, je 5 Läufe à 25 Runden, abwechselnd.
-# Budget: höchstens 0.90 USD vom vorhandenen DeepSeek-Guthaben; der Budgetwächter fragt alle 10 Runden das echte
-# Guthaben ab und stoppt vorher. Zusatz „replikation“ trennt die Läufe von den älteren DeepSeek-Läufen (50 Runden).
-modell: deepseek
-zusatz: replikation
-budget_usd: 0.90
-reserve_usd: 0.05
-zeitlimit_min: 30
+# Aktuell (30.09., Auftrag B, wartet hinter Auftrag A): KI-Kundschaft, Nemotron 3 Ultra, Gratismodell – kostet nichts.
+#   E22 w2: Budget als Betrag (zweiter Durchgang) · E21 w3: Kundschaft liest den Kanal mit · E20 w3: nur Preise
+# Reicht das Tageskontingent (1000 Anfragen) nicht, bricht der Lauf sauber ab (Modellausfall); der Rest folgt am 1.10.
+denken: standard
+zeitlimit_min: 100
 laeufe:
-  - {config: experiments/e2_mit_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 1}
-  - {config: experiments/e18_verbot.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 1}
-  - {config: experiments/e19_verbot_ueberwachung.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 1}
-  - {config: experiments/e1_ohne_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 1}
-  - {config: experiments/e2_mit_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
-  - {config: experiments/e18_verbot.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
-  - {config: experiments/e19_verbot_ueberwachung.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
-  - {config: experiments/e1_ohne_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
-  - {config: experiments/e2_mit_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 3}
-  - {config: experiments/e18_verbot.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 3}
-  - {config: experiments/e19_verbot_ueberwachung.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 3}
-  - {config: experiments/e1_ohne_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 3}
-  - {config: experiments/e2_mit_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 4}
-  - {config: experiments/e18_verbot.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 4}
-  - {config: experiments/e19_verbot_ueberwachung.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 4}
-  - {config: experiments/e1_ohne_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 4}
-  - {config: experiments/e2_mit_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 5}
-  - {config: experiments/e18_verbot.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 5}
-  - {config: experiments/e19_verbot_ueberwachung.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 5}
-  - {config: experiments/e1_ohne_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 5}
+  - {config: experiments/e22_ki_kunden_budget_in_chf.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e21_ki_kunden_sehen_kanal.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 3}
+  - {config: experiments/e20_ki_kunden.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 3}
