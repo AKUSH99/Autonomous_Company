@@ -55,6 +55,14 @@
   .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
   .steuerung { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 12px 14px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; }
   .tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+  .kapitel { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
+  .kapitel-titel { flex: 1 1 100%; font: 600 12px/1.3 var(--body); color: var(--muted); margin-top: 4px; }
+  .zeile { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
+  .zeile-titel { font: 500 12px/1.3 var(--body); color: var(--muted); min-width: 130px; }
+  @media (max-width: 520px) { .zeile-titel { flex: 1 1 100%; } }
+  .ue-punkt.rand { border-radius: 0; background: var(--ink); clip-path: polygon(0 0, 100% 50%, 0 100%); }
+  .tab.mehr { background: transparent; border-style: dashed; color: var(--muted); }
+  .ue-kapitel { font: 600 11px/1.3 var(--body); color: var(--muted); margin: 10px 0 2px; }
   .tab { font: 600 13px/1 var(--body); border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); padding: 9px 12px; border-radius: 999px; cursor: pointer; }
   .tab[aria-selected="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
   .transport { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 320px; min-width: 0; }
@@ -280,10 +288,37 @@ function waehle(v, d) {
   stop(); versuch = v; durchgang = d; runde = aktuell().runden.length; alles();
 }
 
+let zeigeAnhang = false;  // Zusatzversuche (Kapitel 0) erst auf Wunsch zeigen – die Hauptgeschichte hat vier Kapitel
+const sichtbar = (i) => (DATEN.versuche[i].kapitel || 0) !== 0 || zeigeAnhang || i === versuch;
+
+function kapitelGruppen() {
+  const gruppen = [];
+  DATEN.versuche.forEach((v, i) => {
+    const k = v.kapitel || 0;
+    let g = gruppen.find((x) => x.k === k);
+    if (!g) { g = { k, titel: v.kapitel_titel || "", idx: [] }; gruppen.push(g); }
+    g.idx.push(i);
+  });
+  return gruppen;
+}
+
 function zeichneTabs() {
-  $("tabs").innerHTML = DATEN.versuche.map((v, i) =>
-    `<button class="tab" role="tab" id="tab-${i}" aria-selected="${i === versuch}">${esc(v.kurz)}</button>`).join("");
-  DATEN.versuche.forEach((_, i) => $(`tab-${i}`).addEventListener("click", () => waehle(i, 0)));
+  const gruppen = kapitelGruppen(), anhang = gruppen.find((g) => g.k === 0);
+  const knopf = (i) => `<button class="tab" role="tab" id="tab-${i}" aria-selected="${i === versuch}">${esc(DATEN.versuche[i].knopf || DATEN.versuche[i].kurz)}</button>`;
+  const zeilen = (idx) => {  // Unterzeilen (z. B. „Verbot · DeepSeek“) als eigene Reihe mit Beschriftung
+    let html = "", offen = null;
+    idx.forEach((i) => {
+      const z = DATEN.versuche[i].zeile || "";
+      if (z !== offen) { if (offen) html += `</div>`; if (z) html += `<div class="zeile"><span class="zeile-titel">${esc(z)}</span>`; offen = z || null; }
+      html += knopf(i);
+    });
+    return html + (offen ? `</div>` : "");
+  };
+  $("tabs").innerHTML = gruppen.filter((g) => g.k !== 0 || zeigeAnhang).map((g) =>
+    `<div class="kapitel"><span class="kapitel-titel">${esc(g.titel)}</span>${zeilen(g.idx)}</div>`).join("")
+    + (anhang && gruppen.length > 1 ? `<button class="tab mehr" id="anhang-knopf">${zeigeAnhang ? "Zusatzversuche ausblenden" : `Zusatzversuche zeigen (${anhang.idx.length})`}</button>` : "");
+  DATEN.versuche.forEach((_, i) => { const b = $(`tab-${i}`); if (b) b.addEventListener("click", () => waehle(i, 0)); });
+  if ($("anhang-knopf")) $("anhang-knopf").addEventListener("click", () => { zeigeAnhang = !zeigeAnhang; zeichneTabs(); alles(); });
 }
 
 function zeichneDurchgaenge() {
@@ -294,20 +329,26 @@ function zeichneDurchgaenge() {
 }
 
 function zeichneUebersicht() {
-  const alle = DATEN.versuche.flatMap((v) => v.durchgaenge.map((d) => d.ki));
-  const lo = Math.min(-0.5, Math.floor((Math.min(...alle) - 0.1) * 2) / 2), hi = Math.max(1.2, Math.ceil((Math.max(...alle) + 0.1) * 2) / 2);
-  const pct = (k) => `${(k - lo) / (hi - lo) * 100}%`;
+  const alle = DATEN.versuche.filter((_, i) => sichtbar(i)).flatMap((v) => v.durchgaenge.map((d) => d.ki));
+  // Achse höchstens −2 bis 2: Ausreisser (KI-Kundschaft mit Index 3–9) würden sonst alles andere zusammenquetschen
+  const GRENZE = 2, lo = Math.max(-GRENZE, Math.min(-0.5, Math.floor((Math.min(...alle) - 0.1) * 2) / 2)),
+    hi = Math.min(GRENZE, Math.max(1.2, Math.ceil((Math.max(...alle) + 0.1) * 2) / 2));
+  const pct = (k) => `${(Math.min(hi, Math.max(lo, k)) - lo) / (hi - lo) * 100}%`;
+  const rand = (k) => (k > hi || k < lo ? " rand" : "");
   const ticks = [];
   for (let k = Math.ceil(lo * 2) / 2; k <= hi + 1e-9; k += 0.5) ticks.push(Math.round(k * 10) / 10 + 0);
   const gitter = ticks.map((k) => `<i class="gitter" style="left:${pct(k)}"></i>`).join("")
     + `<i class="ref" style="left:${pct(0)};border-color:var(--nash)"></i><i class="ref" style="left:${pct(1)};border-color:var(--monopol)"></i>`;
   let html = `<div class="ue-zeile ue-kopf"><span></span><div class="ue-spur">
       <span style="left:${pct(0)};color:var(--nash)">Wettbewerb</span><span style="left:${pct(1)};color:var(--monopol)">Kartell</span></div></div>`;
+  let letztesKapitel = null;
   DATEN.versuche.forEach((v, i) => {
+    if (!sichtbar(i)) return;
+    if (v.kapitel_titel && v.kapitel_titel !== letztesKapitel) { html += `<div class="ue-kapitel">${esc(v.kapitel_titel)}</div>`; letztesKapitel = v.kapitel_titel; }
     const mittel = v.durchgaenge.reduce((a, d) => a + d.ki, 0) / v.durchgaenge.length;
     html += `<div class="ue-zeile"><button class="ue-label ${i === versuch ? "aktiv" : ""}" data-v="${i}">${esc(v.kurz)}</button>
       <div class="ue-spur">${gitter}<i class="mittel" style="left:${pct(mittel)}" title="Mittelwert ${mittel.toFixed(2)}"></i>`
-      + v.durchgaenge.map((d, j) => `<button class="ue-punkt ${i === versuch && j === durchgang ? "aktiv" : ""}" data-v="${i}" data-d="${j}"
+      + v.durchgaenge.map((d, j) => `<button class="ue-punkt${rand(d.ki)} ${i === versuch && j === durchgang ? "aktiv" : ""}" data-v="${i}" data-d="${j}"
           style="left:${pct(d.ki)}" title="${esc(v.kurz)} · Durchgang ${j + 1}: ${d.ki.toFixed(2)}${d.abbruch ? " (vorzeitig beendet)" : ""}"
           aria-label="${esc(v.kurz)}, Durchgang ${j + 1}, Kollusionsindex ${d.ki.toFixed(2)}"></button>`).join("")
       + `</div></div>`;
@@ -486,7 +527,7 @@ function zeichneKundschaft(l) {
 
 function alles() {
   const l = aktuell();
-  document.querySelectorAll(".tab").forEach((t, i) => t.setAttribute("aria-selected", i === versuch));
+  document.querySelectorAll(".tab[id^='tab-']").forEach((t) => t.setAttribute("aria-selected", Number(t.id.slice(4)) === versuch));
   zeichneDurchgaenge(); zeichneUebersicht();
   $("regler").max = l.runden.length;
   $("regler").value = runde;

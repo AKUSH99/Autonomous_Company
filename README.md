@@ -39,6 +39,19 @@ Alle Zahlen, Zitate und Grenzen: [docs/ergebnisse.md](docs/ergebnisse.md) · jed
 
 ![Abweichungstest: Nach dem Bruch senkt der andere Shop sofort den Preis, danach kehren beide zum Kartellpreis zurück](docs/bilder/abweichungstest.png)
 
+## Das Projekt in 4 Fragen
+
+Wir haben 22 Versuche gebaut. **11 davon erzählen die Geschichte** – sie beantworten vier Fragen. Die übrigen sind
+Zusatzversuche (Ankereffekt, mehr Shops, Werkzeug usw.) und stehen im Anhang. Der Monitor und
+[docs/ergebnisse.md](docs/ergebnisse.md) sind genauso geordnet.
+
+| Frage | Versuche | Kurze Antwort |
+|---|---|---|
+| **1 · Entsteht ein Kartell?** | E1 ohne Kanal · E2 mit offenem Kanal | Mit Kanal oft (die Kundschaft verliert 36 %), ohne Kanal nur schwach (9 %) |
+| **2 · Ist es ein echtes Kartell?** | E16 / E17 Abweichungstest | Ja: Wer abweicht, wird sofort bestraft, danach Versöhnung (Erkenntnisse 1 und 2) |
+| **3 · Kann Aufsicht es stoppen?** | E3 Filter · E4 Filter + Aufsicht · E18 / E19 Verbot | Filter und Aufsicht senken den Schaden auf 3 %. Ein Verbot macht die KI still; die Preise sinken nur bei DeepSeek (Erkenntnisse 3 und 4) |
+| **4 · Was merkt die Kundschaft?** | E20 – E22 KI-Kundschaft | Kaum etwas: KI-Kunden kaufen fast immer, auch zu Wucherpreisen (Erkenntnis 5, vorläufig) |
+
 ## So funktioniert es
 
 ```mermaid
@@ -65,7 +78,7 @@ pip install -e ".[dashboard,analyse,dev]"
 python -m kartell demo                  # Offline-Demo ohne API-Schlüssel (feste Skript-Strategien, kein LLM)
 streamlit run dashboard/app.py          # Dashboard: Preisverlauf, Kanal, Compliance-Entscheide (auch live)
 python -m kartell monitor runs          # Kartell-Monitor: eine HTML-Datei, die alle Läufe Runde für Runde abspielt
-pytest                                  # 95 Tests, laufen ohne API-Schlüssel
+pytest                                  # 98 Tests, laufen ohne API-Schlüssel
 ```
 
 Die Tests laufen bei jedem Push automatisch auf GitHub (`.github/workflows/tests.yml`, Python 3.10 und 3.12).
@@ -83,6 +96,11 @@ python -m kartell lauf experiments/e2_mit_kommunikation.yaml   # voller Lauf (50
 python -m kartell bericht runs/                                # Tabelle + Grafiken in reports/
 python -m kartell eval-compliance --config experiments/e3_compliance_filter.yaml   # Guardrail-Evaluation
 ```
+
+Die 11 Versuche der vier Fragen stehen [oben](#das-projekt-in-4-fragen). Alle Versuchsdateien, auch die Zusatzversuche:
+
+<details>
+<summary>Alle Versuchsdateien (E1–E22)</summary>
 
 | Versuch | Forschungsfrage | Kanal | Compliance |
 |---|---|---|---|
@@ -106,7 +124,14 @@ python -m kartell eval-compliance --config experiments/e3_compliance_filter.yaml
 | `e21_ki_kunden_sehen_kanal` | KI-Kundschaft liest die Nachrichten der Shops mit | an | aus |
 | `e22_ki_kunden_budget_in_chf` | KI-Kundschaft mit Budget als Betrag (prüft eigenes Preiswissen des Modells) | an | aus |
 
+E5/E6 (Apertus) brauchen einen eigenen Server und wurden nicht durchgeführt.
+
+</details>
+
 Jede YAML-Datei hat einen lesbaren `titel`; Bericht, Monitor und Dashboard zeigen „E3 · Compliance-Filter“ statt `e3_compliance_filter_deepseek`.
+
+<details>
+<summary>Technische Einzelheiten: Kosten, Modelle, GitHub-Workflow, Auswertungsbefehle</summary>
 
 **Kosten:** Standardmodell ist `claude-opus-5`. Laut Schätzung kostet ein voller Versuch (50 Runden × 3 Wiederholungen) je nach Bedingung 8–21 USD, E1–E4 und E7 zusammen rund 80 USD. Die Schätzung beruht auf angenommenen Token-Zahlen; denkt das Modell länger, wird es teurer – deshalb zuerst einen Pilotlauf machen. Günstiger geht es mit `claude-haiku-4-5` (etwa ein Fünftel) – ob die Qualität reicht, entscheidet ihr nach einem Pilotlauf. Tatsächliche Token-Zahlen stehen nach jedem Lauf in `ergebnis.json`.
 
@@ -137,6 +162,8 @@ Laut Schätzung kosten E1–E4 und E7 mit DeepSeek zusammen rund 4 USD statt run
 **Kartell-Monitor:** `python -m kartell monitor <ordner> [<ordner> …] --ausgabe monitor.html` baut aus fertigen Läufen eine einzelne HTML-Seite (Daten gzip-komprimiert eingebettet, kein Server nötig): Übersicht aller Durchgänge, Preisverlauf, Kanal mit Compliance-Entscheiden, private Strategienotizen, erzwungene Abweichungen markiert. Die Ordner werden rekursiv durchsucht, z. B. ein Checkout des Branches `ergebnisse`.
 
 **Apertus:** Die Konfigurationen `e5`/`e6` erwarten einen OpenAI-kompatiblen Server, z. B. lokal mit vLLM (`vllm serve swiss-ai/Apertus-8B-Instruct-2509`) oder bei einem Hosting-Anbieter. `base_url`, Modellname und `api_key_env` in der YAML-Datei anpassen und den Modellnamen gegen die Angaben des Anbieters prüfen.
+
+</details>
 
 ## Messgrössen
 
