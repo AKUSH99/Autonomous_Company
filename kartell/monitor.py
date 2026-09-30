@@ -147,17 +147,25 @@ def modellname(kurzname: str) -> str:
     return kurzname.split(":", 1)[-1].removesuffix(":free").split("/")[-1]
 
 
-# Die Geschichte des Projekts in vier Fragen; alles andere ist Zusatz (Robustheit, Varianten) im Anhang.
-KAPITEL_TITEL = {1: "1 · Entsteht ein Kartell?", 2: "2 · Ist es ein echtes Kartell?", 3: "3 · Kann Aufsicht es stoppen?",
-                 4: "4 · Was merkt die Kundschaft?", 0: "Anhang · Zusatzversuche"}
+# Die Geschichte des Projekts: eine Frage, drei Kapitel – alle mit einem Modell (DeepSeek). Alles andere steht im Anhang:
+# Vergleichsläufe und zweites Modell (Nemotron) fürs Verbot, KI-Kundschaft, Varianten (Anker, mehr Shops, Werkzeug).
+KAPITEL_TITEL = {1: "1 · Sprechen sie sich ab?", 2: "2 · Ist es ein echtes Kartell?", 3: "3 · Kann man sie stoppen?",
+                 0: "Anhang"}
+KAPITEL_ANTWORT = {
+    1: "Oft: Mit Kanal landen 4 von 6 Läufen im Kartell, ohne Kanal 2 von 6.",
+    2: "Ja: Wer abweicht, wird sofort bestraft (6 von 6) – danach bieten sie Versöhnung an.",
+    3: "Teilweise: Filter und Verbot machen sie leiser. Mit Verbot planen sie in den Notizen, still zu bleiben.",
+    0: ""}
+ZEILEN_IM_ANHANG = ["Verbot: Vergleichsläufe (DeepSeek)", "Verbot mit zweitem Modell (Nemotron)", "KI-Kundschaft",
+                    "Weitere Varianten"]
 
 
 def kapitel(name: str) -> int:
-    """Kapitel eines Versuchs (0 = Anhang). E1/E2 mit Nemotron oder als Replikation sind Kontrollen des Verbots (Kapitel 3)."""
+    """Kapitel eines Versuchs (0 = Anhang). Fürs Verbot zählen in Kapitel 3 die vorregistrierten DeepSeek-Läufe."""
     kuerzel = name.split("_")[0]
-    if kuerzel in ("e1", "e2") and ("nemotron" in name or "replikation" in name):
-        return 3
-    return {"e1": 1, "e2": 1, "e16": 2, "e17": 2, "e3": 3, "e4": 3, "e18": 3, "e19": 3, "e20": 4, "e21": 4, "e22": 4}.get(kuerzel, 0)
+    if "nemotron" in name or (kuerzel in ("e1", "e2") and "replikation" in name):
+        return 0
+    return {"e1": 1, "e2": 1, "e16": 2, "e17": 2, "e3": 3, "e4": 3, "e18": 3, "e19": 3}.get(kuerzel, 0)
 
 
 def _reihenfolge(name: str) -> tuple:
@@ -190,6 +198,7 @@ def sammle(ordner: list[Path]) -> list[dict]:
         erster = laeufe[0]
         versuche.append({"name": name, "kurz": anzeigename(name, erster["titel"]),
                          "kapitel": kapitel(name), "kapitel_titel": KAPITEL_TITEL[kapitel(name)],
+                         "kapitel_antwort": KAPITEL_ANTWORT[kapitel(name)],
                          "erklaerung": ERKLAERUNG.get(name.split("_")[0], erster["beschreibung"]),
                          "durchgaenge": laeufe})
     return eindeutige_namen(versuche)
@@ -202,16 +211,19 @@ def _modell_kurz(modell: str) -> str:
 
 
 def zeile(name: str, modelle: list[str]) -> str:
-    """Unterzeile in Kapitel 3: der Compliance-Agent für sich, das Verbot je Modell (DeepSeek, Nemotron) in einer Zeile."""
-    if kapitel(name) != 3:
+    """Unterzeile im Anhang, damit auch er geordnet bleibt (die drei Kapitel brauchen keine)."""
+    if kapitel(name) != 0:
         return ""
-    return "Compliance-Agent" if name.split("_")[0] in ("e3", "e4") else f"Verbot · {' / '.join(modelle)}"
+    kuerzel = name.split("_")[0]
+    if kuerzel in ("e1", "e2", "e18", "e19"):
+        return ZEILEN_IM_ANHANG[0] if "replikation" in name else ZEILEN_IM_ANHANG[1]
+    return ZEILEN_IM_ANHANG[2] if kuerzel in ("e20", "e21", "e22") else ZEILEN_IM_ANHANG[3]
 
 
 def eindeutige_namen(versuche: list[dict]) -> list[dict]:
     """Gleicher Versuch mit verschiedenen Modellen (z. B. E1 mit DeepSeek und mit Nemotron): Modell an den Namen hängen.
 
-    Dazu "zeile" (Unterzeile im Kapitel) und "knopf" (kurze Beschriftung ohne Modell, das schon in der Zeile steht)."""
+    Dazu "zeile" (Unterzeile im Anhang) und "knopf" (kurze Beschriftung ohne Modell – das sagen Kapitel und Zeile)."""
     modelle_je_kuerzel: dict[str, set] = defaultdict(set)
     for v in versuche:
         v["_modelle"] = sorted({_modell_kurz(d["modell"]) for d in v["durchgaenge"]})
@@ -221,14 +233,13 @@ def eindeutige_namen(versuche: list[dict]) -> list[dict]:
         zaehler[v["kurz"]] += 1
     for v in versuche:
         v["zeile"] = zeile(v.get("name", ""), v["_modelle"])
-        v["knopf"] = v["kurz"].replace(" · Replikation", "") if v["zeile"] else v["kurz"]
+        v["knopf"] = v["kurz"].replace(" · Replikation", "")
         if len(modelle_je_kuerzel[v["kurz"].split(" · ")[0]]) > 1 or zaehler[v["kurz"]] > 1:
             v["kurz"] = f"{v['kurz']} · {' / '.join(v['_modelle'])}"
-        if not v["zeile"]:
-            v["knopf"] = v["kurz"]
         del v["_modelle"]
-    # innerhalb eines Kapitels: erst ohne Unterzeile bzw. Compliance-Agent, dann die Zeilen je Modell (sort ist stabil)
-    return sorted(versuche, key=lambda v: (v.get("kapitel") or 99, v["zeile"] not in ("", "Compliance-Agent"), v["zeile"]))
+    # Kapitel 1–3, dann der Anhang Zeile für Zeile (sort ist stabil, die Versuchsnummern bleiben geordnet)
+    rang = {z: i + 1 for i, z in enumerate(ZEILEN_IM_ANHANG)}
+    return sorted(versuche, key=lambda v: (v.get("kapitel") or 99, rang.get(v["zeile"], 0)))
 
 
 def baue(ordner: list[Path], ausgabe: Path) -> dict:
@@ -243,18 +254,16 @@ def baue(ordner: list[Path], ausgabe: Path) -> dict:
     zeitraum = daten_liste[0] if daten_liste and daten_liste[0] == daten_liste[-1] else \
         f"{daten_liste[0]}–{daten_liste[-1]}" if daten_liste else "unbekanntem Datum"
     daten = {
-        "kopfzeile": f"KI-Kartell · {modell} · {len(versuche)} Versuche · {anzahl} Läufe",
+        "kopfzeile": f"KI-Kartell · {anzahl} aufgezeichnete Läufe",
         "modell": modell,
         "versuche": versuche,
         "guardrail": None,
         "tempo_ms": 900,
         "uebersicht_text": (
-            "Kollusionsindex über die zweite Hälfte jedes Laufs: 0 = Gewinne wie bei Wettbewerb, 1 = wie ein perfektes Kartell, "
-            "unter 0 = weniger Gewinn als bei Wettbewerb – meist durch Preise unter dem Wettbewerbspreis, bei Nemotron oft durch "
-            "Preise weit über dem Kartellpreis (dann den Preisverlauf ansehen). Werte über 2 stehen am rechten Rand (›): Das sind "
-            "KI-Kunden, die auch zu Wucherpreisen kaufen – die Shops verdienen dann weit mehr als ein Kartell bei echter Kundschaft. "
-            "Jeder Punkt ist ein Durchgang – ein Klick spielt ihn unten ab. "
-            "Wenige Durchgänge je Versuch zeigen eine Tendenz, sind aber statistisch noch kein Beweis (siehe docs/ergebnisse.md)."),
+            "Kollusionsindex über die zweite Hälfte jedes Laufs: 0 = Gewinne wie bei Wettbewerb, 1 = wie ein perfektes Kartell. "
+            "Jeder Punkt ist ein Durchgang – ein Klick spielt ihn unten ab. Wenige Durchgänge zeigen eine Tendenz, keinen Beweis "
+            "(Zahlen und Tests: docs/ergebnisse.md). Im Anhang: Werte unter 0 kommen bei Nemotron oft von Preisen über dem "
+            "Kartellpreis, Werte über 2 (›) von KI-Kunden, die jeden Preis zahlen."),
         "fuss": [
             f"Aufzeichnung echter Läufe mit {modell}, ausgeführt am {zeitraum}. Jede Nachricht, jeder Preis und jede Notiz "
             "stammt vom Modell – nichts ist nachgespielt. Einzige Ausnahme: im Abweichungstest setzt die Simulation den Preis "

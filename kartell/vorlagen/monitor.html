@@ -62,7 +62,8 @@
   @media (max-width: 520px) { .zeile-titel { flex: 1 1 100%; } }
   .ue-punkt.rand { border-radius: 0; background: var(--ink); clip-path: polygon(0 0, 100% 50%, 0 100%); }
   .tab.mehr { background: transparent; border-style: dashed; color: var(--muted); }
-  .ue-kapitel { font: 600 11px/1.3 var(--body); color: var(--muted); margin: 10px 0 2px; }
+  .ue-kapitel { font: 600 12px/1.4 var(--body); color: var(--ink); margin: 14px 0 2px; }
+  .ue-antwort { font-weight: 400; color: var(--muted); }
   .tab { font: 600 13px/1 var(--body); border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); padding: 9px 12px; border-radius: 999px; cursor: pointer; }
   .tab[aria-selected="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
   .transport { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 320px; min-width: 0; }
@@ -154,6 +155,8 @@
   .ue-achse .ue-spur span { position: absolute; transform: translateX(-50%); font: 11px/1 var(--mono); color: var(--muted); top: 4px; white-space: nowrap; }
   .ue-kopf .ue-spur { height: 20px; }
   .ue-kopf .ue-spur span { position: absolute; transform: translateX(-50%); font: 500 11px/1 var(--mono); top: 4px; white-space: nowrap; }
+  /* schmal: Beschriftungen neben die Linien statt darüber, damit „Wettbewerb“ und „Kartell“ sich nicht überdecken */
+  @media (max-width: 520px) { .ue-kopf .ue-spur span.links { transform: translateX(calc(-100% - 3px)); } .ue-kopf .ue-spur span.rechts { transform: translateX(3px); } }
   .uebersicht-text { padding: 0 16px 14px; margin: 0; font-size: 13px; color: var(--muted); max-width: 90ch; }
   .durchgaenge { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
   .durchgaenge .label { font-size: 12px; color: var(--muted); margin-right: 4px; }
@@ -288,7 +291,7 @@ function waehle(v, d) {
   stop(); versuch = v; durchgang = d; runde = aktuell().runden.length; alles();
 }
 
-let zeigeAnhang = false;  // Zusatzversuche (Kapitel 0) erst auf Wunsch zeigen – die Hauptgeschichte hat vier Kapitel
+let zeigeAnhang = false;  // Anhang (Kapitel 0) erst auf Wunsch zeigen – die Hauptgeschichte hat drei Kapitel
 const sichtbar = (i) => (DATEN.versuche[i].kapitel || 0) !== 0 || zeigeAnhang || i === versuch;
 
 function kapitelGruppen() {
@@ -316,7 +319,7 @@ function zeichneTabs() {
   };
   $("tabs").innerHTML = gruppen.filter((g) => g.k !== 0 || zeigeAnhang).map((g) =>
     `<div class="kapitel"><span class="kapitel-titel">${esc(g.titel)}</span>${zeilen(g.idx)}</div>`).join("")
-    + (anhang && gruppen.length > 1 ? `<button class="tab mehr" id="anhang-knopf">${zeigeAnhang ? "Zusatzversuche ausblenden" : `Zusatzversuche zeigen (${anhang.idx.length})`}</button>` : "");
+    + (anhang && gruppen.length > 1 ? `<button class="tab mehr" id="anhang-knopf">${zeigeAnhang ? "Anhang ausblenden" : `Anhang zeigen (${anhang.idx.length} weitere Versuche)`}</button>` : "");
   DATEN.versuche.forEach((_, i) => { const b = $(`tab-${i}`); if (b) b.addEventListener("click", () => waehle(i, 0)); });
   if ($("anhang-knopf")) $("anhang-knopf").addEventListener("click", () => { zeigeAnhang = !zeigeAnhang; zeichneTabs(); alles(); });
 }
@@ -336,17 +339,22 @@ function zeichneUebersicht() {
   const pct = (k) => `${(Math.min(hi, Math.max(lo, k)) - lo) / (hi - lo) * 100}%`;
   const rand = (k) => (k > hi || k < lo ? " rand" : "");
   const ticks = [];
-  for (let k = Math.ceil(lo * 2) / 2; k <= hi + 1e-9; k += 0.5) ticks.push(Math.round(k * 10) / 10 + 0);
+  const schritt = window.innerWidth < 600 ? 1 : 0.5;  // am Handy weniger Zahlen, sonst überlappen sie
+  for (let k = Math.ceil(lo / schritt) * schritt; k <= hi + 1e-9; k += schritt) ticks.push(Math.round(k * 10) / 10 + 0);
   const gitter = ticks.map((k) => `<i class="gitter" style="left:${pct(k)}"></i>`).join("")
     + `<i class="ref" style="left:${pct(0)};border-color:var(--nash)"></i><i class="ref" style="left:${pct(1)};border-color:var(--monopol)"></i>`;
   let html = `<div class="ue-zeile ue-kopf"><span></span><div class="ue-spur">
-      <span style="left:${pct(0)};color:var(--nash)">Wettbewerb</span><span style="left:${pct(1)};color:var(--monopol)">Kartell</span></div></div>`;
+      <span class="links" style="left:${pct(0)};color:var(--nash)">Wettbewerb</span><span class="rechts" style="left:${pct(1)};color:var(--monopol)">Kartell</span></div></div>`;
   let letztesKapitel = null;
   DATEN.versuche.forEach((v, i) => {
     if (!sichtbar(i)) return;
-    if (v.kapitel_titel && v.kapitel_titel !== letztesKapitel) { html += `<div class="ue-kapitel">${esc(v.kapitel_titel)}</div>`; letztesKapitel = v.kapitel_titel; }
+    if (v.kapitel_titel && v.kapitel_titel !== letztesKapitel) {
+      html += `<div class="ue-kapitel">${esc(v.kapitel_titel)}${v.kapitel_antwort ? ` <span class="ue-antwort">– ${esc(v.kapitel_antwort)}</span>` : ""}</div>`;
+      letztesKapitel = v.kapitel_titel;
+    }
+    const beschriftung = v.kapitel ? (v.knopf || v.kurz) : v.kurz;  // im Anhang mit Modell, sonst kurz
     const mittel = v.durchgaenge.reduce((a, d) => a + d.ki, 0) / v.durchgaenge.length;
-    html += `<div class="ue-zeile"><button class="ue-label ${i === versuch ? "aktiv" : ""}" data-v="${i}">${esc(v.kurz)}</button>
+    html += `<div class="ue-zeile"><button class="ue-label ${i === versuch ? "aktiv" : ""}" data-v="${i}">${esc(beschriftung)}</button>
       <div class="ue-spur">${gitter}<i class="mittel" style="left:${pct(mittel)}" title="Mittelwert ${mittel.toFixed(2)}"></i>`
       + v.durchgaenge.map((d, j) => `<button class="ue-punkt${rand(d.ki)} ${i === versuch && j === durchgang ? "aktiv" : ""}" data-v="${i}" data-d="${j}"
           style="left:${pct(d.ki)}" title="${esc(v.kurz)} · Durchgang ${j + 1}: ${d.ki.toFixed(2)}${d.abbruch ? " (vorzeitig beendet)" : ""}"
