@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Instrument+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400;1,6..72,500&display=swap">
 <style>
-  /* Layout: eine Erzählung in drei Akten. Jeder Akt hat eine Bühne (Preisschilder · Preiskurve · Protokoll aus
+  /* Layout: eine Erzählung in drei Kapiteln. Jedes Kapitel hat eine Bühne (Preisschilder · Preiskurve · Protokoll aus
      öffentlichen Nachrichten und privaten Gedanken). Danach die Wand aller Läufe und ein freies Abspielgerät. */
   :root {
     --papier: #f1f3f6;
@@ -76,7 +76,7 @@
   .schild-fuss { font: 500 0.82rem/1.4 var(--text); color: var(--leise); border-top: 1px dashed var(--linie); padding-top: 10px; margin-top: 6px; }
   .schild-gross figcaption { font-size: 0.85rem; color: var(--leise); text-align: center; margin-top: 18px; }
 
-  /* Wegweiser zu den drei Akten */
+  /* Wegweiser zu den drei Kapiteln */
   .wegweiser { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
   @media (max-width: 760px) { .wegweiser { grid-template-columns: 1fr; } }
   .wegweiser a { display: grid; gap: 2px; text-decoration: none; padding: 14px 16px; border-top: 2px solid var(--tinte); height: 100%; }
@@ -85,15 +85,15 @@
   .w-frage { font: 600 1.05rem/1.3 var(--text); }
   .w-antwort { color: var(--leise); font-size: 0.95rem; }
 
-  /* ---------- Akte ---------- */
-  .akt { padding-block: 56px 12px; }
-  .akt-kopf { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 20px 48px; align-items: end; margin-bottom: 22px; }
-  @media (max-width: 860px) { .akt-kopf { grid-template-columns: 1fr; } }
-  .akt-nr { font: 800 0.95rem/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--kartell); }
-  .akt h2, .abschnitt h2 { font: 800 clamp(2.4rem, 3.6vw + 1rem, 4rem)/0.95 var(--display); margin: 8px 0 6px; letter-spacing: -0.01em; text-wrap: balance; }
-  .akt-frage { font: 500 1.2rem/1.3 var(--text); color: var(--leise); margin: 0; }
-  .akt-antwort { font: 600 1.3rem/1.35 var(--text); margin: 0 0 8px; text-wrap: balance; }
-  .akt-text p { margin: 0; max-width: 60ch; }
+  /* ---------- Kapitel ---------- */
+  .kap { padding-block: 56px 12px; }
+  .kap-kopf { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 20px 48px; align-items: end; margin-bottom: 22px; }
+  @media (max-width: 860px) { .kap-kopf { grid-template-columns: 1fr; } }
+  .kap-nr { font: 800 0.95rem/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--kartell); }
+  .kap h2, .abschnitt h2 { font: 800 clamp(2.4rem, 3.6vw + 1rem, 4rem)/0.95 var(--display); margin: 8px 0 6px; letter-spacing: -0.01em; text-wrap: balance; }
+  .kap-frage { font: 500 1.2rem/1.3 var(--text); color: var(--leise); margin: 0; }
+  .kap-antwort { font: 600 1.3rem/1.35 var(--text); margin: 0 0 8px; text-wrap: balance; }
+  .kap-text p { margin: 0; max-width: 60ch; }
   .fakten { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px 28px; margin: 18px 0 0; }
   .fakten div { min-width: 0; }
   .fakten dt { font: 800 2.1rem/1 var(--display); font-variant-numeric: tabular-nums; }
@@ -256,17 +256,17 @@
 </div>
 
 <main>
-  <div id="akte"><div class="rahmen laden">Die Aufzeichnungen werden geladen …</div></div>
+  <div id="kapitel-liste"><div class="rahmen laden">Die Aufzeichnungen werden geladen …</div></div>
 
   <section class="abschnitt rahmen" id="alle">
-    <span class="akt-nr">Alle Läufe</span>
+    <span class="kap-nr">Alle Läufe</span>
     <h2>Jedes Feld ist ein Lauf</h2>
     <p>Zwei Linien, zwei Shops. Die rote Fläche ist der Kartellbereich zwischen Wettbewerbs- und Kartellpreis. Läufe, die im Kartell enden, sind markiert. Ein Klick spielt den Lauf unten ab.</p>
     <div class="wand" id="wand"></div>
   </section>
 
   <section class="abschnitt rahmen" id="abspielen">
-    <span class="akt-nr">Selbst nachsehen</span>
+    <span class="kap-nr">Selbst nachsehen</span>
     <h2>Jeden Lauf abspielen</h2>
     <div class="wahl">
       <label for="wahl-versuch">Versuch</label>
@@ -554,34 +554,34 @@ class Buehne {
   }
 }
 
-/* ---------------------------------------------------------------- Akte ---------------------------------------------------------------- */
-function zeichneAkte() {
-  const akte = DATEN.geschichte || [];
-  $("wegweiser").innerHTML = akte.map((a) => `<li><a href="#akt-${a.nummer}"><span class="w-nr">Akt ${a.nummer} · ${esc(a.titel)}</span><span class="w-frage">${esc(a.frage)}</span><span class="w-antwort">${esc(a.antwort)}</span></a></li>`).join("");
-  if (!akte.length) { $("akte").innerHTML = ""; return; }
-  $("akte").innerHTML = akte.map((a) => {
+/* ---------------------------------------------------------------- Kapitel ------------------------------------------------------------- */
+function zeichneKapitel() {
+  const liste = DATEN.geschichte || [];
+  $("wegweiser").innerHTML = liste.map((a) => `<li><a href="#kap-${a.nummer}"><span class="w-nr">Kapitel ${a.nummer} · ${esc(a.titel)}</span><span class="w-frage">${esc(a.frage)}</span><span class="w-antwort">${esc(a.antwort)}</span></a></li>`).join("");
+  if (!liste.length) { $("kapitel-liste").innerHTML = ""; return; }
+  $("kapitel-liste").innerHTML = liste.map((a) => {
     const v = DATEN.versuche[a.versuch], d = v.durchgaenge[a.durchgang];
-    return `<section class="akt rahmen" id="akt-${a.nummer}">
-      <div class="akt-kopf">
-        <div><span class="akt-nr">Akt ${a.nummer}</span><h2>${esc(a.titel)}</h2><p class="akt-frage">${esc(a.frage)}</p></div>
-        <div class="akt-text"><p class="akt-antwort">${esc(a.antwort)}</p><p>${esc(a.text)}</p>
+    return `<section class="kap rahmen" id="kap-${a.nummer}">
+      <div class="kap-kopf">
+        <div><span class="kap-nr">Kapitel ${a.nummer}</span><h2>${esc(a.titel)}</h2><p class="kap-frage">${esc(a.frage)}</p></div>
+        <div class="kap-text"><p class="kap-antwort">${esc(a.antwort)}</p><p>${esc(a.text)}</p>
           <dl class="fakten">${a.fakten.map((f) => `<div><dt>${esc(f.zahl)}</dt><dd>${esc(f.text)}</dd></div>`).join("")}</dl></div>
       </div>
-      <div class="buehne" data-akt="${a.nummer}"></div>
+      <div class="buehne" data-kap="${a.nummer}"></div>
       <p class="quelle">Aufgezeichneter Lauf: ${esc(v.kurz)} · Durchgang ${d.wiederholung} · Runden ${a.von}–${a.bis} von ${d.runden.length}. Die Zahlen oben gelten für alle Läufe des Versuchs.</p>
     </section>`;
   }).join("");
   const beobachter = "IntersectionObserver" in window && !REDUZIERT ? new IntersectionObserver((eintraege) => {
     eintraege.forEach((e) => { if (e.isIntersecting && !e.target._gespielt) { e.target._gespielt = true; e.target._buehne.spiele(); } });
   }, { threshold: 0.45 }) : null;
-  akte.forEach((a) => {
-    const el = document.querySelector(`.buehne[data-akt="${a.nummer}"]`);
+  liste.forEach((a) => {
+    const el = document.querySelector(`.buehne[data-kap="${a.nummer}"]`);
     el._buehne = new Buehne(el, { lauf: DATEN.versuche[a.versuch].durchgaenge[a.durchgang], von: a.von, bis: a.bis, ruhe: a.ruhe,
                                   momente: a.momente, modus: "geschichte", tempo: 620 });
     if (beobachter) beobachter.observe(el);
   });
-  // Grosses Preisschild aus dem ersten Akt: Preis am Ende, Runde ab der beide gleich sind
-  const a = akte[0], lauf = DATEN.versuche[a.versuch].durchgaenge[a.durchgang], letzte = lauf.runden[lauf.runden.length - 1];
+  // Grosses Preisschild aus dem ersten Kapitel: Preis am Ende, Runde ab der beide gleich sind
+  const a = liste[0], lauf = DATEN.versuche[a.versuch].durchgaenge[a.durchgang], letzte = lauf.runden[lauf.runden.length - 1];
   const shops = Object.keys(letzte.preise), p = letzte.preise[shops[0]];
   if (shops.every((s) => letzte.preise[s] === p)) {
     let ab = lauf.runden.length; while (ab > 1 && shops.every((s) => lauf.runden[ab - 2].preise[s] === p)) ab--;
@@ -662,11 +662,11 @@ function zeichneFuss() {
   try {
     DATEN = await entpacke(DATEN_GZ);
   } catch (e) {
-    $("akte").innerHTML = `<div class="rahmen laden">Die Aufzeichnungen liessen sich nicht laden. Bitte einen aktuellen Browser verwenden.</div>`;
+    $("kapitel-liste").innerHTML = `<div class="rahmen laden">Die Aufzeichnungen liessen sich nicht laden. Bitte einen aktuellen Browser verwenden.</div>`;
     return;
   }
   $("kopfzeile").textContent = `KI-Kartell · Experiment mit echten KI-Agenten · ${DATEN.anzahl_laeufe || ""} aufgezeichnete Läufe`;
-  zeichneAkte();
+  zeichneKapitel();
   zeichneWand();
   zeichneWahl();
   waehle(0, 0);

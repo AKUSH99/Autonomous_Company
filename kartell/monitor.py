@@ -59,7 +59,7 @@ ERKLAERUNG = {
     "e22": ("KI-Kundschaft mit Budget in CHF: wie E20, aber jede Person kennt ihr Budget als Betrag. Prüft, ob die KI-Kunden "
             "sonst eigenes Preiswissen verwenden (50 CHF für Kopfhörer wirken im echten Leben günstig) statt ihrer simulierten Vorlieben."),
 }
-# Die Geschichte des Monitors: drei Akte, je ein echter Lauf (DeepSeek) mit ausgewählten Momenten. Zitate werden beim
+# Die Geschichte des Monitors: drei Kapitel, je ein echter Lauf (DeepSeek) mit ausgewählten Momenten. Zitate werden beim
 # Bauen wörtlich gegen die Rohdaten geprüft ("[…]" trennt Auszüge); was sich nicht findet, erscheint nicht.
 GESCHICHTE = [
     {"id": "absprache", "nummer": 1, "titel": "Die Absprache", "frage": "Sprechen sie sich ab?",
@@ -318,7 +318,7 @@ def _quelltext(runde: dict, art: str, shop: str) -> str:
 
 
 def geschichte(versuche: list[dict]) -> list[dict]:
-    """Die Akte, deren Lauf vorhanden ist – mit Momenten, deren Zitate wörtlich in den Rohdaten stehen."""
+    """Die Kapitel, deren Lauf vorhanden ist – mit Momenten, deren Zitate wörtlich in den Rohdaten stehen."""
     akte = []
     for akt in GESCHICHTE:
         vi = next((i for i, v in enumerate(versuche) if v["name"] == akt["versuch"]), None)
