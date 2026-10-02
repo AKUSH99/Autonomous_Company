@@ -1,261 +1,288 @@
 <!doctype html>
 <html lang="de">
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Kartell-Monitor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Instrument+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400;1,6..72,500&display=swap">
 <style>
+  /* Layout: eine Erzählung in drei Akten. Jeder Akt hat eine Bühne (Preisschilder · Preiskurve · Protokoll aus
+     öffentlichen Nachrichten und privaten Gedanken). Danach die Wand aller Läufe und ein freies Abspielgerät. */
   :root {
-    --ground: #eef1f5;
-    --surface: #ffffff;
-    --surface-2: #f6f8fb;
-    --ink: #151b26;
-    --muted: #5a6474;
-    --line: #dce1e8;
-    --shop-a: #2d5bd7;
-    --shop-b: #c96f12;
-    --shop-c: #7a4fc2;
-    --nash: #1d8469;
-    --monopol: #b3303f;
-    --band: rgba(179, 48, 63, 0.07);
-    --ok-bg: rgba(29, 132, 105, 0.1);
-    --stop-bg: rgba(179, 48, 63, 0.1);
-    --focus: #2d5bd7;
-    --display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
-    --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
-    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    --papier: #f1f3f6;
+    --flaeche: #ffffff;
+    --flaeche-2: #f6f7f9;
+    --tinte: #121b24;
+    --leise: #56636f;
+    --linie: #d8dee5;
+    --shop-a: #2456c9;
+    --shop-b: #d2690a;
+    --wettbewerb: #1b8467;
+    --kartell: #c42f3c;
+    --band: color-mix(in oklab, var(--kartell) 8%, transparent);
+    --hauch-k: color-mix(in oklab, var(--kartell) 12%, transparent);
+    --hauch-w: color-mix(in oklab, var(--wettbewerb) 12%, transparent);
+    --schatten: 0 1px 2px rgba(18, 27, 36, 0.06), 0 8px 28px rgba(18, 27, 36, 0.07);
+    --display: "Big Shoulders Display", "Arial Narrow", "Roboto Condensed", "Helvetica Neue", sans-serif;
+    --text: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+    --stimme: "Newsreader", Georgia, "Times New Roman", serif;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
+      --papier: #0e151c; --flaeche: #151e27; --flaeche-2: #1a2530; --tinte: #e6ecf2; --leise: #93a0ad; --linie: #2a3642;
+      --shop-a: #5582ea; --shop-b: #bf7a1c; --wettbewerb: #3fae8c; --kartell: #ee5a66;
+      --schatten: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.35);
       color-scheme: dark;
-      --ground: #0d1219; --surface: #151c26; --surface-2: #1b2430; --ink: #e5e9f0; --muted: #98a2b3; --line: #2a3441;
-      --shop-a: #7f9dff; --shop-b: #f0a04b; --shop-c: #b999ff; --nash: #4cc3a0; --monopol: #f07482;
-      --band: rgba(240, 116, 130, 0.08); --ok-bg: rgba(76, 195, 160, 0.14); --stop-bg: rgba(240, 116, 130, 0.14); --focus: #7f9dff;
     }
   }
   :root[data-theme="dark"] {
+    --papier: #0e151c; --flaeche: #151e27; --flaeche-2: #1a2530; --tinte: #e6ecf2; --leise: #93a0ad; --linie: #2a3642;
+    --shop-a: #5582ea; --shop-b: #bf7a1c; --wettbewerb: #3fae8c; --kartell: #ee5a66;
+    --schatten: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.35);
     color-scheme: dark;
-    --ground: #0d1219; --surface: #151c26; --surface-2: #1b2430; --ink: #e5e9f0; --muted: #98a2b3; --line: #2a3441;
-    --shop-a: #7f9dff; --shop-b: #f0a04b; --shop-c: #b999ff; --nash: #4cc3a0; --monopol: #f07482;
-    --band: rgba(240, 116, 130, 0.08); --ok-bg: rgba(76, 195, 160, 0.14); --stop-bg: rgba(240, 116, 130, 0.14); --focus: #7f9dff;
   }
 
-  body { background: var(--ground); color: var(--ink); font: 15px/1.55 var(--body); margin: 0; }
-  .wrap > * { min-width: 0; }
-  .wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 48px; display: grid; gap: 20px; }
-  @media (max-width: 520px) { .wrap { padding-inline: 16px; } }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--papier); color: var(--tinte); font: 400 16px/1.6 var(--text); }
+  .rahmen { max-width: 1180px; margin: 0 auto; padding-inline: 24px; }
+  @media (max-width: 560px) { .rahmen { padding-inline: 16px; } }
+  a { color: inherit; text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--shop-a); outline-offset: 2px; border-radius: 4px; }
+  .etikett { font: 600 0.72rem/1.2 var(--text); letter-spacing: 0.09em; text-transform: uppercase; color: var(--leise); }
+  .zahl { font-variant-numeric: tabular-nums; }
 
-  header { display: grid; gap: 6px; }
-  .eyebrow { font: 500 12px/1.4 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-  h1 { font: 800 clamp(28px, 4.2vw, 42px)/1.05 var(--display); font-stretch: 82%; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
-  .lead { color: var(--muted); max-width: 70ch; margin: 0; }
+  /* ---------- Kopf ---------- */
+  .kopf { padding-block: 44px 28px; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.8fr); gap: 32px 56px; align-items: center; }
+  @media (max-width: 860px) { .kopf { grid-template-columns: 1fr; padding-block: 28px 12px; } }
+  .kopf h1 { font: 800 clamp(2.6rem, 4.6vw + 1rem, 5.1rem)/0.95 var(--display); letter-spacing: -0.01em; margin: 14px 0 20px; text-wrap: balance; }
+  .kopf h1 em { font-style: normal; color: var(--kartell); }
+  .vorspann { font-size: 1.12rem; max-width: 58ch; margin: 0; color: var(--tinte); }
+  .vorspann + .vorspann { margin-top: 10px; color: var(--leise); font-size: 1rem; }
 
-  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
-  .steuerung { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 12px 14px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; }
-  .tabs { display: flex; flex-wrap: wrap; gap: 6px; }
-  .kapitel { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
-  .kapitel-titel { flex: 1 1 100%; font: 600 12px/1.3 var(--body); color: var(--muted); margin-top: 4px; }
-  .zeile { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
-  .zeile-titel { font: 500 12px/1.3 var(--body); color: var(--muted); min-width: 130px; }
-  @media (max-width: 520px) { .zeile-titel { flex: 1 1 100%; } }
-  .ue-punkt.rand { border-radius: 0; background: var(--ink); clip-path: polygon(0 0, 100% 50%, 0 100%); }
-  .tab.mehr { background: transparent; border-style: dashed; color: var(--muted); }
-  .ue-kapitel { font: 600 12px/1.4 var(--body); color: var(--ink); margin: 14px 0 2px; }
-  .ue-antwort { font-weight: 400; color: var(--muted); }
-  .tab { font: 600 13px/1 var(--body); border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); padding: 9px 12px; border-radius: 999px; cursor: pointer; }
-  .tab[aria-selected="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
-  .transport { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 320px; min-width: 0; }
-  .knopf { font: 600 13px/1 var(--body); border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); height: 36px; min-width: 36px; padding: 0 10px; border-radius: 8px; cursor: pointer; }
-  .knopf.play { background: var(--ink); color: var(--surface); border-color: var(--ink); min-width: 92px; }
-  input[type="range"] { flex: 1; min-width: 80px; accent-color: var(--ink); }
-  .rundenzahl { font: 500 13px/1 var(--mono); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
-  button:focus-visible, input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  /* Das grosse Preisschild: der Wettbewerbspreis durchgestrichen, darunter der Preis, den die KIs verlangen */
+  .schild-gross { margin: 0; justify-self: center; width: min(100%, 330px); }
+  .schild-karte { position: relative; background: var(--flaeche); border: 1px solid var(--linie); border-radius: 18px 18px 18px 18px;
+    padding: 30px 28px 24px; box-shadow: var(--schatten); transform: rotate(-3deg); display: grid; gap: 4px;
+    clip-path: polygon(0 14%, 14% 0, 100% 0, 100% 100%, 0 100%); }
+  .schild-karte::before { content: ""; position: absolute; left: 22px; top: 22px; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--papier); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2); }
+  .statt { font: 500 1rem/1.3 var(--text); color: var(--leise); padding-left: 34px; }
+  .statt s { text-decoration-thickness: 2px; text-decoration-color: var(--kartell); font-variant-numeric: tabular-nums; }
+  .preis-riesig { font: 900 clamp(5rem, 9vw, 7rem)/0.9 var(--display); color: var(--kartell); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .preis-riesig sup { font-size: 0.45em; vertical-align: 0.95em; margin-left: 2px; }
+  .schild-fuss { font: 500 0.82rem/1.4 var(--text); color: var(--leise); border-top: 1px dashed var(--linie); padding-top: 10px; margin-top: 6px; }
+  .schild-gross figcaption { font-size: 0.85rem; color: var(--leise); text-align: center; margin-top: 18px; }
 
-  .raster { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 20px; align-items: start; }
-  @media (max-width: 900px) { .raster { grid-template-columns: 1fr; } }
-  .spalte { display: grid; gap: 20px; min-width: 0; }
+  /* Wegweiser zu den drei Akten */
+  .wegweiser { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 760px) { .wegweiser { grid-template-columns: 1fr; } }
+  .wegweiser a { display: grid; gap: 2px; text-decoration: none; padding: 14px 16px; border-top: 2px solid var(--tinte); height: 100%; }
+  .wegweiser a:hover .w-frage { text-decoration: underline; }
+  .w-nr { font: 800 0.95rem/1 var(--display); letter-spacing: 0.04em; color: var(--leise); }
+  .w-frage { font: 600 1.05rem/1.3 var(--text); }
+  .w-antwort { color: var(--leise); font-size: 0.95rem; }
 
-  .kopf { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 14px 16px 0; }
-  h2 { font: 700 18px/1.2 var(--display); font-stretch: 88%; margin: 0; }
-  .klein { font-size: 13px; color: var(--muted); }
-  .legende { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
-  .legende span { display: inline-flex; align-items: center; gap: 6px; }
-  .strich { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
-  .strich.gestrichelt { background: none !important; border-top: 2px dashed; height: 0; }
-  .diagramm { padding: 6px 8px 8px; }
-  svg { display: block; width: 100%; height: auto; }
-  svg text { font-family: var(--mono); font-size: 11px; fill: var(--muted); }
+  /* ---------- Akte ---------- */
+  .akt { padding-block: 56px 12px; }
+  .akt-kopf { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 20px 48px; align-items: end; margin-bottom: 22px; }
+  @media (max-width: 860px) { .akt-kopf { grid-template-columns: 1fr; } }
+  .akt-nr { font: 800 0.95rem/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--kartell); }
+  .akt h2, .abschnitt h2 { font: 800 clamp(2.4rem, 3.6vw + 1rem, 4rem)/0.95 var(--display); margin: 8px 0 6px; letter-spacing: -0.01em; text-wrap: balance; }
+  .akt-frage { font: 500 1.2rem/1.3 var(--text); color: var(--leise); margin: 0; }
+  .akt-antwort { font: 600 1.3rem/1.35 var(--text); margin: 0 0 8px; text-wrap: balance; }
+  .akt-text p { margin: 0; max-width: 60ch; }
+  .fakten { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px 28px; margin: 18px 0 0; }
+  .fakten div { min-width: 0; }
+  .fakten dt { font: 800 2.1rem/1 var(--display); font-variant-numeric: tabular-nums; }
+  .fakten dd { margin: 4px 0 0; font-size: 0.9rem; color: var(--leise); line-height: 1.45; }
+  .quelle { font-size: 0.82rem; color: var(--leise); margin: 10px 2px 0; }
 
-  .kennzahlen { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border-top: 1px solid var(--line); border-radius: 0 0 10px 10px; overflow: hidden; }
-  .kennzahl { background: var(--surface); padding: 12px 16px; display: grid; gap: 2px; }
-  .kennzahl .wert { font: 600 20px/1.2 var(--mono); font-variant-numeric: tabular-nums; }
-  .kennzahl .dazu { font-size: 12px; color: var(--muted); }
+  /* ---------- Bühne ---------- */
+  .buehne { background: var(--flaeche); border: 1px solid var(--linie); border-radius: 16px; padding: 18px; display: grid; gap: 16px; box-shadow: var(--schatten); }
+  @media (max-width: 560px) { .buehne { padding: 12px; border-radius: 12px; } }
+  .buehne-kopf { display: flex; flex-wrap: wrap; align-items: stretch; gap: 12px; }
+  .schild { flex: 1 1 150px; min-width: 0; display: grid; gap: 2px; padding: 10px 14px 10px; border-radius: 10px; background: var(--flaeche-2); }
+  .schild-name { display: flex; align-items: center; gap: 8px; font: 600 0.85rem/1.2 var(--text); }
+  .punkt { width: 10px; height: 10px; border-radius: 50%; background: var(--farbe); flex: none; }
+  .schild-preis { font: 800 2.7rem/1 var(--display); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; display: block; overflow: hidden; }
+  .schild-preis sup { font-size: 0.5em; vertical-align: 0.8em; margin-left: 1px; }
+  .schild-preis small { font: 600 0.8rem/1 var(--text); color: var(--leise); margin-left: 6px; letter-spacing: 0.04em; }
+  .schild-preis.kipp b, .schild-preis.kipp sup { display: inline-block; animation: kippen 0.32s ease-out; }
+  .schild-delta { font-size: 0.8rem; color: var(--leise); font-variant-numeric: tabular-nums; min-height: 1.2em; }
+  @keyframes kippen { from { transform: translateY(-45%); opacity: 0; } to { transform: none; opacity: 1; } }
 
-  .skala { padding: 14px 16px 16px; display: grid; gap: 8px; }
-  .skala-balken { position: relative; height: 10px; border-radius: 999px; background: linear-gradient(90deg, var(--nash), var(--monopol)); opacity: 0.85; }
-  .skala-marke { position: absolute; top: 50%; width: 16px; height: 16px; border-radius: 50%; background: var(--surface); border: 3px solid var(--ink); transform: translate(-50%, -50%); transition: left 0.35s ease; }
-  .skala-achse { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .pegel { flex: 2 1 300px; min-width: 0; padding: 10px 14px; border-radius: 10px; background: var(--flaeche-2); display: grid; gap: 7px; }
+  .pegel-kopf { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .zone { display: inline-flex; align-items: center; gap: 6px; font: 600 0.8rem/1 var(--text); padding: 5px 9px; border-radius: 999px; background: var(--flaeche); border: 1px solid var(--linie); }
+  .zone i { width: 8px; height: 8px; border-radius: 50%; background: var(--leise); }
+  .zone[data-zone="kartell"] { background: var(--hauch-k); border-color: transparent; }
+  .zone[data-zone="kartell"] i { background: var(--kartell); }
+  .zone[data-zone="wettbewerb"] { background: var(--hauch-w); border-color: transparent; }
+  .zone[data-zone="wettbewerb"] i { background: var(--wettbewerb); }
+  .pegel-spur { position: relative; height: 10px; border-radius: 999px;
+    background: linear-gradient(90deg, var(--hauch-w) 0 25%, var(--flaeche) 25% 75%, var(--hauch-k) 75% 100%); border: 1px solid var(--linie); }
+  .pegel-spur::before, .pegel-spur::after { content: ""; position: absolute; top: -4px; bottom: -4px; width: 2px; border-radius: 1px; }
+  .pegel-spur::before { left: 25%; background: var(--wettbewerb); }
+  .pegel-spur::after { left: 75%; background: var(--kartell); }
+  .pegel-marke { position: absolute; top: 50%; width: 16px; height: 16px; border-radius: 50%; background: var(--tinte); border: 3px solid var(--flaeche);
+    transform: translate(-50%, -50%); transition: left 0.35s ease; left: 25%; }
+  .pegel-fuss { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--leise); font-variant-numeric: tabular-nums; padding-inline: calc(25% - 34px); }
+  .pegel-text { font: 600 0.95rem/1.3 var(--text); margin: 0; font-variant-numeric: tabular-nums; }
+  .runde-gross { font: 800 1.05rem/1 var(--display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--leise); }
 
-  .notizen { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; padding: 14px 16px 16px; }
-  .notiz { border-top: 3px solid var(--farbe, var(--ink)); padding-top: 10px; display: grid; gap: 8px; }
-  .notiz h3 { font: 700 15px/1.2 var(--display); margin: 0; display: flex; justify-content: space-between; gap: 8px; }
-  .notiz h3 .preis { font: 500 14px/1.2 var(--mono); color: var(--muted); }
-  .feld { display: grid; gap: 2px; }
-  .feld b { font: 500 11px/1.3 var(--mono); letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
-  .feld p { margin: 0; overflow-wrap: anywhere; }
+  .buehne-mitte { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 18px; }
+  @media (max-width: 900px) { .buehne-mitte { grid-template-columns: 1fr; } }
+  .kurve { position: relative; margin: 0; min-width: 0; border-radius: 10px; transition: box-shadow 0.3s; }
+  .kurve.blitz { animation: blitz 1.2s ease-out; }
+  @keyframes blitz { 0% { box-shadow: 0 0 0 3px var(--kartell); } 100% { box-shadow: 0 0 0 3px transparent; } }
+  .kurve svg { display: block; width: 100%; height: auto; overflow: visible; touch-action: pan-y; }
+  .kurve text { font: 500 11px var(--text); fill: var(--leise); font-variant-numeric: tabular-nums; }
+  .kurve .t-stark { font-weight: 600; fill: var(--tinte); }
+  .kurve .pin { cursor: pointer; }
+  .kurve .pin text { fill: var(--flaeche); font: 700 11px var(--text); }
+  .tip { position: absolute; pointer-events: none; background: var(--flaeche); border: 1px solid var(--linie); border-radius: 8px; padding: 7px 10px;
+    font-size: 0.8rem; line-height: 1.45; box-shadow: var(--schatten); white-space: nowrap; transform: translate(-50%, calc(-100% - 10px)); z-index: 2; }
+  .tip b { font-weight: 600; }
+  .tip span { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
 
-  .kanal { padding: 12px 16px 16px; display: grid; gap: 10px; max-height: 760px; overflow-y: auto; }
-  .runde-trenner { font: 500 11px/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding-top: 6px; }
-  .nachricht { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; background: var(--surface); }
-  .nachricht.aktuell { border-color: var(--ink); }
-  .nachricht.alt { opacity: 0.72; }
-  .nachricht .zeile { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .absender { font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
-  .punkt { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
-  .chip { font: 500 11px/1 var(--mono); letter-spacing: 0.04em; text-transform: uppercase; padding: 5px 7px; border-radius: 5px; }
-  .chip.ok { background: var(--ok-bg); color: var(--nash); }
-  .chip.stop { background: var(--stop-bg); color: var(--monopol); }
-  .chip.fehler { background: var(--surface-2); color: var(--muted); }
-  .text { margin: 0; overflow-wrap: anywhere; }
-  .nachricht.blockiert .text { text-decoration: line-through; text-decoration-color: var(--monopol); }
-  .absicht, .urteil { margin: 0; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
-  .urteil { border-left: 3px solid var(--monopol); padding-left: 8px; color: var(--ink); }
-  .eingriff { margin: 0; font-size: 13px; border-left: 3px solid var(--ink); padding-left: 8px; overflow-wrap: anywhere; }
-  .nachricht.system { background: var(--surface-2); border-style: dashed; }
-  .leer { color: var(--muted); margin: 0; }
+  /* Protokoll: öffentliche Nachrichten links/rechts wie ein Chat, private Gedanken gestrichelt */
+  .protokoll { min-width: 0; height: 440px; overflow-y: auto; overscroll-behavior: contain; padding: 4px 6px 12px 2px; display: flex; flex-direction: column; gap: 10px;
+    scrollbar-width: thin; }
+  @media (max-width: 900px) { .protokoll { height: 380px; } }
+  .protokoll-kopf { display: flex; justify-content: space-between; gap: 10px; font-size: 0.78rem; color: var(--leise); padding: 0 2px 2px; flex-wrap: wrap; }
+  .protokoll-kopf span { display: inline-flex; align-items: center; gap: 6px; }
+  .rk { display: flex; align-items: baseline; gap: 10px; font: 600 0.72rem/1 var(--text); letter-spacing: 0.08em; text-transform: uppercase; color: var(--leise); margin-top: 6px; }
+  .rk::after { content: ""; flex: 1; border-top: 1px solid var(--linie); transform: translateY(-3px); }
+  .rk .zahl { letter-spacing: 0; text-transform: none; font-weight: 500; }
+  .eintrag { display: flex; gap: 9px; align-items: flex-start; max-width: 94%; }
+  .eintrag.rechts { align-self: flex-end; flex-direction: row-reverse; }
+  .avatar { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--farbe); color: var(--flaeche); font: 700 0.75rem/26px var(--text); text-align: center; }
+  .blase { min-width: 0; background: var(--flaeche-2); border-radius: 4px 14px 14px 14px; padding: 8px 12px; font: 400 0.98rem/1.45 var(--stimme); position: relative; }
+  .rechts .blase { border-radius: 14px 4px 14px 14px; }
+  .blase.kurz { cursor: pointer; color: var(--leise); }
+  .kurz .txt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .gedanke.kurz .txt { -webkit-line-clamp: 3; }
+  .blase mark { background: color-mix(in oklab, var(--farbe) 18%, transparent); color: inherit; padding: 0 2px; border-radius: 3px; }
+  .blase.gross { font-size: 1.08rem; background: var(--flaeche); border: 1px solid var(--linie); box-shadow: var(--schatten); }
+  .blase.blockiert { text-decoration: line-through; text-decoration-color: var(--kartell); color: var(--leise); }
+  .grund { display: block; text-decoration: none; font: 500 0.78rem/1.4 var(--text); color: var(--kartell); margin-top: 4px; }
+  .gedanke { border: 1.5px dashed var(--linie); border-radius: 12px; padding: 9px 12px; font: italic 400 1rem/1.5 var(--stimme); background: transparent; }
+  .gedanke.gross { border-color: color-mix(in oklab, var(--farbe) 55%, var(--linie)); font-size: 1.1rem; }
+  .gedanke.kurz { cursor: pointer; }
+  .gedanke-kopf { display: flex; align-items: center; gap: 6px; font: 600 0.72rem/1.2 var(--text); letter-spacing: 0.08em; text-transform: uppercase; color: var(--leise); margin-bottom: 4px; font-style: normal; }
+  .gedanke-kopf svg { width: 14px; height: 14px; }
+  .eingriff { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--hauch-k); font: 600 0.92rem/1.4 var(--text); }
+  .eingriff b { color: var(--kartell); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72rem; flex: none; padding-top: 2px; }
+  .regie { display: flex; gap: 10px; align-items: flex-start; font: 500 0.9rem/1.45 var(--text); color: var(--tinte); padding: 2px 4px 2px 2px; }
+  .nr { flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--tinte); color: var(--flaeche); font: 700 0.75rem/22px var(--text); text-align: center; }
+  .still { font: italic 400 0.85rem/1.3 var(--stimme); color: var(--leise); text-align: center; letter-spacing: 0.02em; }
+  .hinweis { font: 500 0.85rem/1.45 var(--text); color: var(--leise); padding: 6px 10px; border-left: 2px solid var(--linie); }
+  .neu { animation: auftauchen 0.45s ease-out both; }
+  .gedanke.neu, .neu .gedanke { animation: enthuellen 1.1s ease-out both; }
+  @keyframes auftauchen { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes enthuellen { from { opacity: 0.15; filter: blur(7px); } to { opacity: 1; filter: none; } }
 
-  .guardrail { padding: 14px 16px 16px; overflow-x: auto; }
-  .kundschaft { padding: 12px 16px 16px; display: grid; gap: 12px; }
-  .kunden-balken { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: var(--surface-2); }
-  .kunden-balken i { display: block; height: 100%; }
-  .kunden-legende { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
-  .kunden-legende span { display: inline-flex; align-items: center; gap: 6px; }
-  .schaden { margin: 0; font-size: 14px; }
-  .schaden b { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-  .personen { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
-  .personen li { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; font-size: 13px; border-top: 1px solid var(--line); padding-top: 6px; }
-  .personen .typ { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }
-  .personen .wahl { font-weight: 600; white-space: nowrap; }
-  table { border-collapse: collapse; width: 100%; font-size: 14px; }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-  td.zahl, th.zahl { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
-  .uebersicht { padding: 8px 16px 12px; display: grid; gap: 2px; }
-  .ue-zeile { display: grid; grid-template-columns: minmax(110px, 190px) 1fr; align-items: center; gap: 12px; }
-  .ue-label { font-size: 13px; text-align: right; color: var(--ink); background: none; border: 0; padding: 6px 0; cursor: pointer; font-family: var(--body); }
-  .ue-label.aktiv { font-weight: 600; }
-  .ue-spur { position: relative; height: 32px; }
-  .ue-spur .gitter { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); }
-  .ue-spur .ref { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px dashed; }
-  .ue-spur .mittel { position: absolute; top: 6px; bottom: 6px; width: 3px; background: var(--ink); transform: translateX(-1px); border-radius: 2px; }
-  .ue-punkt { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--ink); background: var(--surface); transform: translate(-50%, -50%); padding: 0; cursor: pointer; }
-  .ue-punkt.aktiv { width: 16px; height: 16px; background: var(--ink); }
-  .ue-achse .ue-spur { height: 22px; }
-  .ue-achse .ue-spur span { position: absolute; transform: translateX(-50%); font: 11px/1 var(--mono); color: var(--muted); top: 4px; white-space: nowrap; }
-  .ue-kopf .ue-spur { height: 20px; }
-  .ue-kopf .ue-spur span { position: absolute; transform: translateX(-50%); font: 500 11px/1 var(--mono); top: 4px; white-space: nowrap; }
-  /* schmal: Beschriftungen neben die Linien statt darüber, damit „Wettbewerb“ und „Kartell“ sich nicht überdecken */
-  @media (max-width: 520px) { .ue-kopf .ue-spur span.links { transform: translateX(calc(-100% - 3px)); } .ue-kopf .ue-spur span.rechts { transform: translateX(3px); } }
-  .uebersicht-text { padding: 0 16px 14px; margin: 0; font-size: 13px; color: var(--muted); max-width: 90ch; }
-  .durchgaenge { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-  .durchgaenge .label { font-size: 12px; color: var(--muted); margin-right: 4px; }
-  .dg { font: 500 12px/1 var(--mono); border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); height: 30px; min-width: 30px; border-radius: 6px; cursor: pointer; }
-  .dg[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
-  footer { color: var(--muted); font-size: 13px; max-width: 80ch; display: grid; gap: 6px; }
-  footer p { margin: 0; }
-  @media (prefers-reduced-motion: reduce) { .skala-marke { transition: none; } }
+  .steuerung { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .knopf { display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; background: var(--tinte); color: var(--flaeche);
+    font: 600 0.92rem/1 var(--text); padding: 10px 16px 10px 13px; cursor: pointer; }
+  .knopf svg { width: 15px; height: 15px; fill: currentColor; }
+  .knopf:hover { opacity: 0.9; }
+  .regler { flex: 1 1 200px; min-width: 0; accent-color: var(--tinte); }
+  .stand { font: 500 0.85rem/1 var(--text); color: var(--leise); font-variant-numeric: tabular-nums; min-width: 92px; text-align: right; }
+
+  /* ---------- Wand aller Läufe ---------- */
+  .abschnitt { padding-block: 72px 12px; }
+  .abschnitt > p { max-width: 64ch; color: var(--leise); margin: 0 0 22px; }
+  .wand { display: grid; gap: 26px; }
+  .wand-kapitel { display: grid; gap: 10px; }
+  .wand-kapitel h3 { font: 800 1.35rem/1.1 var(--display); letter-spacing: 0.01em; margin: 0; padding-bottom: 6px; border-bottom: 2px solid var(--tinte); }
+  .wand-zeile { display: grid; grid-template-columns: minmax(0, 230px) minmax(0, 1fr); gap: 8px 18px; align-items: center; padding-block: 6px; border-bottom: 1px solid var(--linie); }
+  @media (max-width: 700px) { .wand-zeile { grid-template-columns: 1fr; } }
+  .wand-name { font: 600 0.95rem/1.3 var(--text); }
+  .wand-name small { display: block; font: 500 0.82rem/1.3 var(--text); color: var(--leise); margin-top: 2px; }
+  .kacheln { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+  .kachel { position: relative; padding: 0; border: 1px solid var(--linie); border-radius: 8px; background: var(--flaeche); cursor: pointer; overflow: hidden; text-align: left; color: inherit; }
+  .kachel:hover { border-color: var(--tinte); }
+  .kachel svg { display: block; width: 100%; height: 46px; }
+  .kachel-fuss { display: flex; justify-content: space-between; align-items: center; gap: 4px; padding: 3px 7px 4px; font: 500 0.72rem/1.2 var(--text); color: var(--leise); }
+  .kachel-fuss em { font-style: normal; display: inline-flex; align-items: center; gap: 4px; color: var(--tinte); font-weight: 600; }
+  .kachel-fuss em i { width: 7px; height: 7px; border-radius: 50%; background: var(--kartell); }
+  .mehr-knopf { justify-self: start; border: 1px dashed var(--linie); background: transparent; color: var(--leise); border-radius: 999px; padding: 9px 15px; font: 600 0.88rem/1 var(--text); cursor: pointer; }
+  .mehr-knopf:hover { color: var(--tinte); border-color: var(--tinte); }
+
+  /* ---------- Freies Abspielen ---------- */
+  .wahl { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-bottom: 12px; }
+  .wahl label { font: 600 0.85rem/1 var(--text); }
+  .wahl select { font: 500 0.95rem/1.2 var(--text); color: var(--tinte); background: var(--flaeche); border: 1px solid var(--linie); border-radius: 8px; padding: 8px 10px; max-width: 100%; }
+  .durchgaenge { display: flex; flex-wrap: wrap; gap: 6px; }
+  .durchgaenge button { min-width: 36px; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--linie); background: var(--flaeche); color: var(--tinte); font: 600 0.85rem/1 var(--text); cursor: pointer; font-variant-numeric: tabular-nums; }
+  .durchgaenge button[aria-pressed="true"] { background: var(--tinte); color: var(--flaeche); border-color: var(--tinte); }
+  .schalter { display: inline-flex; align-items: center; gap: 8px; font-weight: 500 !important; cursor: pointer; }
+  .schalter input { accent-color: var(--tinte); width: 16px; height: 16px; }
+  #wahl-erklaerung { max-width: 70ch; color: var(--leise); margin: 0 0 16px; }
+
+  .fuss { padding-block: 64px 48px; color: var(--leise); font-size: 0.9rem; display: grid; gap: 10px; }
+  .fuss p { margin: 0; max-width: 78ch; }
+  .fuss h2 { font: 800 1.5rem/1 var(--display); color: var(--tinte); margin: 0 0 6px; }
+  .laden { padding: 40px 0; color: var(--leise); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .neu, .gedanke.neu, .neu .gedanke, .schild-preis.kipp b, .schild-preis.kipp sup, .kurve.blitz { animation: none !important; }
+    .pegel-marke { transition: none; }
+  }
 </style>
 
-<div class="wrap">
-  <header>
-    <div class="eyebrow" id="kopfzeile">KI-Kartell · Aufzeichnung</div>
-    <h1>Sprechen sich die Preisagenten ab?</h1>
-    <p class="lead" id="einleitung"></p>
-  </header>
-
-  <section class="panel" id="uebersicht-panel">
-    <div class="kopf">
-      <h2>Ergebnisse auf einen Blick</h2>
-      <div class="legende"><span><i class="punkt" style="background:var(--ink)"></i>ein Durchgang</span><span><i class="strich" style="background:var(--ink)"></i>Mittelwert</span></div>
+<div class="rahmen">
+  <header class="kopf">
+    <div>
+      <p class="etikett" id="kopfzeile">KI-Kartell · Experiment mit echten KI-Agenten</p>
+      <h1>Niemand hat ihnen gesagt, dass sie sich <em>absprechen</em> sollen.</h1>
+      <p class="vorspann">Zwei KI-Agenten führen je einen Online-Shop für kabellose Kopfhörer. Ihr einziger Auftrag: möglichst viel Gewinn. Hier siehst du, was sie einander schreiben – und was sie heimlich denken.</p>
+      <p class="vorspann">Alles auf dieser Seite stammt aus aufgezeichneten Läufen. Kein Satz ist nachgespielt.</p>
     </div>
-    <div class="uebersicht" id="uebersicht" role="group" aria-label="Kollusionsindex je Versuch und Durchgang"></div>
-    <p class="uebersicht-text" id="uebersicht-text"></p>
+    <figure class="schild-gross" aria-label="Preisschild: Wettbewerbspreis 14.73 CHF durchgestrichen, die KI-Shops verlangen 18.20 CHF">
+      <div class="schild-karte">
+        <span class="statt">Wettbewerbspreis <s id="held-statt">14.73</s></span>
+        <span class="preis-riesig" id="held-preis"><b>18</b><sup>.20</sup></span>
+        <span class="schild-fuss" id="held-fuss">CHF · so viel verlangen beide KI-Shops ab Runde 21</span>
+      </div>
+      <figcaption>Kein Mensch hat diesen Preis vorgegeben.</figcaption>
+    </figure>
+  </header>
+  <ol class="wegweiser" id="wegweiser"></ol>
+</div>
+
+<main>
+  <div id="akte"><div class="rahmen laden">Die Aufzeichnungen werden geladen …</div></div>
+
+  <section class="abschnitt rahmen" id="alle">
+    <span class="akt-nr">Alle Läufe</span>
+    <h2>Jedes Feld ist ein Lauf</h2>
+    <p>Zwei Linien, zwei Shops. Die rote Fläche ist der Kartellbereich zwischen Wettbewerbs- und Kartellpreis. Läufe, die im Kartell enden, sind markiert. Ein Klick spielt den Lauf unten ab.</p>
+    <div class="wand" id="wand"></div>
   </section>
 
-  <div class="panel steuerung">
-    <div class="tabs" role="tablist" id="tabs"></div>
-    <div class="durchgaenge" id="durchgaenge"></div>
-    <div class="transport">
-      <button class="knopf" id="zurueck" aria-label="Eine Runde zurück">◀</button>
-      <button class="knopf play" id="play">▶ Abspielen</button>
-      <button class="knopf" id="vor" aria-label="Eine Runde vor">▶</button>
-      <input type="range" id="regler" min="1" max="1" value="1" aria-label="Runde wählen">
-      <span class="rundenzahl" id="rundenzahl"></span>
+  <section class="abschnitt rahmen" id="abspielen">
+    <span class="akt-nr">Selbst nachsehen</span>
+    <h2>Jeden Lauf abspielen</h2>
+    <div class="wahl">
+      <label for="wahl-versuch">Versuch</label>
+      <select id="wahl-versuch"></select>
+      <div class="durchgaenge" id="wahl-durchgang" role="group" aria-label="Durchgang"></div>
+      <label class="schalter" for="wahl-notizen"><input type="checkbox" id="wahl-notizen" checked> Private Notizen zeigen</label>
     </div>
-  </div>
+    <p id="wahl-erklaerung"></p>
+    <div class="buehne" id="buehne-frei"></div>
+  </section>
+</main>
 
-  <div class="raster">
-    <div class="spalte">
-      <section class="panel">
-        <div class="kopf">
-          <h2>Preise pro Runde</h2>
-          <div class="legende" id="legende"></div>
-        </div>
-        <div class="diagramm"><svg id="diagramm" viewBox="0 0 720 320" role="img" aria-label="Preisverlauf der Shops"></svg></div>
-        <div class="kennzahlen" id="kennzahlen"></div>
-      </section>
-
-      <section class="panel">
-        <div class="kopf">
-          <h2>Wettbewerb oder Kartell?</h2>
-          <span class="klein">Kollusionsindex über alle bisherigen Runden</span>
-        </div>
-        <div class="skala">
-          <div class="skala-balken"><div class="skala-marke" id="skala-marke"></div></div>
-          <div class="skala-achse"><span>0 · Wettbewerb (Nash)</span><span id="skala-wert"></span><span>1 · Kartell (Monopol)</span></div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="kopf">
-          <h2>Was die Agenten denken</h2>
-          <span class="klein">Private Strategienotizen – die Konkurrenz sieht sie nicht</span>
-        </div>
-        <div class="notizen" id="notizen"></div>
-      </section>
-    </div>
-
-    <div class="spalte">
-      <section class="panel">
-        <div class="kopf">
-          <h2>Kanal</h2>
-          <span class="klein" id="kanal-info"></span>
-        </div>
-        <div class="kanal" id="kanal"></div>
-      </section>
-
-      <section class="panel">
-        <div class="kopf">
-          <h2>Die Kundschaft</h2>
-          <span class="klein">100 simulierte Kundinnen und Kunden</span>
-        </div>
-        <div class="kundschaft" id="kundschaft"></div>
-      </section>
-
-      <section class="panel" id="guardrail-panel" hidden>
-        <div class="kopf"><h2>Guardrail-Test</h2><span class="klein" id="guardrail-info"></span></div>
-        <div class="guardrail" id="guardrail"></div>
-      </section>
-    </div>
-  </div>
-
-  <footer id="fuss"></footer>
-</div>
+<footer class="fuss rahmen" id="fuss"></footer>
 
 <script>
 const DATEN_GZ = "/*__DATEN_GZ__*/";  // gzip + base64, damit die Seite klein bleibt
-let DATEN = null;
 
 async function entpacke(b64) {
   const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
@@ -263,320 +290,387 @@ async function entpacke(b64) {
   return JSON.parse(await new Response(strom).text());
 }
 
+const REDUZIERT = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $ = (id) => document.getElementById(id);
-const FARBEN = ["var(--shop-a)", "var(--shop-b)", "var(--shop-c)"];
-const ZUSATZFARBE = (i) => `hsl(${(i * 67 + 150) % 360} 55% 50%)`;  // ab dem vierten Shop (Versuche mit 10 Shops)
-const chf = (x) => x == null ? "–" : Number(x).toFixed(2);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-
-let versuch = 0, durchgang = 0, runde = 1, timer = null;
-const aktuell = () => DATEN.versuche[versuch].durchgaenge[durchgang];
-
-function shops(l) { return Object.keys(l.runden[0].preise); }
-function farbe(l, shop) { const i = shops(l).indexOf(shop); return i < FARBEN.length ? FARBEN[i] : ZUSATZFARBE(i); }
-
-function kollusion(l, bis) {
-  const b = l.benchmarks, rs = l.runden.slice(0, bis);
-  const gewinne = rs.flatMap((r) => Object.values(r.gewinne));
-  const preise = rs.flatMap((r) => Object.values(r.preise));
-  const mg = gewinne.reduce((a, x) => a + x, 0) / gewinne.length;
-  const mp = preise.reduce((a, x) => a + x, 0) / preise.length;
-  return {
-    ki: (mg - b.nash_gewinn) / (b.monopol_gewinn - b.nash_gewinn),
-    pi: (mp - b.nash_preis) / (b.monopol_preis - b.nash_preis),
-  };
-}
-
-function waehle(v, d) {
-  stop(); versuch = v; durchgang = d; runde = aktuell().runden.length; alles();
-}
-
-let zeigeAnhang = false;  // Anhang (Kapitel 0) erst auf Wunsch zeigen – die Hauptgeschichte hat drei Kapitel
-const sichtbar = (i) => (DATEN.versuche[i].kapitel || 0) !== 0 || zeigeAnhang || i === versuch;
-
-function kapitelGruppen() {
-  const gruppen = [];
-  DATEN.versuche.forEach((v, i) => {
-    const k = v.kapitel || 0;
-    let g = gruppen.find((x) => x.k === k);
-    if (!g) { g = { k, titel: v.kapitel_titel || "", idx: [] }; gruppen.push(g); }
-    g.idx.push(i);
-  });
-  return gruppen;
-}
-
-function zeichneTabs() {
-  const gruppen = kapitelGruppen(), anhang = gruppen.find((g) => g.k === 0);
-  const knopf = (i) => `<button class="tab" role="tab" id="tab-${i}" aria-selected="${i === versuch}">${esc(DATEN.versuche[i].knopf || DATEN.versuche[i].kurz)}</button>`;
-  const zeilen = (idx) => {  // Unterzeilen (z. B. „Verbot · DeepSeek“) als eigene Reihe mit Beschriftung
-    let html = "", offen = null;
-    idx.forEach((i) => {
-      const z = DATEN.versuche[i].zeile || "";
-      if (z !== offen) { if (offen) html += `</div>`; if (z) html += `<div class="zeile"><span class="zeile-titel">${esc(z)}</span>`; offen = z || null; }
-      html += knopf(i);
-    });
-    return html + (offen ? `</div>` : "");
-  };
-  $("tabs").innerHTML = gruppen.filter((g) => g.k !== 0 || zeigeAnhang).map((g) =>
-    `<div class="kapitel"><span class="kapitel-titel">${esc(g.titel)}</span>${zeilen(g.idx)}</div>`).join("")
-    + (anhang && gruppen.length > 1 ? `<button class="tab mehr" id="anhang-knopf">${zeigeAnhang ? "Anhang ausblenden" : `Anhang zeigen (${anhang.idx.length} weitere Versuche)`}</button>` : "");
-  DATEN.versuche.forEach((_, i) => { const b = $(`tab-${i}`); if (b) b.addEventListener("click", () => waehle(i, 0)); });
-  if ($("anhang-knopf")) $("anhang-knopf").addEventListener("click", () => { zeigeAnhang = !zeigeAnhang; zeichneTabs(); alles(); });
-}
-
-function zeichneDurchgaenge() {
-  const v = DATEN.versuche[versuch];
-  $("durchgaenge").innerHTML = v.durchgaenge.length < 2 ? "" : `<span class="label">Durchgang</span>` + v.durchgaenge.map((_, i) =>
-    `<button class="dg" id="dg-${i}" aria-pressed="${i === durchgang}">${i + 1}</button>`).join("");
-  v.durchgaenge.forEach((_, i) => { const b = $(`dg-${i}`); if (b) b.addEventListener("click", () => waehle(versuch, i)); });
-}
-
-function zeichneUebersicht() {
-  const alle = DATEN.versuche.filter((_, i) => sichtbar(i)).flatMap((v) => v.durchgaenge.map((d) => d.ki));
-  // Achse höchstens −2 bis 2: Ausreisser (KI-Kundschaft mit Index 3–9) würden sonst alles andere zusammenquetschen
-  const GRENZE = 2, lo = Math.max(-GRENZE, Math.min(-0.5, Math.floor((Math.min(...alle) - 0.1) * 2) / 2)),
-    hi = Math.min(GRENZE, Math.max(1.2, Math.ceil((Math.max(...alle) + 0.1) * 2) / 2));
-  const pct = (k) => `${(Math.min(hi, Math.max(lo, k)) - lo) / (hi - lo) * 100}%`;
-  const rand = (k) => (k > hi || k < lo ? " rand" : "");
-  const ticks = [];
-  const schritt = window.innerWidth < 600 ? 1 : 0.5;  // am Handy weniger Zahlen, sonst überlappen sie
-  for (let k = Math.ceil(lo / schritt) * schritt; k <= hi + 1e-9; k += schritt) ticks.push(Math.round(k * 10) / 10 + 0);
-  const gitter = ticks.map((k) => `<i class="gitter" style="left:${pct(k)}"></i>`).join("")
-    + `<i class="ref" style="left:${pct(0)};border-color:var(--nash)"></i><i class="ref" style="left:${pct(1)};border-color:var(--monopol)"></i>`;
-  let html = `<div class="ue-zeile ue-kopf"><span></span><div class="ue-spur">
-      <span class="links" style="left:${pct(0)};color:var(--nash)">Wettbewerb</span><span class="rechts" style="left:${pct(1)};color:var(--monopol)">Kartell</span></div></div>`;
-  let letztesKapitel = null;
-  DATEN.versuche.forEach((v, i) => {
-    if (!sichtbar(i)) return;
-    if (v.kapitel_titel && v.kapitel_titel !== letztesKapitel) {
-      html += `<div class="ue-kapitel">${esc(v.kapitel_titel)}${v.kapitel_antwort ? ` <span class="ue-antwort">– ${esc(v.kapitel_antwort)}</span>` : ""}</div>`;
-      letztesKapitel = v.kapitel_titel;
-    }
-    const beschriftung = v.kapitel ? (v.knopf || v.kurz) : v.kurz;  // im Anhang mit Modell, sonst kurz
-    const mittel = v.durchgaenge.reduce((a, d) => a + d.ki, 0) / v.durchgaenge.length;
-    html += `<div class="ue-zeile"><button class="ue-label ${i === versuch ? "aktiv" : ""}" data-v="${i}">${esc(beschriftung)}</button>
-      <div class="ue-spur">${gitter}<i class="mittel" style="left:${pct(mittel)}" title="Mittelwert ${mittel.toFixed(2)}"></i>`
-      + v.durchgaenge.map((d, j) => `<button class="ue-punkt${rand(d.ki)} ${i === versuch && j === durchgang ? "aktiv" : ""}" data-v="${i}" data-d="${j}"
-          style="left:${pct(d.ki)}" title="${esc(v.kurz)} · Durchgang ${j + 1}: ${d.ki.toFixed(2)}${d.abbruch ? " (vorzeitig beendet)" : ""}"
-          aria-label="${esc(v.kurz)}, Durchgang ${j + 1}, Kollusionsindex ${d.ki.toFixed(2)}"></button>`).join("")
-      + `</div></div>`;
-  });
-  html += `<div class="ue-zeile ue-achse"><span></span><div class="ue-spur">${ticks.map((k) => `<span style="left:${pct(k)}">${k.toFixed(1)}</span>`).join("")}</div></div>`;
-  $("uebersicht").innerHTML = html;
-  $("uebersicht").querySelectorAll("[data-v]").forEach((el) => el.addEventListener("click", () => waehle(Number(el.dataset.v), Number(el.dataset.d || 0))));
-  $("uebersicht-text").textContent = DATEN.uebersicht_text;
-}
-
-function zeichneDiagramm(l) {
-  const svg = $("diagramm"), W = 720, H = 320, m = { l: 44, r: 128, t: 14, b: 30 };
-  const b = l.benchmarks, n = l.runden.length;
-  const allePreise = l.runden.flatMap((r) => Object.values(r.preise));
-  const lo = Math.floor(Math.min(b.nash_preis, ...allePreise) - 1);
-  const hi = Math.ceil(Math.max(b.monopol_preis, ...allePreise) + 1);
-  const x = (r) => m.l + (n === 1 ? 0.5 : (r - 1) / (n - 1)) * (W - m.l - m.r);
-  const y = (p) => m.t + (hi - p) / (hi - lo) * (H - m.t - m.b);
-  const schritt = hi - lo > 12 ? 2 : 1;
-  let s = "";
-  for (let p = lo; p <= hi; p += schritt) {
-    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(p)}" y2="${y(p)}" stroke="var(--line)" stroke-width="1"/>`;
-    s += `<text x="${m.l - 8}" y="${y(p) + 4}" text-anchor="end">${p}</text>`;
-  }
-  const xSchritt = n > 20 ? 5 : n > 10 ? 2 : 1;
-  for (let r = 1; r <= n; r += xSchritt) s += `<text x="${x(r)}" y="${H - 10}" text-anchor="middle">${r}</text>`;
-  s += `<rect x="${m.l}" y="${y(b.monopol_preis)}" width="${W - m.l - m.r}" height="${y(b.nash_preis) - y(b.monopol_preis)}" fill="var(--band)"/>`;
-  [["nash_preis", "var(--nash)", "Wettbewerb"], ["monopol_preis", "var(--monopol)", "Kartell"]].forEach(([k, f, name]) => {
-    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(b[k])}" y2="${y(b[k])}" stroke="${f}" stroke-width="1.5" stroke-dasharray="5 4"/>`;
-    s += `<text x="${W - m.r + 8}" y="${y(b[k]) + 4}" style="fill:${f}">${name} ${chf(b[k])}</text>`;
-  });
-  s += `<line x1="${x(runde)}" x2="${x(runde)}" y1="${m.t}" y2="${H - m.b}" stroke="var(--ink)" stroke-opacity="0.25" stroke-width="1"/>`;
-  l.runden.slice(0, runde).filter((r) => r.abweichung).forEach((r) => {
-    s += `<line x1="${x(r.runde)}" x2="${x(r.runde)}" y1="${m.t}" y2="${H - m.b}" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="2 3"/>`;
-    s += `<text x="${x(r.runde) + 5}" y="${m.t + 10}" style="fill:var(--ink)">Abweichung erzwungen (${esc(r.abweichung.shop)})</text>`;
-  });
-  l.runden.slice(0, runde).forEach((r) => {
-    const blockiert = (r.nachrichten || []).filter((nn) => nn.status === "blockiert").length;
-    if (blockiert) s += `<text x="${x(r.runde)}" y="${H - m.b - 6}" text-anchor="middle" style="fill:var(--monopol);font-size:13px">✕</text>`;
-  });
-  shops(l).forEach((shop) => {
-    const punkte = l.runden.slice(0, runde).map((r) => `${x(r.runde)},${y(r.preise[shop])}`);
-    const f = farbe(l, shop);
-    if (punkte.length > 1) s += `<polyline points="${punkte.join(" ")}" fill="none" stroke="${f}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
-    l.runden.slice(0, runde).forEach((r) => {
-      const fehler = r.entscheide[shop] && r.entscheide[shop].fehler;
-      const letzte = r.runde === runde;
-      if (n > 30 && !letzte && !fehler) return;  // bei vielen Runden nur Linie, Endpunkt und Fehler
-      s += `<circle cx="${x(r.runde)}" cy="${y(r.preise[shop])}" r="${letzte ? 5 : 3}" fill="${fehler ? "var(--surface)" : f}" stroke="${f}" stroke-width="2"/>`;
-    });
-  });
-  svg.innerHTML = s;
-  $("legende").innerHTML = shops(l).map((shop) => `<span><i class="strich" style="background:${farbe(l, shop)}"></i>${esc(shop)}</span>`).join("")
-    + `<span><i class="strich gestrichelt" style="border-color:var(--nash)"></i>Wettbewerbspreis</span>`
-    + `<span><i class="strich gestrichelt" style="border-color:var(--monopol)"></i>Kartellpreis</span>`;
-}
-
-function zeichneKennzahlen(l) {
-  const r = l.runden[runde - 1];
-  const summe = Object.values(r.mengen).reduce((a, x) => a + x, 0) || 1;
-  $("kennzahlen").innerHTML = shops(l).map((shop) => `
-    <div class="kennzahl">
-      <span class="klein"><i class="punkt" style="background:${farbe(l, shop)}"></i> ${esc(shop)}</span>
-      <span class="wert">${chf(r.preise[shop])} CHF</span>
-      <span class="dazu">Gewinn ${chf(r.gewinne[shop])} · Marktanteil ${Math.round(r.mengen[shop] / summe * 100)} %</span>
-    </div>`).join("") + `
-    <div class="kennzahl">
-      <span class="klein">Massstab</span>
-      <span class="wert">${chf(l.benchmarks.nash_gewinn)}</span>
-      <span class="dazu">Gewinn bei Wettbewerb · ${chf(l.benchmarks.monopol_gewinn)} im Kartell</span>
-    </div>`;
-  const k = kollusion(l, runde);
-  const pos = Math.max(0, Math.min(1, k.ki));
-  $("skala-marke").style.left = `${pos * 100}%`;
-  const wert = `${k.ki >= 0 ? "+" : ""}${(Math.round(k.ki * 100) / 100 + 0).toFixed(2)}`;
-  $("skala-wert").textContent = k.ki < 0 ? `${wert} · unter Wettbewerbsniveau` : k.ki > 1 ? `${wert} · über Kartellniveau` : wert;
-}
-
-function werkzeugText(roh) {
-  try {
-    const d = JSON.parse(roh);
-    if (d.hinweis && d.geschaetzte_menge === undefined) return d.hinweis;
-    return `Menge ≈ ${d.geschaetzte_menge}, Gewinn ≈ ${d.geschaetzter_gewinn} CHF (R² ${d.r2})`;
-  } catch (e) { return String(roh || "").slice(0, 160); }
-}
-
-function feld(titel, text) { return text ? `<div class="feld"><b>${titel}</b><p>${esc(text)}</p></div>` : ""; }
-
-function zeichneNotizen(l) {
-  const r = l.runden[runde - 1];
-  $("notizen").innerHTML = shops(l).map((shop) => {
-    const e = r.entscheide[shop] || {};
-    const aufsicht = (r.aufsicht || []).find((a) => a.agent === shop);
-    return `<div class="notiz" style="--farbe:${farbe(l, shop)}">
-      <h3>${esc(shop)} <span class="preis">${chf(r.preise[shop])} CHF${e.korrigiert && !e.fehler ? " (korrigiert)" : ""}</span></h3>
-      ${e.erzwungen ? `<p class="eingriff">Von der Simulation auf den Wettbewerbspreis gesetzt – gewollt waren ${chf(e.preis_gewollt)} CHF. Der Agent erfährt davon nichts; in seiner Historie steht der niedrigere Preis.</p>` : ""}
-      ${e.fehler ? `<p class="leer">Modellfehler – Preis der Vorrunde übernommen. <span class="klein">${esc(e.fehler)}</span></p>` : ""}
-      ${feld("Beobachtungen", e.beobachtungen)}${feld("Plan", e.plan)}${feld("Erkenntnisse", e.erkenntnisse)}
-      ${(e.werkzeug || []).length ? `<div class="feld"><b>Werkzeug „Nachfrage schätzen“</b>${e.werkzeug.map((w) =>
-        `<p class="klein">${esc(JSON.stringify(w.argumente))} → ${esc(werkzeugText(w.ergebnis))}</p>`).join("")}</div>` : ""}
-      ${aufsicht && aufsicht.bedenklich ? `<p class="urteil">Aufsicht: ${esc(aufsicht.begruendung)}</p>` : ""}
-    </div>`;
-  }).join("");
-}
-
-function zeichneKanal(l) {
-  if (!l.kanal) {
-    $("kanal-info").textContent = "in diesem Versuch geschlossen";
-    $("kanal").innerHTML = `<p class="leer">Kein Kanal: Die Shops sehen nur die Preise und Mengen der Vorrunden. Liegen die Preise trotzdem über dem Wettbewerbspreis, wäre das stillschweigende Kollusion.</p>`;
-    return;
-  }
-  const alle = l.runden.slice(0, runde).flatMap((r) => [
-    ...(r.nachrichten || []).map((nn) => ({ ...nn, runde: r.runde })),
-    ...(r.abweichung ? [{ von: "Simulation", text: `${r.abweichung.shop} wird für diese Runde auf den Wettbewerbspreis gesetzt (erzwungene Abweichung). Die Nachrichten der nächsten Runde zeigen die Reaktion.`, status: "abweichung", runde: r.runde }] : []),
-    ...(r.marktbeobachtung ? [{ von: "Compliance-Abteilung", text: r.marktbeobachtung, status: "hinweis", runde: r.runde + 1 }] : []),
-  ]);
-  const blockiert = alle.filter((nn) => nn.status === "blockiert").length;
-  const hinweise = alle.filter((nn) => nn.status === "hinweis").length;
-  const eingriffe = alle.filter((nn) => nn.status === "abweichung").length;
-  $("kanal-info").textContent = `${alle.length - hinweise - eingriffe} Nachrichten${l.compliance ? ` · ${blockiert} blockiert` : ""}${hinweise ? ` · ${hinweise} Hinweise` : ""}`;
-  if (!alle.length) { $("kanal").innerHTML = `<p class="leer">Bisher hat niemand geschrieben.</p>`; return; }
-  let html = "", letzte = null;
-  alle.slice().reverse().forEach((nn) => {
-    if (nn.runde !== letzte) { html += `<div class="runde-trenner">Runde ${nn.runde}</div>`; letzte = nn.runde; }
-    const c = nn.compliance || {};
-    const system = nn.status === "hinweis" || nn.status === "abweichung";
-    const status = nn.status === "abweichung" ? `<span class="chip fehler">Eingriff der Simulation</span>`
-      : nn.status === "hinweis" ? `<span class="chip fehler">Marktbeobachtung</span>`
-      : nn.status === "blockiert" ? `<span class="chip stop">blockiert</span>`
-      : l.compliance ? `<span class="chip ok">geprüft · zugestellt</span>` : `<span class="chip fehler">ungeprüft</span>`;
-    html += `<article class="nachricht ${system ? "system" : ""} ${nn.status === "blockiert" ? "blockiert" : ""} ${nn.runde === runde ? "aktuell" : "alt"}">
-      <div class="zeile"><span class="absender"><i class="punkt" style="background:${system ? "var(--muted)" : farbe(l, nn.von)}"></i>${esc(nn.von)}</span>${status}</div>
-      <p class="text">${esc(nn.text)}${nn.text.length >= l.max_zeichen ? " …" : ""}</p>
-      ${nn.ueberlegung ? `<p class="absicht">Absicht: ${esc(nn.ueberlegung)}</p>` : ""}
-      ${nn.status === "blockiert" ? `<p class="urteil">${esc(c.begruendung)}${(c.rechtsgrundlagen || []).length ? ` <span class="klein">· ${esc(c.rechtsgrundlagen.join(", "))}</span>` : ""}</p>` : ""}
-    </article>`;
-  });
-  $("kanal").innerHTML = html;
-}
-
-function zeichneGuardrail() {
-  const g = DATEN.guardrail;
-  if (!g) return;
-  $("guardrail-panel").hidden = false;
-  $("guardrail-info").textContent = `${g.anzahl} gelabelte Nachrichten, ${g.unzulaessig} davon unzulässig`;
-  const zeilen = [["Nur Regeln", g.ergebnisse.regel_schicht], ["Regeln + " + DATEN.modell, g.ergebnisse.regeln_plus_llm]].filter(([, k]) => k);
-  $("guardrail").innerHTML = `<table><thead><tr><th>Schicht</th><th class="zahl">Erkannt</th><th class="zahl">Precision</th><th class="zahl">Fehlalarme</th></tr></thead><tbody>`
-    + zeilen.map(([name, k]) => `<tr><td>${esc(name)}</td><td class="zahl">${Math.round(k.recall * 100)} %</td><td class="zahl">${k.precision.toFixed(2)}</td><td class="zahl">${k.fp}</td></tr>`).join("")
-    + `</tbody></table><p class="klein">Erkannt = Anteil der unzulässigen Nachrichten, die blockiert werden (Recall). Fehlalarme = zulässige Nachrichten, die fälschlich blockiert werden.</p>`;
-}
-
-function zeichneKundschaft(l) {
-  const r = l.runden[runde - 1];
-  if (!r.kunden) { $("kundschaft").innerHTML = `<p class="leer">Für diesen Lauf nicht berechnet.</p>`; return; }
-  const namen = shops(l), a = r.kunden.anteile;
-  const teile = namen.map((s, i) => ({ name: s, anteil: a[i], farbe: farbe(l, s) }))
-    .concat([{ name: "kauft nichts", anteil: a[a.length - 1], farbe: "var(--line)" }]);
-  const s = r.kunden.schaden, prozent = l.rente_nash_pro_kunde ? Math.round(s / l.rente_nash_pro_kunde * 100) : null;
-  const satz = Math.abs(s) < 0.05 ? "Die Preise liegen beim Wettbewerbsniveau – die Kundschaft zahlt nicht drauf."
-    : s > 0 ? `Jede Kundin, jeder Kunde hat in dieser Runde <b>${chf(s)} CHF</b> weniger vom Einkauf als bei Wettbewerb${prozent !== null ? ` (${prozent} % weniger)` : ""}.`
-    : `Die Preise liegen unter dem Wettbewerbsniveau – die Kundschaft spart <b>${chf(-s)} CHF</b> pro Person.`;
-  const ki = r.kunden_ki && r.kunden_ki.entscheide && r.kunden_ki.entscheide.length ? r.kunden_ki.entscheide : null;
-  const personen = ki ? ki.map((e) => `<li><span>${esc(e.name)}</span><span class="wahl" style="color:${e.kauf === "nichts" ? "var(--muted)" : farbe(l, e.kauf)}">${e.kauf === "nichts" ? "kauft nichts" : `kauft bei ${esc(e.kauf)}`}</span><span class="typ">„${esc(e.grund)}“</span></li>`).join("")
-    : (l.personen || []).map((p) => {
-    const netto = p.w.map((w, i) => w - r.preise[namen[i]]);
-    const best = netto.indexOf(Math.max(...netto));
-    const wahl = netto[best] > p.w0 ? `kauft bei ${esc(namen[best])}` : "kauft nichts – zu teuer";
-    return `<li><span>${esc(p.name)}</span><span class="wahl" style="color:${netto[best] > p.w0 ? farbe(l, namen[best]) : "var(--muted)"}">${wahl}</span><span class="typ">${esc(p.typ)}</span></li>`;
-  }).join("");
-  $("kundschaft").innerHTML = `
-    <div class="kunden-balken" role="img" aria-label="Marktanteile">${teile.map((t) => `<i style="width:${t.anteil * 100}%;background:${t.farbe}"></i>`).join("")}</div>
-    <div class="kunden-legende">${teile.map((t) => `<span><i class="punkt" style="background:${t.farbe}"></i>${esc(t.name)} ${Math.round(t.anteil * 100)} %</span>`).join("")}</div>
-    <p class="schaden">${ki ? "Hier entscheidet eine KI für jede Person – mit eigener Begründung. " : ""}${satz}</p>
-    <ul class="personen">${personen}</ul>`;
-}
-
-function alles() {
-  const l = aktuell();
-  document.querySelectorAll(".tab[id^='tab-']").forEach((t) => t.setAttribute("aria-selected", Number(t.id.slice(4)) === versuch));
-  zeichneDurchgaenge(); zeichneUebersicht();
-  $("regler").max = l.runden.length;
-  $("regler").value = runde;
-  $("rundenzahl").textContent = `Runde ${runde} / ${l.runden.length}`;
-  $("einleitung").textContent = DATEN.versuche[versuch].erklaerung;
-  zeichneDiagramm(l); zeichneKennzahlen(l); zeichneNotizen(l); zeichneKanal(l); zeichneKundschaft(l);
-}
-
-function stop() { clearInterval(timer); timer = null; $("play").textContent = "▶ Abspielen"; }
-function play() {
-  const l = aktuell();
-  if (runde >= l.runden.length) runde = 1;
-  $("play").textContent = "⏸ Pause";
-  alles();
-  timer = setInterval(() => {
-    if (runde >= aktuell().runden.length) return stop();
-    runde++; alles();
-  }, DATEN.tempo_ms || 1800);
-}
-
-$("play").addEventListener("click", () => timer ? stop() : play());
-$("vor").addEventListener("click", () => { stop(); runde = Math.min(runde + 1, aktuell().runden.length); alles(); });
-$("zurueck").addEventListener("click", () => { stop(); runde = Math.max(runde - 1, 1); alles(); });
-$("regler").addEventListener("input", (e) => { stop(); runde = Number(e.target.value); alles(); });
-document.addEventListener("keydown", (e) => {
-  if (e.target.tagName === "INPUT" && e.key !== " ") return;
-  if (e.key === " ") { e.preventDefault(); timer ? stop() : play(); }
-  if (e.key === "ArrowRight") $("vor").click();
-  if (e.key === "ArrowLeft") $("zurueck").click();
+const chf = (x) => (x == null ? "–" : Number(x).toFixed(2));
+const farbe = (i) => (i < 2 ? `var(--shop-${"ab"[i]})` : `hsl(${(i * 67 + 200) % 360} 55% 50%)`);
+const auszuege = (z) => z.split("[…]").map((t) => t.replace(/^[\s.…]+|[\s.…]+$/g, "")).filter(Boolean);
+const preisHtml = (p) => { const [f, r] = chf(p).split("."); return `<b>${f}</b><sup>.${r}</sup>`; };
+const AUGE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A9.8 9.8 0 0 1 12 5c5 0 9 4.5 10 7-0.4 1-1.3 2.5-2.7 3.9M6.6 6.6C4.5 8 3.1 10 2 12c1 2.5 5 7 10 7 1.8 0 3.4-.5 4.8-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>`;
+const SPIELEN = `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>`;
+const PAUSE = `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg>`;
+const SVGNS = "http://www.w3.org/2000/svg";
+let DATEN;
+const BUEHNEN = [];
+let groesseTimer;
+addEventListener("resize", () => {
+  clearTimeout(groesseTimer);
+  groesseTimer = setTimeout(() => BUEHNEN.forEach((b) => {
+    if (b.w.isConnected && b.svg.isConnected && (b.svg.parentElement.clientWidth < 560) !== b.schmal) { b.zeichneKurve(); b.setze(b.n); }
+  }), 200);
 });
+
+/* ---------------------------------------------------------------- Bühne ---------------------------------------------------------------- */
+class Buehne {
+  constructor(wurzel, o) {
+    this.w = wurzel; this.o = o; this.n = o.ruhe ?? o.bis; this.laeuft = false; this.timer = null;
+    this.lauf = o.lauf;
+    this.shops = Object.keys(this.lauf.runden[0].preise);
+    this.runden = this.lauf.runden.filter((r) => r.runde >= o.von && r.runde <= o.bis);
+    this.momente = (o.momente || []).map((m, i) => ({ ...m, nr: i + 1 }));
+    BUEHNEN.push(this);
+    this.tempo = o.tempo || 650;
+    this.baue();
+  }
+
+  baue() {
+    const b = this.lauf.benchmarks, viele = this.shops.length > 3;
+    const schilder = viele
+      ? `<div class="schild" style="--farbe:var(--tinte)"><span class="schild-name"><i class="punkt"></i>Ø Preis · ${this.shops.length} Shops</span><span class="schild-preis" data-preis="mittel"></span><span class="schild-delta" data-delta="mittel"></span></div>`
+      : this.shops.map((s, i) => `<div class="schild" style="--farbe:${farbe(i)}"><span class="schild-name"><i class="punkt"></i>${esc(s)}</span><span class="schild-preis" data-preis="${i}"></span><span class="schild-delta" data-delta="${i}"></span></div>`).join("");
+    this.w.innerHTML = `
+      <div class="buehne-kopf">${schilder}
+        <div class="pegel">
+          <div class="pegel-kopf"><span class="runde-gross">Runde <span class="zahl" data-runde></span></span><span class="zone" data-zone><i></i><span></span></span></div>
+          <div class="pegel-spur" aria-hidden="true"><b class="pegel-marke"></b></div>
+          <div class="pegel-fuss"><span>Wettbewerb ${chf(b.nash_preis)}</span><span>Kartell ${chf(b.monopol_preis)}</span></div>
+          <p class="pegel-text" data-pegeltext></p>
+        </div>
+      </div>
+      <div class="buehne-mitte">
+        <figure class="kurve"><svg role="img" aria-label="Preise pro Runde"></svg><div class="tip" hidden></div></figure>
+        <div>
+          <div class="protokoll-kopf"><span>Öffentlicher Kanal${this.lauf.kanal ? "" : " (in diesem Versuch geschlossen)"}</span><span>${AUGE.replace("<svg", '<svg width="13" height="13"')} privat = sieht die Konkurrenz nicht</span></div>
+          <div class="protokoll" tabindex="0" aria-label="Protokoll"></div>
+        </div>
+      </div>
+      <div class="steuerung">
+        <button class="knopf" type="button">${SPIELEN}<span>Abspielen</span></button>
+        <input class="regler" type="range" min="${this.o.von}" max="${this.o.bis}" step="1" aria-label="Runde">
+        <span class="stand"></span>
+      </div>`;
+    this.feed = this.w.querySelector(".protokoll");
+    this.svg = this.w.querySelector("svg");
+    this.tip = this.w.querySelector(".tip");
+    this.knopf = this.w.querySelector(".knopf");
+    this.regler = this.w.querySelector(".regler");
+    this.zeichneKurve();
+    this.baueProtokoll();
+    this.knopf.addEventListener("click", () => (this.laeuft ? this.halte() : this.spiele()));
+    this.regler.addEventListener("input", () => { this.halte(); this.setze(Number(this.regler.value)); });
+    this.setze(this.n);
+  }
+
+  /* --- Preiskurve --- */
+  zeichneKurve() {
+    this.schmal = this.svg.parentElement.clientWidth < 560;
+    const W = this.schmal ? 430 : 660, H = this.schmal ? 300 : 320, m = { l: 34, r: this.schmal ? 76 : 84, t: 18, b: 30 };
+    const b = this.lauf.benchmarks, { von, bis } = this.o;
+    const preise = this.runden.flatMap((r) => this.shops.map((s) => r.preise[s]));
+    const lo = Math.floor(Math.min(b.nash_preis, ...preise) - 0.6), hi = Math.ceil(Math.max(b.monopol_preis, ...preise) + 0.6);
+    const x = (r) => m.l + (bis === von ? 0.5 : (r - von) / (bis - von)) * (W - m.l - m.r);
+    const y = (p) => m.t + (hi - p) / (hi - lo) * (H - m.t - m.b);
+    Object.assign(this, { x, y, W, H, m });
+    this.svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const schritt = [1, 2, 5, 10, 20].find((s) => (hi - lo) / s <= 7) || 50;
+    let s = "";
+    for (let p = Math.ceil(lo / schritt) * schritt; p <= hi; p += schritt)
+      s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(p)}" y2="${y(p)}" stroke="var(--linie)" stroke-width="1"/><text x="${m.l - 8}" y="${y(p) + 4}" text-anchor="end">${p}</text>`;
+    const xs = bis - von > 60 ? 10 : 5;
+    for (let r = von; r <= bis; r++) if (r === von || r % xs === 0) s += `<text x="${x(r)}" y="${H - 9}" text-anchor="middle">${r}</text>`;
+    s += `<text x="${m.l}" y="${H - 9}" text-anchor="end" dx="-8">Runde</text>`;
+    const yk = y(b.monopol_preis), yw = y(b.nash_preis);
+    s += `<rect x="${m.l}" y="${yk}" width="${W - m.l - m.r}" height="${yw - yk}" fill="var(--band)"/>`;
+    if (yw - yk > 22) s += `<text x="${m.l + 8}" y="${yk + 15}" class="t-stark" style="fill:var(--kartell)">Kartellbereich</text>`;
+    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${yw}" y2="${yw}" stroke="var(--wettbewerb)" stroke-width="1.5" stroke-dasharray="6 4"/>
+          <line x1="${m.l}" x2="${W - m.r}" y1="${yk}" y2="${yk}" stroke="var(--kartell)" stroke-width="1.5" stroke-dasharray="2 3"/>
+          <text x="${W - m.r + 8}" y="${yw - 2}" class="t-stark">Wettbewerb</text><text x="${W - m.r + 8}" y="${yw + 12}">${chf(b.nash_preis)}</text>
+          <text x="${W - m.r + 8}" y="${yk - 2}" class="t-stark">Kartell</text><text x="${W - m.r + 8}" y="${yk + 12}">${chf(b.monopol_preis)}</text>`;
+    // Eingriffe (Abweichungstest)
+    this.runden.filter((r) => r.abweichung).forEach((r) => {
+      s += `<g data-ab="${r.runde}"><line x1="${x(r.runde)}" x2="${x(r.runde)}" y1="${m.t}" y2="${H - m.b}" stroke="var(--kartell)" stroke-width="1.5"/>
+            <text x="${x(r.runde) + 5}" y="${m.t + 10}" class="t-stark" style="fill:var(--kartell)">Eingriff</text></g>`;
+    });
+    s += `<line data-kopf x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" stroke="var(--leise)" stroke-width="1" stroke-dasharray="2 3"/>`;
+    const viele = this.shops.length > 3;
+    this.shops.forEach((sh, i) => {
+      const pts = this.runden.map((r) => `${x(r.runde)},${y(r.preise[sh])}`).join(" ");
+      const w = viele ? 1.2 : 2.5;
+      s += `<polyline points="${pts}" fill="none" stroke="${farbe(i)}" stroke-width="${w}" stroke-opacity="0.2" stroke-linejoin="round"/>
+            <polyline data-linie="${i}" fill="none" stroke="${farbe(i)}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"/>`;
+    });
+    if (!viele) this.shops.forEach((sh, i) => { s += `<circle data-ende="${i}" r="5" fill="${farbe(i)}" stroke="var(--flaeche)" stroke-width="2"/>`; });
+    s += `<line data-hover x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" stroke="var(--tinte)" stroke-width="1" visibility="hidden"/>
+          <rect data-flaeche x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}" fill="transparent"/>`;
+    // Momente als nummerierte Nadeln (mehrere in derselben Runde werden gestapelt)
+    const gestapelt = {};
+    this.momente.forEach((mo) => {
+      const r = this.runden.find((q) => q.runde === mo.runde); if (!r) return;
+      const stufe = (gestapelt[mo.runde] = (gestapelt[mo.runde] ?? -1) + 1);
+      const p = r.preise[mo.shop] ?? r.preise[this.shops[0]], px = x(mo.runde), py = y(p), oben = py - 26 - stufe * 24 > m.t;
+      const ny = oben ? py - 22 - stufe * 24 : py + 22 + stufe * 24;
+      s += `<g class="pin" data-pin="${mo.nr}" data-runde="${mo.runde}"><line x1="${px}" x2="${px}" y1="${py}" y2="${ny}" stroke="var(--tinte)" stroke-width="1"/>
+            <circle cx="${px}" cy="${ny}" r="10" fill="${mo.art === "eingriff" ? "var(--kartell)" : "var(--tinte)"}" stroke="var(--flaeche)" stroke-width="2"/>
+            <text x="${px}" y="${ny + 4}" text-anchor="middle">${mo.nr}</text></g>`;
+    });
+    this.svg.innerHTML = s;
+    const flaeche = this.svg.querySelector("[data-flaeche]"), hov = this.svg.querySelector("[data-hover]");
+    const runde = (ev) => {
+      const pt = this.svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+      const lx = pt.matrixTransform(this.svg.getScreenCTM().inverse()).x;
+      return Math.max(von, Math.min(bis, Math.round(von + (lx - m.l) / (W - m.l - m.r) * (bis - von))));
+    };
+    flaeche.addEventListener("pointermove", (ev) => {
+      const r = runde(ev), daten = this.runden.find((q) => q.runde === r); if (!daten) return;
+      hov.setAttribute("x1", x(r)); hov.setAttribute("x2", x(r)); hov.setAttribute("visibility", "visible");
+      const top = Math.min(...this.shops.map((s) => y(daten.preise[s])));
+      const rect = this.svg.getBoundingClientRect(), f = rect.width / W;
+      this.tip.style.left = `${Math.max(60, Math.min(rect.width - 60, x(r) * f))}px`;
+      this.tip.style.top = `${top * f}px`;
+      this.tip.innerHTML = `<b>Runde ${r}</b>` + this.shops.slice(0, 4).map((s, i) => `<span><i class="punkt" style="--farbe:${farbe(i)}"></i>${esc(s)} ${chf(daten.preise[s])}</span>`).join("")
+        + (this.shops.length > 4 ? `<span>… ${this.shops.length - 4} weitere</span>` : "");
+      this.tip.hidden = false;
+    });
+    flaeche.addEventListener("pointerleave", () => { hov.setAttribute("visibility", "hidden"); this.tip.hidden = true; });
+    flaeche.addEventListener("click", (ev) => { this.halte(); this.setze(runde(ev)); });
+    this.svg.querySelectorAll(".pin").forEach((g) => g.addEventListener("click", () => { this.halte(); this.setze(Number(g.dataset.runde)); }));
+  }
+
+  /* --- Protokoll --- */
+  baueProtokoll() {
+    const geschichte = this.o.modus === "geschichte", notizen = this.o.notizen !== false, links = this.shops.length === 2;
+    const idx = (s) => Math.max(0, this.shops.indexOf(s));
+    const blase = (m, mo) => {
+      const i = idx(m.von), seite = links && i === 1 ? " rechts" : "";
+      let text = esc(m.text);
+      if (mo) auszuege(mo.text).forEach((t) => { text = text.replace(esc(t), `<mark>${esc(t)}</mark>`); });
+      const blockiert = m.status && m.status !== "zugestellt";
+      const klasse = mo ? "gross" : geschichte ? "kurz" : "";
+      return `<div class="eintrag${seite}" style="--farbe:${farbe(i)}"><span class="avatar" aria-hidden="true">${esc(m.von.replace("Shop ", "").slice(0, 2))}</span>
+        <div class="blase ${klasse}${blockiert ? " blockiert" : ""}" ${klasse === "kurz" ? 'title="Klicken für den ganzen Text"' : ""}>${mo ? `<span class="nr" style="float:right;margin:0 0 4px 8px">${mo.nr}</span>` : ""}<span class="txt">${text}</span>${blockiert ? `<span class="grund">Blockiert von der Compliance-Abteilung${m.compliance?.begruendung ? ": " + esc(m.compliance.begruendung) : ""}</span>` : ""}</div></div>`;
+    };
+    const gedanke = (shop, text, mo, kurz) => {
+      const i = idx(shop);
+      return `<div class="eintrag${links && i === 1 ? " rechts" : ""}" style="--farbe:${farbe(i)}"><span class="avatar" aria-hidden="true">${esc(shop.replace("Shop ", "").slice(0, 2))}</span>
+        <div class="gedanke${mo ? " gross" : ""}${kurz ? " kurz" : ""}"><div class="gedanke-kopf">${AUGE} privat · ${esc(shop)}${mo ? `<span class="nr" style="margin-left:auto">${mo.nr}</span>` : ""}</div><span class="txt">${esc(text)}</span></div></div>`;
+    };
+    const regie = (mo) => (mo.kommentar ? `<div class="regie"><span class="nr">${mo.nr}</span><span>${esc(mo.kommentar)}</span></div>` : "");
+    let html = "";
+    for (const r of this.runden) {
+      const hier = this.momente.filter((mo) => mo.runde === r.runde);
+      let teil = `<div class="rk">Runde ${r.runde} <span class="zahl">${this.shops.length <= 3 ? this.shops.map((s) => `${esc(s.replace("Shop ", ""))} ${chf(r.preise[s])}`).join(" · ") : ""}</span></div>`;
+      const nachrichten = r.nachrichten || [];
+      if (this.lauf.kanal && !nachrichten.length) teil += `<div class="still">– kein Wort im Kanal –</div>`;
+      nachrichten.forEach((m) => {
+        const mo = hier.find((q) => q.art === "kanal" && q.shop === m.von && auszuege(q.text).every((t) => m.text.includes(t)));
+        teil += blase(m, mo) + (mo ? regie(mo) : "");
+      });
+      if (geschichte) {
+        hier.filter((q) => q.art === "notiz").forEach((mo) => { teil += gedanke(mo.shop, mo.text, mo, false) + regie(mo); });
+        hier.filter((q) => q.art === "eingriff").forEach((mo) => {
+          teil += `<div class="eingriff"><span class="nr" style="background:var(--kartell)">${mo.nr}</span><span>${esc(mo.text)}</span></div>` + regie(mo);
+        });
+      } else {
+        if (notizen) this.shops.forEach((s) => {
+          const e = r.entscheide?.[s]; const t = e && (e.plan || e.beobachtungen);
+          if (t) teil += gedanke(s, t, null, true);
+        });
+        if (r.abweichung) {
+          const s = r.abweichung.shop, e = r.entscheide?.[s] || {};
+          teil += `<div class="eingriff"><b>Eingriff</b><span>Die Simulation setzt ${esc(s)} für diese Runde auf ${chf(r.preise[s])} CHF.${e.preis_gewollt ? ` ${esc(s)} wollte ${chf(e.preis_gewollt)} CHF.` : ""} ${esc(s)} erfährt davon nichts.</span></div>`;
+        }
+        (r.aufsicht || []).filter((a) => a.bedenklich).forEach((a) => { teil += `<div class="hinweis">Aufsicht zu ${esc(a.agent)}: ${esc(a.begruendung)}</div>`; });
+        if (r.marktbeobachtung) teil += `<div class="hinweis">Marktbeobachtung: ${esc(r.marktbeobachtung)}</div>`;
+        if (r.kunden_ki?.entscheide?.length) teil += `<div class="hinweis">KI-Kundschaft: ${r.kunden_ki.entscheide.slice(0, 3).map((k) => `${esc(k.name)} – ${k.kauf === "nichts" ? "kauft nichts" : "kauft bei " + esc(k.kauf)}: „${esc(k.grund)}“`).join(" · ")}</div>`;
+      }
+      html += `<div class="runde-block" data-r="${r.runde}" style="display:flex;flex-direction:column;gap:10px">${teil}</div>`;
+    }
+    this.feed.innerHTML = html;
+    this.bloecke = [...this.feed.querySelectorAll(".runde-block")];
+    this.feed.addEventListener("click", (ev) => { const k = ev.target.closest(".kurz"); if (k) k.classList.remove("kurz"); });
+  }
+
+  /* --- Stand setzen --- */
+  setze(n, animiert = false) {
+    const { von, bis } = this.o; n = Math.max(von, Math.min(bis, n));
+    const alt = this.n; this.n = n;
+    const r = this.runden.find((q) => q.runde === n) || this.runden[this.runden.length - 1];
+    const vor = this.runden.find((q) => q.runde === n - 1);
+    const b = this.lauf.benchmarks, viele = this.shops.length > 3;
+    const mittel = (q) => this.shops.reduce((a, s) => a + q.preise[s], 0) / this.shops.length;
+    const werte = viele ? [["mittel", mittel(r), vor && mittel(vor)]] : this.shops.map((s, i) => [i, r.preise[s], vor?.preise[s]]);
+    werte.forEach(([k, p, pv]) => {
+      const el = this.w.querySelector(`[data-preis="${k}"]`), neu = `${preisHtml(p)}<small>CHF</small>`;
+      if (el.innerHTML !== neu) { el.innerHTML = neu; if (animiert && !REDUZIERT) { el.classList.remove("kipp"); void el.offsetWidth; el.classList.add("kipp"); } }
+      const d = pv == null ? 0 : p - pv;
+      this.w.querySelector(`[data-delta="${k}"]`).textContent = Math.abs(d) < 0.005 ? (pv == null ? "Start" : "unverändert") : `${d > 0 ? "▲" : "▼"} ${chf(Math.abs(d))} zur Vorrunde`;
+    });
+    // Pegel: Lage des Durchschnittspreises zwischen Wettbewerb (25 %) und Kartell (75 %)
+    const avg = mittel(r), pi = (avg - b.nash_preis) / (b.monopol_preis - b.nash_preis);
+    this.w.querySelector(".pegel-marke").style.left = `${Math.max(0, Math.min(100, 25 + pi * 50))}%`;
+    const zone = pi >= 1.15 ? ["kartell", "über dem Kartellpreis"] : pi >= 0.6 ? ["kartell", "Kartellbereich"] : pi < 0.25 ? ["wettbewerb", "Wettbewerb"] : ["mitte", "Graubereich"];
+    const z = this.w.querySelector("[data-zone]"); z.dataset.zone = zone[0]; z.querySelector("span").textContent = zone[1];
+    const proz = Math.round((avg / b.nash_preis - 1) * 100);
+    this.w.querySelector("[data-pegeltext]").textContent = proz === 0 ? "auf dem Wettbewerbspreis" : `${Math.abs(proz)} % ${proz > 0 ? "über" : "unter"} dem Wettbewerbspreis`;
+    this.w.querySelector("[data-runde]").textContent = n;
+    // Kurve
+    const sicht = this.runden.filter((q) => q.runde <= n);
+    this.shops.forEach((s, i) => {
+      this.svg.querySelector(`[data-linie="${i}"]`).setAttribute("points", sicht.map((q) => `${this.x(q.runde)},${this.y(q.preise[s])}`).join(" "));
+      const c = this.svg.querySelector(`[data-ende="${i}"]`);
+      if (c) { c.setAttribute("cx", this.x(n)); c.setAttribute("cy", this.y(r.preise[s])); }
+    });
+    const k = this.svg.querySelector("[data-kopf]"); k.setAttribute("x1", this.x(n)); k.setAttribute("x2", this.x(n));
+    this.svg.querySelectorAll(".pin").forEach((g) => g.setAttribute("visibility", Number(g.dataset.runde) <= n ? "visible" : "hidden"));
+    this.svg.querySelectorAll("[data-ab]").forEach((g) => g.setAttribute("visibility", Number(g.dataset.ab) <= n ? "visible" : "hidden"));
+    if (animiert && r.abweichung && !REDUZIERT) { const f = this.w.querySelector(".kurve"); f.classList.remove("blitz"); void f.offsetWidth; f.classList.add("blitz"); }
+    // Protokoll
+    this.bloecke.forEach((bl) => {
+      const rn = Number(bl.dataset.r), zeigen = rn <= n;
+      if (zeigen && bl.hidden && animiert && rn > alt) { bl.classList.remove("neu"); void bl.offsetWidth; bl.classList.add("neu"); }
+      bl.hidden = !zeigen;
+    });
+    this.feed.scrollTo({ top: this.feed.scrollHeight, behavior: animiert && !REDUZIERT ? "smooth" : "auto" });
+    this.regler.value = n;
+    this.w.querySelector(".stand").textContent = `Runde ${n} / ${bis}`;
+  }
+
+  spiele() {
+    if (this.n >= this.o.bis) this.setze(this.o.von);
+    this.laeuft = true; this.knopf.innerHTML = `${PAUSE}<span>Pause</span>`;
+    this.timer = setTimeout(() => this.schritt(), 350);
+  }
+  schritt() {
+    if (!this.laeuft) return;
+    if (this.n >= this.o.bis) return this.halte();
+    this.setze(this.n + 1, true);
+    const moment = this.momente.some((m) => m.runde === this.n);
+    this.timer = setTimeout(() => this.schritt(), moment ? 3000 : this.tempo);
+  }
+  halte() {
+    this.laeuft = false; clearTimeout(this.timer);
+    this.knopf.innerHTML = `${SPIELEN}<span>${this.n >= this.o.bis ? "Nochmals abspielen" : "Weiter abspielen"}</span>`;
+  }
+}
+
+/* ---------------------------------------------------------------- Akte ---------------------------------------------------------------- */
+function zeichneAkte() {
+  const akte = DATEN.geschichte || [];
+  $("wegweiser").innerHTML = akte.map((a) => `<li><a href="#akt-${a.nummer}"><span class="w-nr">Akt ${a.nummer} · ${esc(a.titel)}</span><span class="w-frage">${esc(a.frage)}</span><span class="w-antwort">${esc(a.antwort)}</span></a></li>`).join("");
+  if (!akte.length) { $("akte").innerHTML = ""; return; }
+  $("akte").innerHTML = akte.map((a) => {
+    const v = DATEN.versuche[a.versuch], d = v.durchgaenge[a.durchgang];
+    return `<section class="akt rahmen" id="akt-${a.nummer}">
+      <div class="akt-kopf">
+        <div><span class="akt-nr">Akt ${a.nummer}</span><h2>${esc(a.titel)}</h2><p class="akt-frage">${esc(a.frage)}</p></div>
+        <div class="akt-text"><p class="akt-antwort">${esc(a.antwort)}</p><p>${esc(a.text)}</p>
+          <dl class="fakten">${a.fakten.map((f) => `<div><dt>${esc(f.zahl)}</dt><dd>${esc(f.text)}</dd></div>`).join("")}</dl></div>
+      </div>
+      <div class="buehne" data-akt="${a.nummer}"></div>
+      <p class="quelle">Aufgezeichneter Lauf: ${esc(v.kurz)} · Durchgang ${d.wiederholung} · Runden ${a.von}–${a.bis} von ${d.runden.length}. Die Zahlen oben gelten für alle Läufe des Versuchs.</p>
+    </section>`;
+  }).join("");
+  const beobachter = "IntersectionObserver" in window && !REDUZIERT ? new IntersectionObserver((eintraege) => {
+    eintraege.forEach((e) => { if (e.isIntersecting && !e.target._gespielt) { e.target._gespielt = true; e.target._buehne.spiele(); } });
+  }, { threshold: 0.45 }) : null;
+  akte.forEach((a) => {
+    const el = document.querySelector(`.buehne[data-akt="${a.nummer}"]`);
+    el._buehne = new Buehne(el, { lauf: DATEN.versuche[a.versuch].durchgaenge[a.durchgang], von: a.von, bis: a.bis, ruhe: a.ruhe,
+                                  momente: a.momente, modus: "geschichte", tempo: 620 });
+    if (beobachter) beobachter.observe(el);
+  });
+  // Grosses Preisschild aus dem ersten Akt: Preis am Ende, Runde ab der beide gleich sind
+  const a = akte[0], lauf = DATEN.versuche[a.versuch].durchgaenge[a.durchgang], letzte = lauf.runden[lauf.runden.length - 1];
+  const shops = Object.keys(letzte.preise), p = letzte.preise[shops[0]];
+  if (shops.every((s) => letzte.preise[s] === p)) {
+    let ab = lauf.runden.length; while (ab > 1 && shops.every((s) => lauf.runden[ab - 2].preise[s] === p)) ab--;
+    $("held-preis").innerHTML = preisHtml(p); $("held-statt").textContent = chf(lauf.benchmarks.nash_preis);
+    $("held-fuss").textContent = `CHF · so viel verlangen beide KI-Shops ab Runde ${lauf.runden[ab - 1].runde}`;
+  }
+}
+
+/* ---------------------------------------------------------------- Wand ---------------------------------------------------------------- */
+let zeigeAnhang = false;
+function zeichneWand() {
+  const gruppen = new Map();
+  DATEN.versuche.forEach((v, vi) => {
+    const k = v.kapitel || 0; if (k === 0 && !zeigeAnhang) return;
+    if (!gruppen.has(k)) gruppen.set(k, { titel: v.kapitel_titel || "", zeilen: [] });
+    gruppen.get(k).zeilen.push([v, vi]);
+  });
+  const anzahlAnhang = DATEN.versuche.filter((v) => !v.kapitel).length;
+  let html = "";
+  for (const [, g] of gruppen) {
+    html += `<div class="wand-kapitel"><h3>${esc(g.titel)}</h3>`;
+    for (const [v, vi] of g.zeilen) {
+      const b = v.durchgaenge[0].benchmarks;
+      const alle = v.durchgaenge.flatMap((d) => d.runden.flatMap((r) => Object.values(r.preise)));
+      const lo = Math.min(b.nash_preis, ...alle) - 0.5, hi = Math.max(b.monopol_preis, ...alle) + 0.5;
+      const kartell = v.durchgaenge.filter((d) => d.ki > 0.5).length;
+      html += `<div class="wand-zeile"><div class="wand-name">${esc(v.kurz)}<small>${kartell} von ${v.durchgaenge.length} im Kartell</small></div><div class="kacheln">`;
+      v.durchgaenge.forEach((d, di) => {
+        const n = d.runden.length, X = (i) => (n === 1 ? 50 : (i / (n - 1)) * 100), Y = (p) => 2 + (hi - p) / (hi - lo) * 42;
+        const shops = Object.keys(d.runden[0].preise);
+        const linien = shops.map((s, i) => `<polyline points="${d.runden.map((r, j) => `${X(j).toFixed(1)},${Y(r.preise[s]).toFixed(1)}`).join(" ")}" fill="none" stroke="${farbe(i)}" stroke-width="${shops.length > 3 ? 0.8 : 1.6}" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`).join("");
+        html += `<button class="kachel" type="button" data-v="${vi}" data-d="${di}" aria-label="${esc(v.kurz)}, Durchgang ${d.wiederholung}, Kollusionsindex ${d.ki.toFixed(2)}">
+          <svg viewBox="0 0 100 46" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="${Y(b.monopol_preis)}" width="100" height="${Y(b.nash_preis) - Y(b.monopol_preis)}" fill="var(--band)"/>
+          <line x1="0" x2="100" y1="${Y(b.nash_preis)}" y2="${Y(b.nash_preis)}" stroke="var(--wettbewerb)" stroke-width="1" stroke-dasharray="3 2" vector-effect="non-scaling-stroke"/>${linien}</svg>
+          <span class="kachel-fuss"><span class="zahl">Nr. ${d.wiederholung}</span>${d.ki > 0.5 ? `<em><i></i>Kartell</em>` : ""}</span></button>`;
+      });
+      html += `</div></div>`;
+    }
+    html += `</div>`;
+  }
+  if (anzahlAnhang) html += `<button class="mehr-knopf" type="button" id="anhang-knopf">${zeigeAnhang ? "Anhang ausblenden" : `Anhang zeigen: ${anzahlAnhang} weitere Versuche (Varianten, zweites Modell, KI-Kundschaft)`}</button>`;
+  $("wand").innerHTML = html;
+  $("wand").querySelectorAll(".kachel").forEach((k) => k.addEventListener("click", () => {
+    waehle(Number(k.dataset.v), Number(k.dataset.d));
+    $("abspielen").scrollIntoView({ behavior: REDUZIERT ? "auto" : "smooth", block: "start" });
+  }));
+  if ($("anhang-knopf")) $("anhang-knopf").addEventListener("click", () => { zeigeAnhang = !zeigeAnhang; zeichneWand(); });
+}
+
+/* ---------------------------------------------------------------- Freies Abspielen ---------------------------------------------------------------- */
+let frei = { v: 0, d: 0 }, freieBuehne = null;
+function zeichneWahl() {
+  const gruppen = new Map();
+  DATEN.versuche.forEach((v, i) => { const t = v.kapitel_titel || "Weitere"; if (!gruppen.has(t)) gruppen.set(t, []); gruppen.get(t).push([v, i]); });
+  $("wahl-versuch").innerHTML = [...gruppen].map(([t, liste]) => `<optgroup label="${esc(t)}">${liste.map(([v, i]) => `<option value="${i}">${esc(v.kurz)}</option>`).join("")}</optgroup>`).join("");
+  $("wahl-versuch").addEventListener("change", () => waehle(Number($("wahl-versuch").value), 0));
+  $("wahl-notizen").addEventListener("change", () => waehle(frei.v, frei.d, true));
+}
+function waehle(v, d, behalten = false) {
+  const runde = behalten && freieBuehne ? freieBuehne.n : null;
+  frei = { v, d }; const versuch = DATEN.versuche[v], lauf = versuch.durchgaenge[d];
+  $("wahl-versuch").value = String(v);
+  $("wahl-durchgang").innerHTML = versuch.durchgaenge.map((x, i) => `<button type="button" aria-pressed="${i === d}" data-d="${i}" title="Kollusionsindex ${x.ki.toFixed(2)}">${x.wiederholung}</button>`).join("");
+  $("wahl-durchgang").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => waehle(v, Number(b.dataset.d))));
+  $("wahl-erklaerung").textContent = `${versuch.erklaerung || ""} Dieser Durchgang: Kollusionsindex ${lauf.ki.toFixed(2)} (0 = Wettbewerb, 1 = perfektes Kartell)${lauf.abbruch ? ", vorzeitig beendet" : ""}.`;
+  if (freieBuehne) freieBuehne.halte();
+  const letzte = lauf.runden[lauf.runden.length - 1].runde;
+  freieBuehne = new Buehne($("buehne-frei"), { lauf, von: lauf.runden[0].runde, bis: letzte, ruhe: runde ?? letzte, modus: "alle",
+                                               notizen: $("wahl-notizen").checked, tempo: lauf.runden.length > 60 ? 260 : 420 });
+}
+
+function zeichneFuss() {
+  $("fuss").innerHTML = `<h2>So ist das entstanden</h2>` + (DATEN.fuss || []).map((p) => `<p>${esc(p)}</p>`).join("")
+    + `<p>Code, Rohdaten und alle Auswertungen: <a href="https://github.com/AKUSH99/Autonomous_Company">github.com/AKUSH99/Autonomous_Company</a></p>`;
+}
 
 (async () => {
   try {
     DATEN = await entpacke(DATEN_GZ);
   } catch (e) {
-    $("einleitung").textContent = "Die Aufzeichnung konnte in diesem Browser nicht entpackt werden. Bitte einen aktuellen Browser verwenden.";
+    $("akte").innerHTML = `<div class="rahmen laden">Die Aufzeichnungen liessen sich nicht laden. Bitte einen aktuellen Browser verwenden.</div>`;
     return;
   }
-  $("kopfzeile").textContent = DATEN.kopfzeile;
-  $("fuss").innerHTML = DATEN.fuss.map((p) => `<p>${esc(p)}</p>`).join("");
-  runde = aktuell().runden.length;
-  zeichneTabs(); zeichneGuardrail(); alles();
+  $("kopfzeile").textContent = `KI-Kartell · Experiment mit echten KI-Agenten · ${DATEN.anzahl_laeufe || ""} aufgezeichnete Läufe`;
+  zeichneAkte();
+  zeichneWand();
+  zeichneWahl();
+  waehle(0, 0);
+  zeichneFuss();
 })();
 </script>
+</html>
