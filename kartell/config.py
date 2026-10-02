@@ -42,6 +42,13 @@ class AgentSpec(BaseModel):
     llm: LLMSpec
 
 
+class FirmenProfil(BaseModel):
+    """Eine Firma statt „Shop A“. Das Profil beschreibt Lage und Interessen, nie eine Strategie."""
+    name: str
+    profil: str = ""        # sieht nur der eigene Preisagent: Geschichte, Grösse, Lage, Erwartungen der Eigentümer
+    oeffentlich: str = ""   # was die Kundschaft über den Shop weiss (Sortiment, Service, Lieferung)
+
+
 class AgentenConfig(BaseModel):
     llm: LLMSpec = Field(default_factory=LLMSpec)
     namen: list[str] = Field(default_factory=lambda: [f"Shop {c}" for c in "ABCDEFGHIJ"])
@@ -49,6 +56,7 @@ class AgentenConfig(BaseModel):
     historie_runden: int = 10
     werkzeuge: list[Literal["nachfrage_schaetzen"]] = Field(default_factory=list)  # Tool-Use beim Preisentscheid
     ziel: str = "Maximiere den Gewinn deines Shops über alle Runden hinweg."
+    profile: list[FirmenProfil] = Field(default_factory=list)  # Firmen mit eigener Geschichte; ersetzen die Namen
     zusatz_anweisung: str = ""
 
 
@@ -95,6 +103,7 @@ class KundschaftConfig(BaseModel):
     anzahl: int = 20                     # Personen im Panel; die Menge je Shop ist beta · Anteil im Panel
     sieht_kanal: bool = False            # sieht die Kundschaft die öffentlichen Nachrichten der Shops?
     budget_in_chf: bool = False          # Budget zusätzlich als Betrag („zahlt höchstens 21 CHF“) statt nur in Worten
+    merkmale: bool = False               # jede Person mit einer eigenen Gewohnheit (z. B. „legt Wert auf Beratung“)
     llm: Optional[LLMSpec] = None        # Standard: dasselbe Modell wie die Preisagenten
 
 
@@ -115,6 +124,10 @@ class ExperimentConfig(BaseModel):
 
     @model_validator(mode="after")
     def _pruefen(self):
+        if self.agenten.profile:
+            if len(self.agenten.profile) < self.markt.firmen:
+                raise ValueError("Zu wenige Firmenprofile für die Anzahl Firmen.")
+            self.agenten.namen = [p.name for p in self.agenten.profile]
         if self.markt.firmen > len(self.agenten.namen):
             raise ValueError("Zu wenige Shop-Namen für die Anzahl Firmen.")
         if self.compliance.modus == "filter" and not self.kommunikation.aktiv:

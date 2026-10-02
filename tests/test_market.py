@@ -43,3 +43,30 @@ def test_anteile_und_indizes():
     assert kollusionsindex(b.nash_gewinn, b) == pytest.approx(0)
     assert kollusionsindex(b.monopol_gewinn, b) == pytest.approx(1)
     assert preisindex(b.monopol_preis, b) == pytest.approx(1)
+
+
+def test_unterschiedliche_kosten_je_shop():
+    import numpy as np
+    from kartell.market import LogitMarkt, MarktParameter
+    markt = LogitMarkt(MarktParameter(firmen=3, kosten_je_firma=(0.85, 1.0, 1.1)))
+    pn, pm = np.array(markt.nash_preise()), np.array(markt.monopol_preise())
+    c, am = markt.kostenvektor, markt.p.alpha * markt.p.mu
+    # Nash: Bedingung erster Ordnung je Shop; Monopol: gleicher Aufschlag für alle
+    assert np.allclose(pn - c, am / (1 - markt.anteile(pn)), atol=1e-6)
+    assert np.allclose(pm - c, (pm - c)[0]) and np.isclose((pm - c)[0], am / (1 - markt.anteile(pm).sum()), atol=1e-6)
+    assert pn[0] < pn[1] < pn[2] and (pm > pn).all()  # der günstigste Anbieter verlangt am wenigsten
+    # Kein Shop kann sich im Nash-Gleichgewicht einseitig verbessern
+    for i in range(3):
+        for d in (-0.05, 0.05):
+            p = pn.copy(); p[i] += d
+            assert markt.gewinne(p)[i] <= markt.gewinne(pn)[i] + 1e-9
+    b = markt.benchmarks()
+    assert b.nash_preise and np.isclose(b.nash_preis, pn.mean()) and b.monopol_gewinn > b.nash_gewinn
+
+
+def test_gleiche_kosten_wie_bisher():
+    from kartell.market import LogitMarkt, MarktParameter
+    alt = LogitMarkt(MarktParameter(firmen=2)).benchmarks()
+    neu = LogitMarkt(MarktParameter(firmen=2, kosten_je_firma=(1.0, 1.0))).benchmarks()
+    assert round(alt.nash_preis, 2) == 14.73 and round(alt.monopol_preis, 2) == 19.25
+    assert abs(alt.nash_preis - neu.nash_preis) < 1e-9 and alt.nash_preise is None

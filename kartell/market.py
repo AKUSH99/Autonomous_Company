@@ -15,7 +15,7 @@ Aus dem Modell lassen sich zwei Referenzpreise exakt berechnen:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Optional, Sequence
 
 import numpy as np
 
@@ -29,6 +29,9 @@ class MarktParameter:
     kosten: float = 1.0   # Stückkosten in Einheiten von alpha
     alpha: float = 10.0   # Preisskala: alpha=10 ergibt Preise in einer CHF-Grössenordnung um 15
     beta: float = 100.0   # Mengenskala: potenzielle Kundschaft pro Runde
+    # Unterschiedliche Stückkosten je Shop (in Einheiten von alpha), z. B. ein Discounter mit tieferen Kosten.
+    # Ohne Angabe haben alle Shops dieselben Kosten `kosten`.
+    kosten_je_firma: Optional[tuple[float, ...]] = None
 
 
 @dataclass(frozen=True)
@@ -38,20 +41,37 @@ class Benchmarks:
     nash_gewinn: float      # Gewinn pro Shop im Nash-Gleichgewicht
     monopol_gewinn: float   # Gewinn pro Shop bei gemeinsamer Gewinnmaximierung
     grenzkosten: float
+    # Bei unterschiedlichen Kosten: Preise je Shop; die Werte oben sind dann Durchschnitte über die Shops
+    nash_preise: Optional[tuple[float, ...]] = None
+    monopol_preise: Optional[tuple[float, ...]] = None
 
     def als_dict(self) -> dict:
-        return {k: round(v, 4) for k, v in self.__dict__.items()}
+        return {k: (round(v, 4) if isinstance(v, float) else [round(x, 4) for x in v])
+                for k, v in self.__dict__.items() if v is not None}
 
 
 class LogitMarkt:
     def __init__(self, parameter: MarktParameter):
         if parameter.firmen < 2:
             raise ValueError("Ein Markt braucht mindestens zwei Shops.")
+        if parameter.kosten_je_firma is not None and len(parameter.kosten_je_firma) != parameter.firmen:
+            raise ValueError("kosten_je_firma braucht genau einen Wert pro Shop.")
         self.p = parameter
 
     @property
+    def symmetrisch(self) -> bool:
+        return self.p.kosten_je_firma is None or len(set(self.p.kosten_je_firma)) == 1
+
+    @property
+    def kostenvektor(self) -> np.ndarray:
+        """Stückkosten je Shop in CHF."""
+        roh = self.p.kosten_je_firma if self.p.kosten_je_firma is not None else [self.p.kosten] * self.p.firmen
+        return np.asarray(roh, dtype=float) * self.p.alpha
+
+    @property
     def grenzkosten(self) -> float:
-        return self.p.kosten * self.p.alpha
+        """Stückkosten in CHF (bei unterschiedlichen Kosten: Durchschnitt über die Shops)."""
+        return float(self.kostenvektor.mean())
 
     def anteile(self, preise: Sequence[float]) -> np.ndarray:
         preise = np.asarray(preise, dtype=float)
@@ -66,7 +86,7 @@ class LogitMarkt:
 
     def gewinne(self, preise: Sequence[float]) -> np.ndarray:
         preise = np.asarray(preise, dtype=float)
-        return (preise - self.grenzkosten) * self.mengen(preise)
+        return (preise - self.kostenvektor) * self.mengen(preise)
 
     def _loese(self, aufschlag_von_anteil) -> float:
         """Löst p = c + aufschlag(p) für einen symmetrischen Preis per Bisektion.
@@ -74,8 +94,9 @@ class LogitMarkt:
         f(p) = p - c - aufschlag(p) ist monoton steigend (höherer Preis -> kleinerer Marktanteil ->
         kleinerer Aufschlag), negativ knapp über den Kosten und positiv bei sehr hohen Preisen.
         """
-        f = lambda p: p - self.grenzkosten - aufschlag_von_anteil(self.anteile([p] * self.p.firmen))
-        lo, hi = self.grenzkosten, self.grenzkosten + self.p.alpha * self.p.mu
+        c = float(self.kostenvektor[0])
+        f = lambda p: p - c - aufschlag_von_anteil(self.anteile([p] * self.p.firmen))
+        lo, hi = c, c + self.p.alpha * self.p.mu
         while f(hi) < 0:
             hi += self.p.alpha * self.p.mu * 4
         for _ in range(200):
@@ -83,21 +104,47 @@ class LogitMarkt:
             lo, hi = (mitte, hi) if f(mitte) < 0 else (lo, mitte)
         return float((lo + hi) / 2)
 
+    def nash_preise(self) -> list[float]:
+        """Nash-Preise je Shop. Bedingung erster Ordnung im Logit-Modell: p_i - c_i = alpha * mu / (1 - s_i)."""
+        if self.symmetrisch:
+            return [self._loese(lambda s: self.p.alpha * self.p.mu / (1 - s[0]))] * self.p.firmen
+        c, preise = self.kostenvektor, self.kostenvektor + self.p.alpha * self.p.mu * 1.5
+        for _ in range(5000):  # gedämpfte Fixpunkt-Iteration der besten Antworten
+            neu = c + self.p.alpha * self.p.mu / (1 - self.anteile(preise))
+            if np.abs(neu - preise).max() < 1e-10:
+                break
+            preise = 0.5 * preise + 0.5 * neu
+        return [float(x) for x in preise]
+
+    def monopol_preise(self) -> list[float]:
+        """Preise je Shop bei gemeinsamer Gewinnmaximierung. Im Logit-Modell setzt ein Mehrprodukt-Monopolist auf alle
+        Produkte denselben Aufschlag m = alpha * mu / (1 - Σ s_j) – auch bei unterschiedlichen Kosten."""
+        if self.symmetrisch:
+            return [self._loese(lambda s: self.p.alpha * self.p.mu / (1 - s.sum()))] * self.p.firmen
+        c, am = self.kostenvektor, self.p.alpha * self.p.mu
+        f = lambda m: m - am / (1 - self.anteile(c + m).sum())
+        lo, hi = 0.0, am
+        while f(hi) < 0:
+            hi += am * 4
+        for _ in range(200):
+            mitte = (lo + hi) / 2
+            lo, hi = (mitte, hi) if f(mitte) < 0 else (lo, mitte)
+        return [float(x) for x in c + (lo + hi) / 2]
+
     def nash_preis(self) -> float:
-        # Bedingung erster Ordnung im Logit-Modell: p - c = alpha * mu / (1 - s_i)
-        return self._loese(lambda s: self.p.alpha * self.p.mu / (1 - s[0]))
+        return float(np.mean(self.nash_preise()))
 
     def monopol_preis(self) -> float:
-        # Mehrprodukt-Monopolist: gleicher Aufschlag auf alle Produkte, p - c = alpha * mu / (1 - Σ s_j)
-        return self._loese(lambda s: self.p.alpha * self.p.mu / (1 - s.sum()))
+        return float(np.mean(self.monopol_preise()))
 
     def benchmarks(self) -> Benchmarks:
-        pn, pm = self.nash_preis(), self.monopol_preis()
-        n = self.p.firmen
+        pn, pm = self.nash_preise(), self.monopol_preise()
         return Benchmarks(
-            nash_preis=pn,
-            monopol_preis=pm,
-            nash_gewinn=float(self.gewinne([pn] * n)[0]),
-            monopol_gewinn=float(self.gewinne([pm] * n)[0]),
+            nash_preis=float(np.mean(pn)),
+            monopol_preis=float(np.mean(pm)),
+            nash_gewinn=float(self.gewinne(pn).mean()),
+            monopol_gewinn=float(self.gewinne(pm).mean()),
             grenzkosten=self.grenzkosten,
+            nash_preise=None if self.symmetrisch else tuple(pn),
+            monopol_preise=None if self.symmetrisch else tuple(pm),
         )

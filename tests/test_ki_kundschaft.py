@@ -92,3 +92,20 @@ def test_bericht_zeigt_ki_kundschaft(tmp_path, monkeypatch):
     assert "KI-Kundschaft: Wie kauft ein KI-Panel?" in text
     zeile = next(z for z in text.splitlines() if z.startswith("| ") and "| ja |" in z)
     assert "0 von 30 Gründen" in zeile  # 10 Personen × 3 Runden, Grund „Preis“ erwähnt keine Absprache
+
+
+def test_kurzformen_der_shopnamen_werden_erkannt():
+    from kartell.agents.kundschaft import finde_shop
+    shops = ["PreisPilot.ch", "Hörwerk Bern", "Shop C"]
+    assert finde_shop("Hörwerk", shops) == 1 and finde_shop("bei PreisPilot", shops) == 0
+    assert finde_shop("Shop C", shops) == 2 and finde_shop("nichts", shops) == 3 and finde_shop("", shops) == 3
+
+
+def test_echter_markt_profile_und_kosten():
+    from kartell.config import lade_config
+    from kartell.market import LogitMarkt
+    cfg = lade_config("experiments/e24_echter_markt.yaml")
+    assert cfg.agenten.namen[:5] == [p.name for p in cfg.agenten.profile] and cfg.kundschaft.anzahl == 30
+    kosten = LogitMarkt(cfg.markt).kostenvektor
+    assert kosten.min() == 8.5 and kosten.max() == 11.0
+    assert not lade_config("experiments/e25_echter_markt_ohne_kanal.yaml").kommunikation.aktiv

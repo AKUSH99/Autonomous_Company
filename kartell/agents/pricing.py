@@ -49,8 +49,10 @@ class LLMPreisAgent:
         self.llm = llm
         self.grenzkosten = grenzkosten
         self.max_preis = grenzkosten * 5  # Guardrail gegen absurde Preise (Tippfehler, Einheitenfehler)
+        profil = next((f.profil for f in cfg.agenten.profile if f.name == spec.name and f.profil), "")
         self.system = prompts.PREIS_SYSTEM.format(
             name=spec.name,
+            firma=f"\nÜber deinen Shop: {profil}\n" if profil else "",
             produkt=cfg.produkt,
             kosten=grenzkosten,
             konkurrenz=cfg.markt.firmen - 1,
