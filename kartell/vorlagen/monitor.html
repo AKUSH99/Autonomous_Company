@@ -137,6 +137,7 @@
   @media (max-width: 900px) { .buehne-mitte { grid-template-columns: 1fr; } }
   .kurve { position: relative; margin: 0; min-width: 0; border-radius: 10px; transition: box-shadow 0.3s; }
   .kurve.blitz { animation: blitz 1.2s ease-out; }
+  .kurve.verdeckt [data-geist] { visibility: hidden; }
   @keyframes blitz { 0% { box-shadow: 0 0 0 3px var(--kartell); } 100% { box-shadow: 0 0 0 3px transparent; } }
   .kurve svg { display: block; width: 100%; height: auto; overflow: visible; touch-action: pan-y; }
   .kurve text { font: 500 11px var(--text); fill: var(--leise); font-variant-numeric: tabular-nums; }
@@ -224,6 +225,66 @@
   .schalter input { accent-color: var(--tinte); width: 16px; height: 16px; }
   #wahl-erklaerung { max-width: 70ch; color: var(--leise); margin: 0 0 16px; }
 
+  /* Tippfrage vor jedem Kapitel */
+  .quiz { display: grid; gap: 12px; }
+  .quiz-frage { font: 600 1.25rem/1.35 var(--text); margin: 0; text-wrap: balance; max-width: 52ch; }
+  .optionen { display: grid; gap: 8px; }
+  .option { display: flex; align-items: center; gap: 12px; text-align: left; width: 100%; padding: 12px 14px; border-radius: 12px;
+    border: 1.5px solid var(--linie); background: var(--flaeche); color: var(--tinte); font: 500 1rem/1.35 var(--text); cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s; }
+  .option:hover:not(:disabled) { border-color: var(--tinte); transform: translateX(3px); }
+  .option:disabled { cursor: default; }
+  .option .marke { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--linie); display: grid; place-items: center;
+    font: 700 0.8rem/1 var(--text); color: var(--leise); }
+  .option .marke svg { width: 14px; height: 14px; }
+  .option .urteil { margin-left: auto; font: 600 0.78rem/1 var(--text); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+  .option[data-wertung="richtig"].gezeigt { border-color: var(--wettbewerb); background: var(--hauch-w); }
+  .option[data-wertung="richtig"].gezeigt .marke { background: var(--wettbewerb); border-color: var(--wettbewerb); color: var(--flaeche); }
+  .option.gewaehlt[data-wertung="falsch"] { border-color: var(--kartell); background: var(--hauch-k); }
+  .option.gewaehlt[data-wertung="falsch"] .marke { background: var(--kartell); border-color: var(--kartell); color: var(--flaeche); }
+  .option.gewaehlt[data-wertung="halb"] { border-color: var(--leise); background: var(--flaeche-2); }
+  .option.gewaehlt[data-wertung="halb"] .marke { background: var(--leise); border-color: var(--leise); color: var(--flaeche); }
+  .option.blass { opacity: 0.55; }
+  .quiz-fuss { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .textknopf { border: 0; background: none; padding: 4px 0; color: var(--leise); font: 500 0.88rem/1.2 var(--text); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .textknopf:hover { color: var(--tinte); }
+  .aufloesung { display: grid; gap: 10px; }
+  .aufloesung.neu-auf { animation: auftauchen 0.5s ease-out both; }
+  .rueckmeldung { margin: 0; font: 500 1rem/1.5 var(--text); max-width: 60ch; }
+  .rueckmeldung b { font-weight: 700; }
+
+  /* Spiel: Du bist die Aufsicht */
+  .fall { background: var(--flaeche); border: 1px solid var(--linie); border-radius: 16px; padding: 20px; box-shadow: var(--schatten); display: grid; gap: 16px; }
+  @media (max-width: 560px) { .fall { padding: 14px; border-radius: 12px; } }
+  .fall-kopf { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .fall-kopf h3 { font: 800 1.6rem/1 var(--display); margin: 0; }
+  .punkte { display: flex; gap: 6px; align-items: center; }
+  .punkte i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--linie); }
+  .punkte i.ja { background: var(--wettbewerb); border-color: var(--wettbewerb); }
+  .punkte i.nein { background: var(--kartell); border-color: var(--kartell); }
+  .punkte i.jetzt { border-color: var(--tinte); }
+  .fall-mitte { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 860px) { .fall-mitte { grid-template-columns: 1fr; } }
+  .fall [data-kurve] svg { display: block; width: 100%; height: auto; }
+  .fall [data-kurve] svg text { font: 500 11px var(--text); fill: var(--leise); font-variant-numeric: tabular-nums; }
+  .fall-kanal { display: grid; gap: 10px; min-width: 0; }
+  .fall .kurz .txt { -webkit-line-clamp: 4; }
+  .fall .blase.kurz { color: var(--tinte); }
+  .entscheid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .entscheid button { padding: 14px 10px; border-radius: 12px; border: 1.5px solid var(--linie); background: var(--flaeche-2); color: var(--tinte);
+    font: 800 1.35rem/1 var(--display); letter-spacing: 0.02em; cursor: pointer; }
+  .entscheid button:hover { border-color: var(--tinte); }
+  .entscheid button[data-wahl="kartell"]:hover { border-color: var(--kartell); }
+  .entscheid button[data-wahl="wettbewerb"]:hover { border-color: var(--wettbewerb); }
+  .urteil-box { display: grid; gap: 10px; padding: 14px 16px; border-radius: 12px; background: var(--flaeche-2); }
+  .urteil-box h4 { margin: 0; font: 700 1.05rem/1.3 var(--text); display: flex; align-items: center; gap: 8px; }
+  .urteil-box h4 i { width: 10px; height: 10px; border-radius: 50%; background: var(--leise); }
+  .urteil-box[data-ergebnis="ja"] h4 i { background: var(--wettbewerb); }
+  .urteil-box[data-ergebnis="nein"] h4 i { background: var(--kartell); }
+  .urteil-box p { margin: 0; font-size: 0.95rem; }
+  .ende { display: grid; gap: 10px; justify-items: start; padding: 10px 0; }
+  .ende strong { font: 900 clamp(3rem, 8vw, 5rem)/0.9 var(--display); font-variant-numeric: tabular-nums; }
+
   .fuss { padding-block: 64px 48px; color: var(--leise); font-size: 0.9rem; display: grid; gap: 10px; }
   .fuss p { margin: 0; max-width: 78ch; }
   .fuss h2 { font: 800 1.5rem/1 var(--display); color: var(--tinte); margin: 0 0 6px; }
@@ -257,6 +318,13 @@
 
 <main>
   <div id="kapitel-liste"><div class="rahmen laden">Die Aufzeichnungen werden geladen …</div></div>
+
+  <section class="abschnitt rahmen" id="aufsicht">
+    <span class="kap-nr">Spiel</span>
+    <h2>Du bist die Aufsicht</h2>
+    <p>Du arbeitest bei der Wettbewerbskommission und siehst nur, was eine Behörde sehen kann: die Preise und den öffentlichen Kanal. Kartell oder Wettbewerb? Danach zeigen wir dir, was die KIs privat dachten. Sechs echte Läufe, jedes Mal neu gemischt.</p>
+    <div class="fall" id="fall"></div>
+  </section>
 
   <section class="abschnitt rahmen" id="alle">
     <span class="kap-nr">Alle Läufe</span>
@@ -300,7 +368,8 @@ const preisHtml = (p) => { const [f, r] = chf(p).split("."); return `<b>${f}</b>
 const AUGE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A9.8 9.8 0 0 1 12 5c5 0 9 4.5 10 7-0.4 1-1.3 2.5-2.7 3.9M6.6 6.6C4.5 8 3.1 10 2 12c1 2.5 5 7 10 7 1.8 0 3.4-.5 4.8-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>`;
 const SPIELEN = `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>`;
 const PAUSE = `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg>`;
-const SVGNS = "http://www.w3.org/2000/svg";
+const HAKEN = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>`;
+const KREUZ = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>`;
 let DATEN;
 const BUEHNEN = [];
 let groesseTimer;
@@ -358,7 +427,8 @@ class Buehne {
     this.zeichneKurve();
     this.baueProtokoll();
     this.knopf.addEventListener("click", () => (this.laeuft ? this.halte() : this.spiele()));
-    this.regler.addEventListener("input", () => { this.halte(); this.setze(Number(this.regler.value)); });
+    this.regler.addEventListener("input", () => { this.halte(); this.aufdecken(); this.setze(Number(this.regler.value)); });
+    if (this.o.verdeckt) this.w.querySelector(".kurve").classList.add("verdeckt");
     this.setze(this.n);
   }
 
@@ -397,7 +467,7 @@ class Buehne {
     this.shops.forEach((sh, i) => {
       const pts = this.runden.map((r) => `${x(r.runde)},${y(r.preise[sh])}`).join(" ");
       const w = viele ? 1.2 : 2.5;
-      s += `<polyline points="${pts}" fill="none" stroke="${farbe(i)}" stroke-width="${w}" stroke-opacity="0.2" stroke-linejoin="round"/>
+      s += `<polyline data-geist points="${pts}" fill="none" stroke="${farbe(i)}" stroke-width="${w}" stroke-opacity="0.2" stroke-linejoin="round"/>
             <polyline data-linie="${i}" fill="none" stroke="${farbe(i)}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"/>`;
     });
     if (!viele) this.shops.forEach((sh, i) => { s += `<circle data-ende="${i}" r="5" fill="${farbe(i)}" stroke="var(--flaeche)" stroke-width="2"/>`; });
@@ -543,11 +613,12 @@ class Buehne {
   }
   schritt() {
     if (!this.laeuft) return;
-    if (this.n >= this.o.bis) return this.halte();
+    if (this.n >= this.o.bis) { this.halte(); this.aufdecken(); this.o.beiEnde?.(); return; }
     this.setze(this.n + 1, true);
     const moment = this.momente.some((m) => m.runde === this.n);
     this.timer = setTimeout(() => this.schritt(), moment ? 3000 : this.tempo);
   }
+  aufdecken() { this.w.querySelector(".kurve").classList.remove("verdeckt"); }
   halte() {
     this.laeuft = false; clearTimeout(this.timer);
     this.knopf.innerHTML = `${SPIELEN}<span>${this.n >= this.o.bis ? "Nochmals abspielen" : "Weiter abspielen"}</span>`;
@@ -557,28 +628,61 @@ class Buehne {
 /* ---------------------------------------------------------------- Kapitel ------------------------------------------------------------- */
 function zeichneKapitel() {
   const liste = DATEN.geschichte || [];
-  $("wegweiser").innerHTML = liste.map((a) => `<li><a href="#kap-${a.nummer}"><span class="w-nr">Kapitel ${a.nummer} · ${esc(a.titel)}</span><span class="w-frage">${esc(a.frage)}</span><span class="w-antwort">${esc(a.antwort)}</span></a></li>`).join("");
+  $("wegweiser").innerHTML = liste.map((a) => `<li><a href="#kap-${a.nummer}"><span class="w-nr">Kapitel ${a.nummer} · ${esc(a.titel)}</span><span class="w-frage">${esc(a.frage)}</span><span class="w-antwort">Erst tippen, dann auflösen</span></a></li>`).join("")
+    + `<li><a href="#aufsicht"><span class="w-nr">Spiel</span><span class="w-frage">Erkennst du ein Kartell?</span><span class="w-antwort">Sechs echte Läufe, du entscheidest</span></a></li>`;
   if (!liste.length) { $("kapitel-liste").innerHTML = ""; return; }
   $("kapitel-liste").innerHTML = liste.map((a) => {
     const v = DATEN.versuche[a.versuch], d = v.durchgaenge[a.durchgang];
     return `<section class="kap rahmen" id="kap-${a.nummer}">
       <div class="kap-kopf">
         <div><span class="kap-nr">Kapitel ${a.nummer}</span><h2>${esc(a.titel)}</h2><p class="kap-frage">${esc(a.frage)}</p></div>
-        <div class="kap-text"><p class="kap-antwort">${esc(a.antwort)}</p><p>${esc(a.text)}</p>
-          <dl class="fakten">${a.fakten.map((f) => `<div><dt>${esc(f.zahl)}</dt><dd>${esc(f.text)}</dd></div>`).join("")}</dl></div>
+        <div class="kap-text">${a.quiz ? `<div class="quiz" data-quiz="${a.nummer}">
+            <span class="etikett">Was glaubst du?</span>
+            <p class="quiz-frage">${esc(a.quiz.frage)}</p>
+            <div class="optionen">${a.quiz.optionen.map((o, i) => `<button type="button" class="option" data-i="${i}" data-wertung="${esc(o.wertung)}"><span class="marke">${"ABC"[i]}</span><span>${esc(o.text)}</span><span class="urteil"></span></button>`).join("")}</div>
+            <div class="quiz-fuss"><button type="button" class="textknopf" data-ueberspringen>Ohne Tipp direkt abspielen</button></div>
+          </div>` : ""}
+          <div class="aufloesung" data-aufloesung="${a.nummer}" ${a.quiz ? "hidden" : ""}>
+            <p class="rueckmeldung" data-rueckmeldung></p>
+            <p class="kap-antwort">${esc(a.antwort)}</p>
+            <dl class="fakten">${a.fakten.map((f) => `<div><dt>${esc(f.zahl)}</dt><dd>${esc(f.text)}</dd></div>`).join("")}</dl>
+          </div></div>
       </div>
       <div class="buehne" data-kap="${a.nummer}"></div>
       <p class="quelle">Aufgezeichneter Lauf: ${esc(v.kurz)} · Durchgang ${d.wiederholung} · Runden ${a.von}–${a.bis} von ${d.runden.length}. Die Zahlen oben gelten für alle Läufe des Versuchs.</p>
     </section>`;
   }).join("");
-  const beobachter = "IntersectionObserver" in window && !REDUZIERT ? new IntersectionObserver((eintraege) => {
-    eintraege.forEach((e) => { if (e.isIntersecting && !e.target._gespielt) { e.target._gespielt = true; e.target._buehne.spiele(); } });
-  }, { threshold: 0.45 }) : null;
   liste.forEach((a) => {
     const el = document.querySelector(`.buehne[data-kap="${a.nummer}"]`);
-    el._buehne = new Buehne(el, { lauf: DATEN.versuche[a.versuch].durchgaenge[a.durchgang], von: a.von, bis: a.bis, ruhe: a.ruhe,
-                                  momente: a.momente, modus: "geschichte", tempo: 620 });
-    if (beobachter) beobachter.observe(el);
+    const auf = document.querySelector(`[data-aufloesung="${a.nummer}"]`), quiz = document.querySelector(`[data-quiz="${a.nummer}"]`);
+    // Auflösen: nach dem Tipp, beim Überspringen oder wenn der Lauf ohne Tipp zu Ende gespielt ist
+    const aufloesen = (gewaehlt) => {
+      if (quiz) {
+        if (quiz.dataset.fertig) return;
+        quiz.dataset.fertig = "1";
+        quiz.querySelectorAll(".option").forEach((b) => {
+          const w = b.dataset.wertung, eigen = gewaehlt != null && Number(b.dataset.i) === gewaehlt;
+          b.disabled = true;
+          if (w === "richtig") { b.classList.add("gezeigt"); b.querySelector(".marke").innerHTML = HAKEN; b.querySelector(".urteil").textContent = eigen ? "Dein Tipp · richtig" : "Richtig"; }
+          if (eigen && w !== "richtig") { b.classList.add("gewaehlt"); b.querySelector(".marke").innerHTML = w === "halb" ? "½" : KREUZ; b.querySelector(".urteil").textContent = w === "halb" ? "Dein Tipp · halb richtig" : "Dein Tipp"; }
+          if (!eigen && w !== "richtig") b.classList.add("blass");
+        });
+        quiz.querySelector(".quiz-fuss").hidden = true;
+        const o = gewaehlt != null ? a.quiz.optionen[gewaehlt] : null;
+        auf.querySelector("[data-rueckmeldung]").innerHTML = o
+          ? `<b>${o.wertung === "richtig" ? "Richtig." : o.wertung === "halb" ? "Halb richtig." : "Daneben."}</b> ${esc(o.erklaerung)}`
+          : esc(a.quiz.optionen.find((x) => x.wertung === "richtig")?.erklaerung || "");
+      }
+      auf.hidden = false;
+      if (!REDUZIERT) { auf.classList.remove("neu-auf"); void auf.offsetWidth; auf.classList.add("neu-auf"); }
+    };
+    el._buehne = new Buehne(el, { lauf: DATEN.versuche[a.versuch].durchgaenge[a.durchgang], von: a.von, bis: a.bis,
+                                  ruhe: a.quiz ? a.von : a.ruhe, verdeckt: !!a.quiz, momente: a.momente, modus: "geschichte",
+                                  tempo: 620, beiEnde: () => aufloesen(null) });
+    if (quiz) {
+      quiz.querySelectorAll(".option").forEach((b) => b.addEventListener("click", () => { aufloesen(Number(b.dataset.i)); el._buehne.spiele(); }));
+      quiz.querySelector("[data-ueberspringen]").addEventListener("click", () => { aufloesen(null); el._buehne.spiele(); });
+    }
   });
   // Grosses Preisschild aus dem ersten Kapitel: Preis am Ende, Runde ab der beide gleich sind
   const a = liste[0], lauf = DATEN.versuche[a.versuch].durchgaenge[a.durchgang], letzte = lauf.runden[lauf.runden.length - 1];
@@ -588,6 +692,79 @@ function zeichneKapitel() {
     $("held-preis").innerHTML = preisHtml(p); $("held-statt").textContent = chf(lauf.benchmarks.nash_preis);
     $("held-fuss").textContent = `CHF · so viel verlangen beide KI-Shops ab Runde ${lauf.runden[ab - 1].runde}`;
   }
+}
+
+/* ---------------------------------------------------------------- Spiel: Du bist die Aufsicht -------------------------------------- */
+// Fälle: klare Läufe aus den drei Kapiteln (Kartell = Kollusionsindex über 0.5; im Spiel nur ≥ 0.6 oder ≤ 0.2)
+const SPIEL_FAELLE = 6, VERRAET = /koopera|absprach|gleichgewicht|halte|signal|unterbiet|preiskampf|preiskrieg|niveau/i;
+let spiel = null;
+function mischen(liste) { const l = [...liste]; for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [l[i], l[j]] = [l[j], l[i]]; } return l; }
+function neuesSpiel() {
+  const pool = [];
+  DATEN.versuche.forEach((v, vi) => { if (!v.kapitel) return; v.durchgaenge.forEach((d, di) => { if (d.ki >= 0.6 || d.ki <= 0.2) pool.push({ vi, di, kartell: d.ki > 0.5 }); }); });
+  const k = mischen(pool.filter((f) => f.kartell)), w = mischen(pool.filter((f) => !f.kartell)), halb = Math.floor(SPIEL_FAELLE / 2);
+  spiel = { faelle: mischen([...k.slice(0, halb), ...w.slice(0, SPIEL_FAELLE - halb)]), i: 0, ergebnisse: [] };
+  zeichneFall();
+}
+function fallKurve(lauf, band) {
+  const W = 520, H = 210, m = { l: 34, r: 76, t: 12, b: 26 }, b = lauf.benchmarks, rs = lauf.runden, shops = Object.keys(rs[0].preise);
+  const preise = rs.flatMap((r) => shops.map((s) => r.preise[s]));
+  const lo = Math.floor(Math.min(b.nash_preis, ...preise) - 0.6), hi = Math.ceil(Math.max(b.monopol_preis, ...preise) + 0.6);
+  const x = (i) => m.l + (rs.length === 1 ? 0.5 : i / (rs.length - 1)) * (W - m.l - m.r), y = (p) => m.t + (hi - p) / (hi - lo) * (H - m.t - m.b);
+  const schritt = [1, 2, 5, 10, 20].find((st) => (hi - lo) / st <= 6) || 50;
+  let s = "";
+  for (let p = Math.ceil(lo / schritt) * schritt; p <= hi; p += schritt) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(p)}" y2="${y(p)}" stroke="var(--linie)"/><text x="${m.l - 7}" y="${y(p) + 4}" text-anchor="end">${p}</text>`;
+  s += `<text x="${m.l}" y="${H - 8}">Runde 1</text><text x="${W - m.r}" y="${H - 8}" text-anchor="end">${rs[rs.length - 1].runde}</text>`;
+  if (band) s += `<rect x="${m.l}" y="${y(b.monopol_preis)}" width="${W - m.l - m.r}" height="${y(b.nash_preis) - y(b.monopol_preis)}" fill="var(--band)"/>
+    <line x1="${m.l}" x2="${W - m.r}" y1="${y(b.monopol_preis)}" y2="${y(b.monopol_preis)}" stroke="var(--kartell)" stroke-width="1.5" stroke-dasharray="2 3"/>
+    <text x="${W - m.r + 7}" y="${y(b.monopol_preis) + 4}" style="fill:var(--kartell);font-weight:600">Kartell</text>`;
+  s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(b.nash_preis)}" y2="${y(b.nash_preis)}" stroke="var(--wettbewerb)" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <text x="${W - m.r + 7}" y="${y(b.nash_preis) + 4}" style="fill:var(--tinte);font-weight:600">Wettbewerb</text>`;
+  shops.forEach((sh, i) => { s += `<polyline points="${rs.map((r, j) => `${x(j)},${y(r.preise[sh])}`).join(" ")}" fill="none" stroke="${farbe(i)}" stroke-width="2.2" stroke-linejoin="round"/>`; });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Preise beider Shops über alle Runden">${s}</svg>`;
+}
+function zeichneFall() {
+  const f = spiel.faelle[spiel.i];
+  const punkte = `<span class="punkte" aria-label="${spiel.ergebnisse.filter(Boolean).length} richtig">${spiel.faelle.map((_, i) => `<i class="${i < spiel.ergebnisse.length ? (spiel.ergebnisse[i] ? "ja" : "nein") : i === spiel.i ? "jetzt" : ""}"></i>`).join("")}</span>`;
+  if (!f) {
+    const richtig = spiel.ergebnisse.filter(Boolean).length;
+    $("fall").innerHTML = `<div class="fall-kopf"><h3>Auswertung</h3>${punkte}</div>
+      <div class="ende"><strong>${richtig} von ${spiel.faelle.length}</strong>
+        <p class="rueckmeldung">${richtig === spiel.faelle.length ? "Alle erkannt. Mit den Preisen allein ist das selten so eindeutig." : "So geht es echten Behörden: Hohe, gleiche Preise können ein Kartell sein – oder einfach ein ruhiger Markt."} Was die KIs wirklich wollten, stand nur in ihren privaten Notizen.</p>
+        <button type="button" class="knopf" id="spiel-neu">${SPIELEN}<span>Neue Fälle</span></button></div>`;
+    $("spiel-neu").addEventListener("click", neuesSpiel);
+    return;
+  }
+  const v = DATEN.versuche[f.vi], d = v.durchgaenge[f.di], haelfte = d.runden.slice(Math.floor(d.runden.length / 2));
+  const msgs = haelfte.flatMap((r) => (r.nachrichten || []).filter((m) => !m.status || m.status === "zugestellt").map((m) => ({ ...m, runde: r.runde }))).slice(-2);
+  const shops = Object.keys(d.runden[0].preise);
+  const kanal = !d.kanal ? `<p class="hinweis">Kein Kanal: Diese Shops können sich nicht schreiben. Du hast nur die Preise.</p>`
+    : msgs.length ? msgs.map((m) => { const i = Math.max(0, shops.indexOf(m.von)); return `<div class="eintrag" style="--farbe:${farbe(i)}"><span class="avatar" aria-hidden="true">${esc(m.von.replace("Shop ", "").slice(0, 2))}</span><div class="blase kurz" title="Klicken für den ganzen Text"><span class="txt">${esc(m.text)}</span></div></div>`; }).join("")
+    : `<p class="still">– in der zweiten Hälfte kein Wort im Kanal –</p>`;
+  $("fall").innerHTML = `<div class="fall-kopf"><h3>Fall ${spiel.i + 1} von ${spiel.faelle.length}</h3>${punkte}</div>
+    <div class="fall-mitte"><div data-kurve>${fallKurve(d, false)}</div>
+      <div class="fall-kanal"><span class="etikett">Öffentlicher Kanal, letzte Nachrichten</span>${kanal}
+        <div class="entscheid" data-entscheid><button type="button" data-wahl="kartell">Kartell</button><button type="button" data-wahl="wettbewerb">Wettbewerb</button></div>
+        <div data-urteil></div></div></div>`;
+  $("fall").onclick = (ev) => { const k = ev.target.closest(".kurz"); if (k) k.classList.remove("kurz"); };
+  $("fall").querySelectorAll("[data-wahl]").forEach((b) => b.addEventListener("click", () => {
+    const tipp = b.dataset.wahl === "kartell", richtig = tipp === f.kartell;
+    spiel.ergebnisse.push(richtig);
+    $("fall").querySelector("[data-kurve]").innerHTML = fallKurve(d, true);
+    $("fall").querySelector("[data-entscheid]").hidden = true;
+    // Verräterische private Notiz aus der zweiten Hälfte, sonst die letzte
+    let notiz = null;
+    for (const r of [...haelfte].reverse()) { for (const s of shops) { const t = r.entscheide?.[s]?.plan; if (t && VERRAET.test(t)) { notiz = { s, t, runde: r.runde }; break; } } if (notiz) break; }
+    if (!notiz) { const r = haelfte[haelfte.length - 1], s = shops[0], t = r.entscheide?.[s]?.plan || r.entscheide?.[s]?.beobachtungen; if (t) notiz = { s, t, runde: r.runde }; }
+    const i = notiz ? Math.max(0, shops.indexOf(notiz.s)) : 0;
+    $("fall").querySelector("[data-urteil]").innerHTML = `<div class="urteil-box" data-ergebnis="${richtig ? "ja" : "nein"}">
+        <h4><i></i>${richtig ? "Richtig erkannt" : "Daneben"}: ${f.kartell ? "Kartell" : "Wettbewerb"}</h4>
+        <p>Kollusionsindex ${d.ki.toFixed(2)} (0 = Wettbewerb, 1 = perfektes Kartell). Das war ${esc(v.kurz)}, Durchgang ${d.wiederholung}.</p>
+        ${notiz ? `<div class="eintrag" style="--farbe:${farbe(i)};max-width:100%"><span class="avatar" aria-hidden="true">${esc(notiz.s.replace("Shop ", "").slice(0, 2))}</span><div class="gedanke"><div class="gedanke-kopf">${AUGE} privat · ${esc(notiz.s)} · Runde ${notiz.runde}</div><span class="txt">${esc(notiz.t)}</span></div></div>` : ""}
+        <div><button type="button" class="knopf" data-weiter>${SPIELEN}<span>${spiel.i + 1 < spiel.faelle.length ? "Nächster Fall" : "Auswertung"}</span></button></div>
+      </div>`;
+    $("fall").querySelector("[data-weiter]").addEventListener("click", () => { spiel.i++; zeichneFall(); $("aufsicht").scrollIntoView({ behavior: REDUZIERT ? "auto" : "smooth", block: "start" }); });
+  }));
 }
 
 /* ---------------------------------------------------------------- Wand ---------------------------------------------------------------- */
@@ -667,6 +844,7 @@ function zeichneFuss() {
   }
   $("kopfzeile").textContent = `KI-Kartell · Experiment mit echten KI-Agenten · ${DATEN.anzahl_laeufe || ""} aufgezeichnete Läufe`;
   zeichneKapitel();
+  neuesSpiel();
   zeichneWand();
   zeichneWahl();
   waehle(0, 0);
