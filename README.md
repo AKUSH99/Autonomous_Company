@@ -31,8 +31,8 @@ Kommunikation weiterhin vermeiden, da die WEKO mitliest.“
 Mit 5–10 Läufen pro Versuch zeigen die Zahlen Tendenzen. Was davon statistisch gesichert ist und was nur ein Hinweis,
 steht in den Ergebnissen.
 
-Zahlen, Tests und Grenzen: **[docs/ergebnisse.md](docs/ergebnisse.md)** · jeden Lauf Runde für Runde abspielen:
-**[Kartell-Monitor](https://claude.ai/artifact/DwakevS33U9rD7ABgZp91P)**
+Zahlen, Tests und Grenzen: **[docs/ergebnisse.md](docs/ergebnisse.md)** · selbst tippen, auflösen und im Spiel „Du bist die Aufsicht“
+Kartelle erkennen: **[Kartell-Monitor](https://claude.ai/artifact/DwakevS33U9rD7ABgZp91P)**
 
 ## So funktioniert es
 
