@@ -246,19 +246,22 @@ def modellname(kurzname: str) -> str:
 # Die Geschichte des Projekts: eine Frage, drei Kapitel – alle mit einem Modell (DeepSeek). Alles andere steht im Anhang:
 # Vergleichsläufe und zweites Modell (Nemotron) fürs Verbot, KI-Kundschaft, Varianten (Anker, mehr Shops, Werkzeug).
 KAPITEL_TITEL = {1: "1 · Sprechen sie sich ab?", 2: "2 · Ist es ein echtes Kartell?", 3: "3 · Kann man sie stoppen?",
-                 0: "Anhang"}
+                 4: "4 · Was ändert sich mit mehr Shops?", 0: "Anhang"}
 KAPITEL_ANTWORT = {
     1: "Oft: Mit Kanal landen 4 von 6 Läufen im Kartell, ohne Kanal 2 von 6.",
     2: "Ja: Wer abweicht, wird sofort bestraft (6 von 6) – danach bieten sie Versöhnung an.",
     3: "Teilweise: Filter und Verbot machen sie leiser. Mit Verbot planen sie in den Notizen, still zu bleiben.",
-    0: ""}
+    4: "", 0: ""}
 ZEILEN_IM_ANHANG = ["Verbot: Vergleichsläufe (DeepSeek)", "Verbot mit zweitem Modell (Nemotron)", "KI-Kundschaft",
                     "Weitere Varianten"]
 
 
 def kapitel(name: str) -> int:
-    """Kapitel eines Versuchs (0 = Anhang). Fürs Verbot zählen in Kapitel 3 die vorregistrierten DeepSeek-Läufe."""
+    """Kapitel eines Versuchs (0 = Anhang). Fürs Verbot zählen in Kapitel 3 die vorregistrierten DeepSeek-Läufe.
+    Kapitel 4 vergleicht 2, 5 und 10 Shops mit demselben Modell (Space Bunny)."""
     kuerzel = name.split("_")[0]
+    if "space-bunny" in name:
+        return 4
     if "nemotron" in name or (kuerzel in ("e1", "e2") and "replikation" in name):
         return 0
     return {"e1": 1, "e2": 1, "e16": 2, "e17": 2, "e3": 3, "e4": 3, "e18": 3, "e19": 3}.get(kuerzel, 0)
@@ -294,7 +297,7 @@ def sammle(ordner: list[Path]) -> list[dict]:
         erster = laeufe[0]
         versuche.append({"name": name, "kurz": anzeigename(name, erster["titel"]),
                          "kapitel": kapitel(name), "kapitel_titel": KAPITEL_TITEL[kapitel(name)],
-                         "kapitel_antwort": KAPITEL_ANTWORT[kapitel(name)],
+                         "kapitel_antwort": KAPITEL_ANTWORT[kapitel(name)], "shops": len(erster["runden"][0]["preise"]),
                          "erklaerung": ERKLAERUNG.get(name.split("_")[0], erster["beschreibung"]),
                          "durchgaenge": laeufe})
     return eindeutige_namen(versuche)
@@ -335,7 +338,8 @@ def eindeutige_namen(versuche: list[dict]) -> list[dict]:
         del v["_modelle"]
     # Kapitel 1–3, dann der Anhang Zeile für Zeile (sort ist stabil, die Versuchsnummern bleiben geordnet)
     rang = {z: i + 1 for i, z in enumerate(ZEILEN_IM_ANHANG)}
-    return sorted(versuche, key=lambda v: (v.get("kapitel") or 99, rang.get(v["zeile"], 0)))
+    # in Kapitel 4 nach Anzahl Shops (2, 5, 10)
+    return sorted(versuche, key=lambda v: (v.get("kapitel") or 99, rang.get(v["zeile"], 0), v.get("shops", 0) if v.get("kapitel") == 4 else 0))
 
 
 def _auszuege(zitat: str) -> list[str]:
