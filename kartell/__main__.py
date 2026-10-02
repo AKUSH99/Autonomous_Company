@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from .config import DENKEN, OPENROUTER_URL, ComplianceConfig, LLMSpec, kurz, lade_config, mit_denken, mit_modell, voreinstellung
+from .config import DENKEN, DENKEN_MAXIMAL_ERSATZ, OPENROUTER_URL, ComplianceConfig, LLMSpec, kurz, lade_config, mit_denken, mit_modell, voreinstellung
 
 
 def _lade(args):
@@ -93,6 +93,53 @@ def _pruefe_modell(spec: LLMSpec, berichte) -> None:
     print(f"{len(ids)} Modelle bei {spec.base_url}" + (f": {', '.join(ids)}" if len(ids) <= 20 else ""))
     if spec.model not in ids:
         raise SystemExit(f"Modell {spec.model} ist bei {spec.base_url} nicht verfügbar – Modellnamen prüfen (siehe modelle.txt).")
+
+
+def preise_openrouter(modell: str, modelle: list[dict]) -> dict | None:
+    """Preisangaben eines Modells aus OpenRouters Modellliste (GET /models), oder None, wenn es fehlt."""
+    eintrag = next((m for m in modelle if m.get("id") == modell), None)
+    return None if eintrag is None else (eintrag.get("pricing") or {})
+
+
+def ist_gratis(preise: dict | None) -> bool:
+    """Nur wenn alle Preisfelder genau 0 sind. Fehlt die Angabe, gilt das Modell nicht als gratis."""
+    if not preise:
+        return False
+    try:
+        return all(float(v) == 0 for v in preise.values() if v not in (None, ""))
+    except (TypeError, ValueError):
+        return False
+
+
+def _pruefe_gratis(spec: LLMSpec, berichte) -> None:
+    """Sicherung vor Läufen mit `nur_gratis: true`: Kostet das Modell bei OpenRouter etwas, startet kein Lauf."""
+    import urllib.request
+    if spec.provider != "openai_compat" or not (spec.base_url or "").startswith(OPENROUTER_URL):
+        raise SystemExit(f"nur_gratis: {spec.kurzname} läuft nicht über OpenRouter – Preis nicht prüfbar, kein Lauf.")
+    with urllib.request.urlopen(f"{OPENROUTER_URL}/models", timeout=30) as antwort:
+        modelle = json.load(antwort).get("data", [])
+    preise = preise_openrouter(spec.model, modelle)
+    (berichte / f"preise_{kurz(spec.model)}.json").write_text(json.dumps(preise, indent=2), encoding="utf-8")
+    if not ist_gratis(preise):
+        raise SystemExit(f"nur_gratis: {spec.model} ist nicht gratis ({preise}) – kein Lauf gestartet, nichts ausgegeben.")
+    print(f"Preis geprüft: {spec.model} ist gratis ({preise}).")
+
+
+def _denkstufe_pruefen(spec: LLMSpec) -> str:
+    """Für denken: maximal – eine Probe-Anfrage mit der höchsten Stufe; lehnt das Modell sie ab, die nächsttiefere."""
+    import os
+
+    import openai
+    client = openai.OpenAI(base_url=spec.base_url, api_key=os.environ.get(spec.api_key_env or "", "") or "nicht-benoetigt")
+    for stufe in DENKEN_MAXIMAL_ERSATZ:
+        try:
+            client.chat.completions.create(model=spec.model, messages=[{"role": "user", "content": "Antworte nur mit OK."}],
+                                           max_tokens=2000, extra_body={"reasoning": {"effort": stufe}})
+            print(f"Denkstufe maximal: Modell akzeptiert effort={stufe}.")
+            return stufe
+        except openai.BadRequestError as e:
+            print(f"Denkstufe effort={stufe} abgelehnt ({str(e)[:160]}) – versuche die nächste.")
+    return DENKEN_MAXIMAL_ERSATZ[-1]
 
 
 def _modellsuche(suche: dict, berichte) -> None:
@@ -267,6 +314,11 @@ def _auftrag(args) -> None:
             zu_pruefen[s.kurzname] = s
     for s in zu_pruefen.values():
         _pruefe_modell(s, berichte)
+        if auftrag.get("nur_gratis"):
+            _pruefe_gratis(s, berichte)
+    stufen = {e.get("denken", auftrag.get("denken")) for e in auftrag.get("laeufe", [])} | {auftrag.get("denken")}
+    if "maximal" in stufen:
+        DENKEN["maximal"] = {"reasoning": {"effort": _denkstufe_pruefen(spec)}}
     waechter = None
     if auftrag.get("budget_usd"):
         waechter = Budgetwaechter(spec, float(auftrag["budget_usd"]), float(auftrag.get("reserve_usd", 0.5)))

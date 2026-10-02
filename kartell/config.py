@@ -174,7 +174,17 @@ VOREINSTELLUNGEN: dict[str, LLMSpec] = {
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1"
 # Denkmodus über OpenRouters einheitlichen Parameter `reasoning` – pro Lauf in der Auftragsdatei wählbar (`denken:`).
-DENKEN = {"aus": {"reasoning": {"enabled": False}}, "niedrig": {"reasoning": {"effort": "low"}}, "standard": None}
+# "maximal" probiert zuerst die höchste Stufe (xhigh); kennt das Modell sie nicht, wählt der Auftrag "high" (siehe denkstufe_pruefen).
+DENKEN = {"aus": {"reasoning": {"enabled": False}}, "niedrig": {"reasoning": {"effort": "low"}}, "standard": None,
+          "hoch": {"reasoning": {"effort": "high"}}, "maximal": {"reasoning": {"effort": "xhigh"}}}
+DENKEN_MAXIMAL_ERSATZ = ("xhigh", "high")
+# Viel Denken braucht Platz vor der eigentlichen Antwort; sonst schneidet max_tokens die Antwort ab.
+DENKEN_MIN_TOKENS = {"hoch": 16000, "maximal": 24000}
+
+
+def ist_gedrosselt(modell: str) -> bool:
+    """Gratis- und Stealth-Modelle bei OpenRouter erlauben nur wenige Anfragen pro Minute."""
+    return modell.endswith(":free") or modell.startswith("stealth/")
 
 
 def voreinstellung(name: str) -> LLMSpec:
@@ -189,17 +199,19 @@ def voreinstellung(name: str) -> LLMSpec:
         modell = name.split(":", 1)[1]
         # 8000 Tokens: Denk-Modelle brauchen Platz vor der eigentlichen Antwort (Gratismodelle zählen Anfragen, nicht Tokens)
         return LLMSpec(provider="openai_compat", model=modell, base_url=OPENROUTER_URL, api_key_env="OPENROUTER_API_KEY",
-                       max_tokens=8000, anfragen_pro_minute=16 if modell.endswith(":free") else None)
+                       max_tokens=8000, anfragen_pro_minute=16 if ist_gedrosselt(modell) else None)
     raise ValueError(f"Unbekanntes Modell '{name}'. Erlaubt: {', '.join(VOREINSTELLUNGEN)} oder openrouter:<modell-id>")
 
 
 def mit_denken(cfg: ExperimentConfig, stufe: str) -> ExperimentConfig:
-    """Setzt den Denkmodus aller Preisagenten (aus, niedrig, standard) – zusätzlich zu vorhandenen extra_body-Feldern."""
+    """Setzt den Denkmodus aller Preisagenten (aus, niedrig, standard, hoch, maximal) – zusätzlich zu vorhandenen extra_body-Feldern."""
     if stufe not in DENKEN:
         raise ValueError(f"Unbekannte Denkstufe '{stufe}'. Erlaubt: {', '.join(DENKEN)}")
     neu = cfg.model_copy(deep=True)
     zusatz = DENKEN[stufe] or {}
-    setze = lambda s: s.model_copy(update={"extra_body": ({k: v for k, v in (s.extra_body or {}).items() if k != "reasoning"} | zusatz) or None})
+    tokens = DENKEN_MIN_TOKENS.get(stufe, 0)
+    setze = lambda s: s.model_copy(update={"extra_body": ({k: v for k, v in (s.extra_body or {}).items() if k != "reasoning"} | zusatz) or None,
+                                           "max_tokens": max(s.max_tokens, tokens)})
     neu.agenten.llm = setze(neu.agenten.llm)
     neu.agenten.abweichende_llm = {i: setze(s) for i, s in neu.agenten.abweichende_llm.items()}
     return neu
