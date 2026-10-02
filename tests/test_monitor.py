@@ -96,3 +96,27 @@ def test_anhang_in_zeilen_und_kurze_knoepfe():
         (0, "Verbot mit zweitem Modell (Nemotron)", "E18 · Verbot"),
         (0, "Weitere Varianten", "E7 · drei Shops")]
     assert ergebnis[0]["kurz"] == "E18 · Verbot · Replikation · DeepSeek"  # voller Name bleibt für den Anhang
+
+
+def test_geschichte_zeigt_nur_woertliche_zitate(tmp_path, monkeypatch):
+    import kartell.monitor as monitor
+    cfg = lade_config("experiments/demo_absprache_ohne_aufsicht.yaml")
+    cfg.runden = 6
+    fuehre_lauf_aus(cfg, 1, tmp_path / "runs")
+    ordner = next((tmp_path / "runs").iterdir())
+    runden = [json.loads(z) for z in (ordner / "runden.jsonl").read_text(encoding="utf-8").splitlines() if z.strip()]
+    echt = next((r["runde"], m["von"], m["text"]) for r in runden for m in r.get("nachrichten", []) if len(m["text"]) > 30)
+    monkeypatch.setattr(monitor, "GESCHICHTE", [{
+        "id": "test", "nummer": 1, "titel": "T", "frage": "F?", "antwort": "A.", "text": "", "fakten": [],
+        "versuch": cfg.name, "wiederholung": 1, "von": 1, "bis": 6, "ruhe": 6,
+        "momente": [
+            {"runde": echt[0], "art": "kanal", "shop": echt[1], "text": f"{echt[2][:12]} […] {echt[2][-12:]}"},
+            {"runde": echt[0], "art": "kanal", "shop": echt[1], "text": "Diesen Satz hat nie ein Agent geschrieben."},
+            {"runde": 3, "art": "eingriff", "shop": echt[1], "text": "Eingriff ohne Abweichung in den Daten"},
+        ]}])
+    ausgabe = tmp_path / "monitor.html"
+    monitor.baue([tmp_path / "runs"], ausgabe)
+    daten = _daten(ausgabe.read_text(encoding="utf-8"))
+    akt = daten["geschichte"][0]
+    assert [m["text"][:12] for m in akt["momente"]] == [echt[2][:12]]  # nur das echte Zitat bleibt
+    assert daten["versuche"][akt["versuch"]]["name"] == cfg.name and "_ordner" not in daten["versuche"][0]["durchgaenge"][0]
