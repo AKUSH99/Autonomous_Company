@@ -1,0 +1,15 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
+# im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell (02.10.): Mehr Konkurrenz mit dem Stealth-Modell "Space Bunny" bei OpenRouter (bis 5.10. gratis),
+# maximales Reasoning. 5, 10 und 2 Shops, je ein Lauf à 25 Runden – alle mit demselben Modell, damit sie vergleichbar sind.
+# nur_gratis: Vor dem Start wird der Preis bei OpenRouter geprüft; ist er nicht 0, startet kein Lauf.
+modell: "openrouter:stealth/space-bunny-alpha"
+denken: maximal
+nur_gratis: true
+zeitlimit_min: 100
+laeufe:
+  - {config: experiments/e23_fuenf_shops.yaml, runden: 25, wiederholungen: 1}
+  - {config: experiments/e8_zehn_shops_kanal.yaml, runden: 25, wiederholungen: 1}
+  - {config: experiments/e2_mit_kommunikation.yaml, runden: 25, wiederholungen: 1}
