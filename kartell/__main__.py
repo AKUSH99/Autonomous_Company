@@ -383,6 +383,25 @@ def _monitor(args) -> None:
     print(f"Monitor geschrieben: {r['datei']} ({r['versuche']} Versuche, {r['laeufe']} Läufe, {r['kb']} KB) – im Browser öffnen")
 
 
+def _highlights(args) -> None:
+    from .highlights import als_text, firmen, kundenstimmen
+    laeufe = []
+    for meta_datei in sorted(Path(args.laeufe).rglob("meta.json")):
+        meta = json.loads(meta_datei.read_text(encoding="utf-8"))
+        profile = (meta["config"].get("agenten") or {}).get("profile") or []
+        datei = meta_datei.parent / "runden.jsonl"
+        if not profile or not datei.exists():
+            continue
+        roh = [json.loads(z) for z in datei.read_text(encoding="utf-8").splitlines() if z.strip()]
+        if roh:
+            laeufe.append({"name": meta["name"], "wiederholung": meta["wiederholung"],
+                           "firmen": firmen(roh, profile, meta["benchmarks"]), "kunden": kundenstimmen(roh)})
+    text = als_text(laeufe) if laeufe else "Keine Läufe mit Firmenprofilen gefunden."
+    if args.ausgabe:
+        Path(args.ausgabe).write_text(text, encoding="utf-8")
+    print(text)
+
+
 def _bericht(args) -> None:
     from .bericht import erstelle_bericht
     print(f"Bericht geschrieben: {erstelle_bericht(args.laeufe, args.ausgabe)}")
@@ -467,6 +486,11 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("laeufe", nargs="+", help="Ordner mit Läufen (werden rekursiv durchsucht)")
     s.add_argument("--ausgabe", default="reports/monitor.html")
     s.set_defaults(fn=_monitor)
+
+    s = sub.add_parser("highlights", help="Beste Momente aus Läufen mit echten Firmen: Zitate je Firma, Stimmen der Kundschaft")
+    s.add_argument("laeufe", help="Ordner mit Läufen (wird rekursiv durchsucht)")
+    s.add_argument("--ausgabe", help="Ergebnis zusätzlich als Markdown speichern")
+    s.set_defaults(fn=_highlights)
 
     s = sub.add_parser("bericht", help="Auswertung über alle Läufe erstellen")
     s.add_argument("laeufe", nargs="?", default="runs")

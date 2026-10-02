@@ -273,6 +273,29 @@
   .vgl-zahlen dd { margin: 0; font: 700 1.05rem/1.2 var(--text); font-variant-numeric: tabular-nums; }
   .vgl-zitat { font: italic 400 0.95rem/1.45 var(--stimme); color: var(--tinte); margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
+  /* Kapitel 5: Firmen mit eigenen Interessen */
+  .umschalter { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--flaeche-2); margin-bottom: 14px; flex-wrap: wrap; }
+  .umschalter button { border: 0; background: transparent; color: var(--leise); border-radius: 999px; padding: 7px 14px; font: 600 0.88rem/1 var(--text); cursor: pointer; }
+  .umschalter button[aria-pressed="true"] { background: var(--tinte); color: var(--flaeche); }
+  .firmen { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-bottom: 18px; }
+  .firma { display: grid; gap: 10px; align-content: start; background: var(--flaeche); border: 1px solid var(--linie); border-radius: 14px; padding: 16px; min-width: 0; }
+  .firma h3 { margin: 0; font: 800 1.7rem/1 var(--display); }
+  .firma-profil { margin: 0; font-size: 0.88rem; color: var(--leise); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
+  .firma-profil.offen { display: block; }
+  .firma-zahlen { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin: 0; }
+  .firma-zahlen dt { font-size: 0.72rem; color: var(--leise); }
+  .firma-zahlen dd { margin: 0; font: 700 1rem/1.2 var(--text); font-variant-numeric: tabular-nums; }
+  .lage { display: grid; gap: 4px; }
+  .lage-spur { position: relative; height: 8px; border-radius: 999px; background: linear-gradient(90deg, var(--hauch-w), var(--hauch-k)); border: 1px solid var(--linie); }
+  .lage-spur b { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; background: var(--tinte); border: 3px solid var(--flaeche); transform: translate(-50%, -50%); }
+  .lage-text { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--leise); }
+  .firma .blase, .firma .gedanke { font-size: 0.95rem; }
+  .kundenbox { display: grid; gap: 10px; background: var(--flaeche); border: 1px solid var(--linie); border-radius: 14px; padding: 16px; margin-bottom: 18px; }
+  .kundenbox h3 { margin: 0; font: 800 1.4rem/1 var(--display); }
+  .kunden-zitate { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  .kunden-zitat { margin: 0; font: italic 400 0.98rem/1.45 var(--stimme); padding: 10px 12px; border-radius: 10px; background: var(--flaeche-2); }
+  .kunden-zitat span { display: block; font: 600 0.75rem/1.3 var(--text); font-style: normal; color: var(--leise); margin-top: 6px; }
+
   /* Spiel: Du bist die Aufsicht */
   .fall { background: var(--flaeche); border: 1px solid var(--linie); border-radius: 16px; padding: 20px; box-shadow: var(--schatten); display: grid; gap: 16px; }
   @media (max-width: 560px) { .fall { padding: 14px; border-radius: 12px; } }
@@ -756,6 +779,7 @@ function zeichneKapitel() {
     }
   });
   zeichneKapitelVier(liste.length + 1);
+  zeichneKapitelFuenf(liste.length + (DATEN.versuche.some((v) => v.kapitel === 4) ? 2 : 1));
   // Grosses Preisschild aus dem ersten Kapitel: Preis am Ende, Runde ab der beide gleich sind
   const a = liste[0], lauf = DATEN.versuche[a.versuch].durchgaenge[a.durchgang], letzte = lauf.runden[lauf.runden.length - 1];
   const shops = Object.keys(letzte.preise), p = letzte.preise[shops[0]];
@@ -841,6 +865,93 @@ function zeichneKapitelVier(nummer) {
   };
   quiz.querySelectorAll(".option").forEach((b) => b.addEventListener("click", () => aufloesen(Number(b.dataset.i))));
   quiz.querySelector("[data-ueberspringen]").addEventListener("click", () => aufloesen(null));
+}
+
+/* ---------------------------------------------------------------- Kapitel 5: Firmen mit eigenen Interessen ------------------------- */
+function quizVerdrahten(quiz, auf, richtig, beiAufloesung) {
+  const aufloesen = (gewaehlt) => {
+    if (quiz.dataset.fertig) return; quiz.dataset.fertig = "1";
+    quiz.querySelectorAll(".option").forEach((b) => {
+      const w = b.dataset.wertung, eigen = gewaehlt != null && Number(b.dataset.i) === gewaehlt; b.disabled = true;
+      if (w === "richtig") { b.classList.add("gezeigt"); b.querySelector(".marke").innerHTML = HAKEN; b.querySelector(".urteil").textContent = eigen ? "Dein Tipp · richtig" : "Richtig"; }
+      else if (eigen) { b.classList.add("gewaehlt"); b.querySelector(".marke").innerHTML = KREUZ; b.querySelector(".urteil").textContent = "Dein Tipp"; }
+      else b.classList.add("blass");
+    });
+    quiz.querySelector(".quiz-fuss").hidden = true;
+    auf.querySelector("[data-rueckmeldung]").innerHTML = gewaehlt == null ? "" : `<b>${gewaehlt === richtig ? "Richtig." : "Daneben."}</b>`;
+    auf.hidden = false; beiAufloesung();
+  };
+  quiz.querySelectorAll(".option").forEach((b) => b.addEventListener("click", () => aufloesen(Number(b.dataset.i))));
+  quiz.querySelector("[data-ueberspringen]").addEventListener("click", () => aufloesen(null));
+}
+function zeichneKapitelFuenf(nummer) {
+  const gruppe = DATEN.versuche.map((v, vi) => ({ v, vi })).filter(({ v }) => v.kapitel === 5 && v.durchgaenge[0].firmen);
+  if (!gruppe.length) return;
+  const haupt = gruppe.find(({ v }) => v.durchgaenge[0].kanal) || gruppe[0];
+  const firmenH = haupt.v.durchgaenge[0].firmen, hoch = firmenH.filter((f) => f.lage >= 0.5);
+  const richtig = hoch.length >= firmenH.length - 1 ? 0 : hoch.length <= 1 ? 2 : 1;
+  const optionen = ["Ja, (fast) alle halten die Preise hoch.", "Einige ja, andere spielen nicht mit.", "Nein, jede kämpft für sich."];
+  const antwort = richtig === 0 ? "Ja. Trotz ganz verschiedener Interessen halten fast alle die Preise hoch."
+    : richtig === 2 ? "Nein. Mit eigenen Interessen kämpft jede Firma für sich." : "Teilweise. Einige halten die Preise hoch, andere spielen nicht mit.";
+  const namenHoch = hoch.map((f) => f.name).join(", ") || "keine";
+  $("wegweiser").querySelector('a[href="#aufsicht"]')?.parentElement.insertAdjacentHTML("beforebegin",
+    `<li><a href="#kap-${nummer}"><span class="w-nr">Kapitel ${nummer} · Echte Firmen</span><span class="w-frage">Was tun Firmen mit eigenen Interessen?</span><span class="w-antwort">Erst tippen, dann auflösen</span></a></li>`);
+  $("kapitel-liste").insertAdjacentHTML("beforeend", `<section class="kap rahmen" id="kap-${nummer}">
+    <div class="kap-kopf">
+      <div><span class="kap-nr">Kapitel ${nummer}</span><h2>Echte Firmen</h2><p class="kap-frage">Was tun Firmen mit eigenen Interessen?</p></div>
+      <div class="kap-text"><div class="quiz" data-quiz="fuenf">
+          <span class="etikett">Was glaubst du?</span>
+          <p class="quiz-frage">${firmenH.length} Firmen mit ganz verschiedenen Interessen, vom Discounter mit Investor bis zum Familienbetrieb. Sprechen sie sich trotzdem ab?</p>
+          <div class="optionen">${optionen.map((o, i) => `<button type="button" class="option" data-i="${i}" data-wertung="${i === richtig ? "richtig" : "falsch"}"><span class="marke">${"ABC"[i]}</span><span>${o}</span><span class="urteil"></span></button>`).join("")}</div>
+          <div class="quiz-fuss"><button type="button" class="textknopf" data-ueberspringen>Ohne Tipp auflösen</button></div>
+        </div>
+        <div class="aufloesung" data-aufloesung="fuenf" hidden>
+          <p class="rueckmeldung" data-rueckmeldung></p>
+          <p class="kap-antwort">${esc(antwort)}</p>
+          <p>Näher am eigenen Kartellpreis als am eigenen Wettbewerbspreis: ${esc(namenHoch)}. Jede Firma kennt nur ihre eigene Geschichte und ihre Kosten. Niemand sagt ihr, wie sie sich verhalten soll. Die Kundschaft besteht aus 30 KI-Personen mit Budget in CHF.</p>
+        </div></div>
+    </div>
+    <div data-fuenf-inhalt hidden>
+      ${gruppe.length > 1 ? `<div class="umschalter" role="group" aria-label="Variante">${gruppe.map(({ v, vi }) => `<button type="button" data-fuenf-vi="${vi}" aria-pressed="${vi === haupt.vi}">${v.durchgaenge[0].kanal ? "Mit Kanal" : "Ohne Kanal"}</button>`).join("")}</div>` : ""}
+      <div class="durchgaenge" data-fuenf-durchgang style="margin-bottom:12px"></div>
+      <div class="firmen" data-firmen></div>
+      <div class="kundenbox" data-kunden></div>
+      <div class="buehne" id="buehne-fuenf"></div>
+    </div>
+  </section>`);
+  const zeige = (vi, di) => {
+    const v = DATEN.versuche[vi], d = v.durchgaenge[di];
+    document.querySelectorAll("[data-fuenf-vi]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.fuenfVi) === vi)));
+    const dg = document.querySelector("[data-fuenf-durchgang]");
+    dg.innerHTML = v.durchgaenge.length > 1 ? v.durchgaenge.map((x, i) => `<button type="button" aria-pressed="${i === di}" data-d="${i}">Durchgang ${x.wiederholung}</button>`).join("") : "";
+    dg.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => zeige(vi, Number(b.dataset.d))));
+    document.querySelector("[data-firmen]").innerHTML = (d.firmen || []).map((f) => {
+      const proz = Math.round((f.preis / f.nash - 1) * 100), lage = Math.max(0, Math.min(100, (0.15 + f.lage * 0.7) * 100));
+      return `<article class="firma"><h3>${esc(f.name)}</h3>
+        <p class="firma-profil" title="Klicken für das ganze Profil">${esc(f.profil)}</p>
+        <dl class="firma-zahlen"><div><dt>Stückkosten</dt><dd>${chf(f.kosten)} CHF</dd></div><div><dt>Preis, 2. Hälfte</dt><dd>${chf(f.preis)} CHF</dd></div>
+          <div><dt>Marktanteil</dt><dd>${Math.round(f.anteil * 100)} %</dd></div><div><dt>Gewinn, ganzer Lauf</dt><dd>${Math.round(f.gewinn)} CHF</dd></div></dl>
+        <div class="lage" aria-label="Preis zwischen eigenem Wettbewerbs- und Kartellpreis"><div class="lage-spur"><b style="left:${lage}%"></b></div>
+          <div class="lage-text"><span>Wettbewerb ${chf(f.nash)}</span><span>${proz >= 0 ? "+" : "−"}${Math.abs(proz)} %</span><span>Kartell ${chf(f.monopol)}</span></div></div>
+        ${f.stimme ? `<div class="blase"><span class="etikett">Öffentlich · Runde ${f.stimme.runde}</span><br><span class="txt">${esc(f.stimme.text)}</span></div>` : d.kanal ? `<p class="still">– schreibt nichts in den Kanal –</p>` : ""}
+        ${f.gedanke ? `<div class="gedanke"><div class="gedanke-kopf">${AUGE} privat · Runde ${f.gedanke.runde}</div><span class="txt">${esc(f.gedanke.text)}</span></div>` : ""}
+      </article>`;
+    }).join("");
+    document.querySelectorAll(".firma-profil").forEach((el) => el.addEventListener("click", () => el.classList.toggle("offen")));
+    const k = d.kunden_stimmen || {};
+    document.querySelector("[data-kunden]").innerHTML = k.zitate?.length ? `<h3>Was die Kundschaft sagt</h3>
+      <p class="rueckmeldung">In der zweiten Hälfte kaufen ${Math.round(k.nicht_kauf * 100)} % der 30 Personen pro Runde nichts.</p>
+      <div class="kunden-zitate">${k.zitate.map((z) => `<p class="kunden-zitat">„${esc(z.grund)}“<span>${esc(z.name)} · ${z.kauf === "nichts" ? "kauft nichts" : "kauft bei " + esc(z.kauf)} · Runde ${z.runde}</span></p>`).join("")}</div>` : "";
+    document.querySelector("[data-kunden]").hidden = !k.zitate?.length;
+    const letzte = d.runden[d.runden.length - 1].runde;
+    new Buehne($("buehne-fuenf"), { lauf: d, von: d.runden[0].runde, bis: letzte, ruhe: letzte, modus: "alle", notizen: true, tempo: 600 });
+  };
+  document.querySelectorAll("[data-fuenf-vi]").forEach((b) => b.addEventListener("click", () => zeige(Number(b.dataset.fuenfVi), 0)));
+  let gezeigt = false;
+  quizVerdrahten(document.querySelector('[data-quiz="fuenf"]'), document.querySelector('[data-aufloesung="fuenf"]'), richtig, () => {
+    document.querySelector("[data-fuenf-inhalt]").hidden = false;
+    if (!gezeigt) { gezeigt = true; zeige(haupt.vi, 0); }
+  });
 }
 
 /* ---------------------------------------------------------------- Spiel: Du bist die Aufsicht -------------------------------------- */

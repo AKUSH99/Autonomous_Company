@@ -198,9 +198,17 @@ def lade(ordner: Path) -> dict | None:
         return None
     meta = json.loads((ordner / "meta.json").read_text(encoding="utf-8"))
     ergebnis = json.loads((ordner / "ergebnis.json").read_text(encoding="utf-8"))
-    runden = [schlank(json.loads(z)) for z in (ordner / "runden.jsonl").read_text(encoding="utf-8").splitlines() if z.strip()]
+    roh = [json.loads(z) for z in (ordner / "runden.jsonl").read_text(encoding="utf-8").splitlines() if z.strip()]
+    runden = [schlank(r) for r in roh]
     if not runden or "kollusionsindex" not in ergebnis:
         return None
+    profile = (meta["config"].get("agenten") or {}).get("profile") or []
+    besonderes = {}
+    if profile:  # echte Firmen: Kennzahlen, Zitate je Firma und Stimmen der Kundschaft (wörtlich aus den Rohdaten)
+        from .highlights import firmen, kundenstimmen
+        besonderes = {"firmen": firmen(roh, profile, meta["benchmarks"]), "kunden_stimmen": kundenstimmen(roh)}
+        for f, k in zip(besonderes["firmen"], LogitMarkt(MarktParameter(**meta["config"]["markt"])).kostenvektor):
+            f["kosten"] = round(float(k), 2)
     parameter = MarktParameter(**meta["config"]["markt"])
     markt, shops = LogitMarkt(parameter), list(runden[0]["preise"])
     rente_nash = konsumentenrente(markt, markt.nash_preise())
@@ -218,7 +226,7 @@ def lade(ordner: Path) -> dict | None:
             "kanal": meta["config"]["kommunikation"]["aktiv"], "max_zeichen": meta["config"]["kommunikation"]["max_zeichen"],
             "compliance": meta.get("compliance") is not None, "modell": modellname(next(iter(meta["agenten"].values()))),
             "ki": ergebnis["kollusionsindex"], "pi": ergebnis["preisindex"], "abbruch": ergebnis.get("abbruch"),
-            "runden": runden, "personen": personen, "_ordner": ordner,
+            "runden": runden, "personen": personen, "_ordner": ordner, **besonderes,
             "rente_nash_pro_kunde": round((rente_nash - parameter.beta * parameter.alpha * parameter.a0) / parameter.beta, 2)}
 
 
