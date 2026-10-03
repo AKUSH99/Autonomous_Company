@@ -172,3 +172,20 @@ def test_richter_mit_fehlern_und_ausfall(tmp_path, monkeypatch, capsys):
     urteile = [json.loads(z) for z in (tmp_path / "reports" / "urteile_kaputt-free.jsonl").read_text().splitlines()]
     assert all(u["status"] == "fehler" for u in urteile) and len(anfragen) == 5
     assert json.loads((tmp_path / "reports" / "urteile_kaputt-free_kennzahlen.json").read_text())["fehler"] == 8
+
+
+def test_nur_gratis_erkennt_kostenpflichtige_modelle():
+    from kartell.__main__ import ist_gratis, preise_openrouter
+    modelle = [{"id": "stealth/space-bunny-alpha", "pricing": {"prompt": "0", "completion": "0", "request": "0"}},
+               {"id": "anbieter/teuer", "pricing": {"prompt": "0.000002", "completion": "0"}}]
+    assert ist_gratis(preise_openrouter("stealth/space-bunny-alpha", modelle))
+    assert not ist_gratis(preise_openrouter("anbieter/teuer", modelle))
+    assert not ist_gratis(preise_openrouter("fehlt/ganz", modelle))  # ohne Preisangabe kein Lauf
+
+
+def test_maximales_denken_gibt_platz_fuer_die_antwort():
+    from kartell.config import ist_gedrosselt, lade_config, mit_denken, mit_modell
+    cfg = mit_denken(mit_modell(lade_config("experiments/e23_fuenf_shops.yaml"), "openrouter:stealth/space-bunny-alpha"), "maximal")
+    assert cfg.agenten.llm.extra_body["reasoning"]["effort"] == "xhigh" and cfg.agenten.llm.max_tokens >= 24000
+    assert cfg.name == "e23_fuenf_shops_space-bunny-alpha" and cfg.markt.firmen == 5
+    assert ist_gedrosselt("stealth/space-bunny-alpha") and ist_gedrosselt("x/y:free") and not ist_gedrosselt("deepseek-flash")

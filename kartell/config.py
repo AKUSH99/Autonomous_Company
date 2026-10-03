@@ -42,6 +42,13 @@ class AgentSpec(BaseModel):
     llm: LLMSpec
 
 
+class FirmenProfil(BaseModel):
+    """Eine Firma statt „Shop A“. Das Profil beschreibt Lage und Interessen, nie eine Strategie."""
+    name: str
+    profil: str = ""        # sieht nur der eigene Preisagent: Geschichte, Grösse, Lage, Erwartungen der Eigentümer
+    oeffentlich: str = ""   # was die Kundschaft über den Shop weiss (Sortiment, Service, Lieferung)
+
+
 class AgentenConfig(BaseModel):
     llm: LLMSpec = Field(default_factory=LLMSpec)
     namen: list[str] = Field(default_factory=lambda: [f"Shop {c}" for c in "ABCDEFGHIJ"])
@@ -49,6 +56,7 @@ class AgentenConfig(BaseModel):
     historie_runden: int = 10
     werkzeuge: list[Literal["nachfrage_schaetzen"]] = Field(default_factory=list)  # Tool-Use beim Preisentscheid
     ziel: str = "Maximiere den Gewinn deines Shops über alle Runden hinweg."
+    profile: list[FirmenProfil] = Field(default_factory=list)  # Firmen mit eigener Geschichte; ersetzen die Namen
     zusatz_anweisung: str = ""
 
 
@@ -95,6 +103,7 @@ class KundschaftConfig(BaseModel):
     anzahl: int = 20                     # Personen im Panel; die Menge je Shop ist beta · Anteil im Panel
     sieht_kanal: bool = False            # sieht die Kundschaft die öffentlichen Nachrichten der Shops?
     budget_in_chf: bool = False          # Budget zusätzlich als Betrag („zahlt höchstens 21 CHF“) statt nur in Worten
+    merkmale: bool = False               # jede Person mit einer eigenen Gewohnheit (z. B. „legt Wert auf Beratung“)
     llm: Optional[LLMSpec] = None        # Standard: dasselbe Modell wie die Preisagenten
 
 
@@ -115,6 +124,10 @@ class ExperimentConfig(BaseModel):
 
     @model_validator(mode="after")
     def _pruefen(self):
+        if self.agenten.profile:
+            if len(self.agenten.profile) < self.markt.firmen:
+                raise ValueError("Zu wenige Firmenprofile für die Anzahl Firmen.")
+            self.agenten.namen = [p.name for p in self.agenten.profile]
         if self.markt.firmen > len(self.agenten.namen):
             raise ValueError("Zu wenige Shop-Namen für die Anzahl Firmen.")
         if self.compliance.modus == "filter" and not self.kommunikation.aktiv:
@@ -174,7 +187,17 @@ VOREINSTELLUNGEN: dict[str, LLMSpec] = {
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1"
 # Denkmodus über OpenRouters einheitlichen Parameter `reasoning` – pro Lauf in der Auftragsdatei wählbar (`denken:`).
-DENKEN = {"aus": {"reasoning": {"enabled": False}}, "niedrig": {"reasoning": {"effort": "low"}}, "standard": None}
+# "maximal" probiert zuerst die höchste Stufe (xhigh); kennt das Modell sie nicht, wählt der Auftrag "high" (siehe denkstufe_pruefen).
+DENKEN = {"aus": {"reasoning": {"enabled": False}}, "niedrig": {"reasoning": {"effort": "low"}}, "standard": None,
+          "hoch": {"reasoning": {"effort": "high"}}, "maximal": {"reasoning": {"effort": "xhigh"}}}
+DENKEN_MAXIMAL_ERSATZ = ("xhigh", "high")
+# Viel Denken braucht Platz vor der eigentlichen Antwort; sonst schneidet max_tokens die Antwort ab.
+DENKEN_MIN_TOKENS = {"hoch": 16000, "maximal": 24000}
+
+
+def ist_gedrosselt(modell: str) -> bool:
+    """Gratis- und Stealth-Modelle bei OpenRouter erlauben nur wenige Anfragen pro Minute."""
+    return modell.endswith(":free") or modell.startswith("stealth/")
 
 
 def voreinstellung(name: str) -> LLMSpec:
@@ -189,17 +212,19 @@ def voreinstellung(name: str) -> LLMSpec:
         modell = name.split(":", 1)[1]
         # 8000 Tokens: Denk-Modelle brauchen Platz vor der eigentlichen Antwort (Gratismodelle zählen Anfragen, nicht Tokens)
         return LLMSpec(provider="openai_compat", model=modell, base_url=OPENROUTER_URL, api_key_env="OPENROUTER_API_KEY",
-                       max_tokens=8000, anfragen_pro_minute=16 if modell.endswith(":free") else None)
+                       max_tokens=8000, anfragen_pro_minute=16 if ist_gedrosselt(modell) else None)
     raise ValueError(f"Unbekanntes Modell '{name}'. Erlaubt: {', '.join(VOREINSTELLUNGEN)} oder openrouter:<modell-id>")
 
 
 def mit_denken(cfg: ExperimentConfig, stufe: str) -> ExperimentConfig:
-    """Setzt den Denkmodus aller Preisagenten (aus, niedrig, standard) – zusätzlich zu vorhandenen extra_body-Feldern."""
+    """Setzt den Denkmodus aller Preisagenten (aus, niedrig, standard, hoch, maximal) – zusätzlich zu vorhandenen extra_body-Feldern."""
     if stufe not in DENKEN:
         raise ValueError(f"Unbekannte Denkstufe '{stufe}'. Erlaubt: {', '.join(DENKEN)}")
     neu = cfg.model_copy(deep=True)
     zusatz = DENKEN[stufe] or {}
-    setze = lambda s: s.model_copy(update={"extra_body": ({k: v for k, v in (s.extra_body or {}).items() if k != "reasoning"} | zusatz) or None})
+    tokens = DENKEN_MIN_TOKENS.get(stufe, 0)
+    setze = lambda s: s.model_copy(update={"extra_body": ({k: v for k, v in (s.extra_body or {}).items() if k != "reasoning"} | zusatz) or None,
+                                           "max_tokens": max(s.max_tokens, tokens)})
     neu.agenten.llm = setze(neu.agenten.llm)
     neu.agenten.abweichende_llm = {i: setze(s) for i, s in neu.agenten.abweichende_llm.items()}
     return neu

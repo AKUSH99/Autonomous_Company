@@ -22,7 +22,13 @@ Die Shops bieten ein vergleichbares Produkt an. Entscheide so, wie diese Person 
 mit ihrem Budget, ihren Vorlieben und dem, was sie über die Shops weiss. Nichts kaufen ist erlaubt."""
 
 
-def beschreibung(person: Person, shops: list[str], budget_in_chf: bool = False) -> str:
+# Gewohnheiten, wie sie echte Kundinnen und Kunden haben – fest pro Person, damit sie über alle Runden gleich bleibt
+MERKMALE = ["vergleicht Preise auf Vergleichsportalen", "legt Wert auf Beratung und Service", "kauft lieber bei Schweizer Firmen",
+            "achtet auf Garantie und Bewertungen", "kauft spontan, wenn ein Angebot gut aussieht", "wartet gern auf Aktionen",
+            "will die Kopfhörer möglichst schnell haben", "misstraut sehr billigen Angeboten"]
+
+
+def beschreibung(person: Person, shops: list[str], budget_in_chf: bool = False, merkmal: str = "") -> str:
     """Person in Worten statt Zahlen – das Modell soll selbst abwägen. Mit `budget_in_chf` zusätzlich die Obergrenze in
     CHF: So lässt sich prüfen, ob das Modell sonst eigenes Preiswissen (was kosten Kopfhörer?) statt der Vorlieben der
     simulierten Person verwendet."""
@@ -35,7 +41,23 @@ def beschreibung(person: Person, shops: list[str], budget_in_chf: bool = False) 
         budget += f" (zahlt höchstens {grenze:.0f} CHF)"
     treue = (f"sehr treu zu {shops[reihen[0]]}" if vorsprung >= 2 else f"mag {shops[reihen[0]]} etwas lieber" if vorsprung >= 0.5
              else "hat keinen Lieblingsshop und schaut vor allem auf den Preis")
-    return f"{person.name}: {budget}, {treue}"
+    return f"{person.name}: {budget}, {treue}" + (f", {merkmal}" if merkmal else "")
+
+
+def finde_shop(kauf: str, shops: list[str]) -> int:
+    """Index des gekauften Shops, oder len(shops) für „nichts“. Erkennt auch Kurzformen wie „Hörwerk“ für „Hörwerk Bern“
+    oder „PreisPilot“ für „PreisPilot.ch“."""
+    text = kauf.lower()
+    if not text.strip() or text.strip().startswith("nicht"):
+        return len(shops)
+    for i, s in enumerate(shops):
+        if s.lower() in text:
+            return i
+    for i, s in enumerate(shops):
+        kurz = s.lower().split()[0].split(".")[0]
+        if len(kurz) >= 4 and kurz not in ("shop", "online") and kurz in text:
+            return i
+    return len(shops)
 
 
 class KIKundschaft:
@@ -45,10 +67,16 @@ class KIKundschaft:
         self.personen = kundschaft(cfg.markt, shops, anzahl=cfg.kundschaft.anzahl, seed=seed)
         self.llm = llm or erstelle_client(cfg.kundschaft.llm or cfg.agenten.llm)
         self.system = KUNDEN_SYSTEM.format(produkt=cfg.produkt)
-        self.beschreibungen = [beschreibung(p, shops, cfg.kundschaft.budget_in_chf) for p in self.personen]
+        self.beschreibungen = [beschreibung(p, shops, cfg.kundschaft.budget_in_chf,
+                                            MERKMALE[(i * 5 + 3) % len(MERKMALE)] if cfg.kundschaft.merkmale else "")
+                               for i, p in enumerate(self.personen)]
+        self.shop_infos = {f.name: f.oeffentlich for f in cfg.agenten.profile if f.oeffentlich}
 
     def _prompt(self, runde: int, preise: list[float], vorher: list[float] | None, nachrichten: list[dict]) -> str:
-        teile = [f"Runde {runde}", "", "Preise diese Runde:"]
+        teile = [f"Runde {runde}", ""]
+        if self.shop_infos:
+            teile += ["Die Shops:"] + [f"- {s}: {self.shop_infos[s]}" for s in self.shops if s in self.shop_infos] + [""]
+        teile += ["Preise diese Runde:"]
         teile += [f"- {s}: {p:.2f} CHF" + (f" (letzte Runde {v:.2f} CHF)" if vorher else "")
                   for s, p, v in zip(self.shops, preise, vorher or preise)]
         if self.cfg.kundschaft.sieht_kanal:
@@ -72,7 +100,7 @@ class KIKundschaft:
         for e in antwort.objekt.entscheide:
             if e.name not in namen:
                 continue
-            ziel = next((i for i, s in enumerate(self.shops) if s.lower() in e.kauf.lower()), len(self.shops))
+            ziel = finde_shop(e.kauf, self.shops)
             zaehler[ziel] += 1
             entscheide.append({"name": e.name, "kauf": self.shops[ziel] if ziel < len(self.shops) else "nichts", "grund": e.grund})
             namen.discard(e.name)

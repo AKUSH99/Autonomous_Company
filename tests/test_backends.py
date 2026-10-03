@@ -192,4 +192,4 @@ def test_denkmodus_je_lauf():
     assert mit_denken(aus, "standard").agenten.llm.extra_body == {"thinking": {"type": "disabled"}}
     assert mit_denken(cfg, "niedrig").agenten.llm.extra_body["reasoning"] == {"effort": "low"}
     with pytest.raises(ValueError):
-        mit_denken(cfg, "maximal")
+        mit_denken(cfg, "unendlich")

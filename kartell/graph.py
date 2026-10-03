@@ -61,7 +61,7 @@ class Simulation:
         self.markt = LogitMarkt(cfg.markt)
         self.benchmarks = self.markt.benchmarks()
         self.agenten = agenten or [
-            erstelle_preisagent(spec, cfg, self.markt.grenzkosten, seed * 100 + i)
+            erstelle_preisagent(spec, cfg, float(self.markt.kostenvektor[i]), seed * 100 + i)
             for i, spec in enumerate(cfg.agenten_liste())
         ]
         if compliance is None and cfg.compliance.modus != "aus":
@@ -188,7 +188,7 @@ class Simulation:
             tokens = self._plus_tokens(tokens, kunden.pop("input_tokens"), kunden.pop("output_tokens"))
             if kunden["anteile"]:
                 mengen = self.cfg.markt.beta * np.asarray(kunden["anteile"][:-1])
-        gewinne = (np.asarray(preise) - self.markt.grenzkosten) * mengen
+        gewinne = (np.asarray(preise) - self.markt.kostenvektor) * mengen
         eintrag = {
             "runde": s["runde"],
             "preise": {n: round(float(p), 2) for n, p in zip(namen, preise)},

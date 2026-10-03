@@ -77,7 +77,7 @@
   .schild-gross figcaption { font-size: 0.85rem; color: var(--leise); text-align: center; margin-top: 18px; }
 
   /* Wegweiser zu den drei Kapiteln */
-  .wegweiser { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .wegweiser { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
   @media (max-width: 760px) { .wegweiser { grid-template-columns: 1fr; } }
   .wegweiser a { display: grid; gap: 2px; text-decoration: none; padding: 14px 16px; border-top: 2px solid var(--tinte); height: 100%; }
   .wegweiser a:hover .w-frage { text-decoration: underline; }
@@ -114,6 +114,14 @@
   .schild-delta { font-size: 0.8rem; color: var(--leise); font-variant-numeric: tabular-nums; min-height: 1.2em; }
   @keyframes kippen { from { transform: translateY(-45%); opacity: 0; } to { transform: none; opacity: 1; } }
 
+  .shop-chips { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--leise); }
+  .shop-chips button { border: 1px solid var(--linie); background: var(--flaeche); color: var(--tinte); border-radius: 999px; padding: 4px 10px;
+    font: 600 0.8rem/1 var(--text); cursor: pointer; }
+  .shop-chips button[aria-pressed="true"] { background: var(--shop-a); border-color: var(--shop-a); color: var(--flaeche); }
+  .schild-name { flex-wrap: wrap; }
+  .schild-name small { font: 500 0.78rem/1.2 var(--text); color: var(--leise); flex: 1 1 100%; margin-left: 18px; min-width: 0; overflow-wrap: anywhere; }
+  .schild-name small:empty { display: none; }
+  .avatar.hervor { background: var(--shop-a) !important; }
   .pegel { flex: 2 1 300px; min-width: 0; padding: 10px 14px; border-radius: 10px; background: var(--flaeche-2); display: grid; gap: 7px; }
   .pegel-kopf { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
   .zone { display: inline-flex; align-items: center; gap: 6px; font: 600 0.8rem/1 var(--text); padding: 5px 9px; border-radius: 999px; background: var(--flaeche); border: 1px solid var(--linie); }
@@ -253,6 +261,43 @@
   .rueckmeldung { margin: 0; font: 500 1rem/1.5 var(--text); max-width: 60ch; }
   .rueckmeldung b { font-weight: 700; }
 
+  /* Kapitel 4: 2, 5 und 10 Shops nebeneinander */
+  .vergleich { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 18px; }
+  .vgl-karte { display: grid; gap: 8px; align-content: start; background: var(--flaeche); border: 1.5px solid var(--linie); border-radius: 14px; padding: 14px; text-align: left;
+    color: inherit; font: inherit; cursor: pointer; }
+  .vgl-karte:hover { border-color: var(--tinte); }
+  .vgl-karte[aria-pressed="true"] { border-color: var(--tinte); box-shadow: var(--schatten); }
+  .vgl-karte h3 { margin: 0; font: 800 2rem/1 var(--display); }
+  .vgl-karte svg { display: block; width: 100%; height: auto; }
+  .vgl-karte svg text { font: 500 11px var(--text); fill: var(--leise); }
+  .vgl-zahlen { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin: 0; }
+  .vgl-zahlen dt { font-size: 0.75rem; color: var(--leise); }
+  .vgl-zahlen dd { margin: 0; font: 700 1.05rem/1.2 var(--text); font-variant-numeric: tabular-nums; }
+  .vgl-zitat { font: italic 400 0.95rem/1.45 var(--stimme); color: var(--tinte); margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* Kapitel 5: Firmen mit eigenen Interessen */
+  .umschalter { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--flaeche-2); margin-bottom: 14px; flex-wrap: wrap; }
+  .umschalter button { border: 0; background: transparent; color: var(--leise); border-radius: 999px; padding: 7px 14px; font: 600 0.88rem/1 var(--text); cursor: pointer; }
+  .umschalter button[aria-pressed="true"] { background: var(--tinte); color: var(--flaeche); }
+  .firmen { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-bottom: 18px; }
+  .firma { display: grid; gap: 10px; align-content: start; background: var(--flaeche); border: 1px solid var(--linie); border-radius: 14px; padding: 16px; min-width: 0; }
+  .firma h3 { margin: 0; font: 800 1.7rem/1 var(--display); }
+  .firma-profil { margin: 0; font-size: 0.88rem; color: var(--leise); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
+  .firma-profil.offen { display: block; }
+  .firma-zahlen { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin: 0; }
+  .firma-zahlen dt { font-size: 0.72rem; color: var(--leise); }
+  .firma-zahlen dd { margin: 0; font: 700 1rem/1.2 var(--text); font-variant-numeric: tabular-nums; }
+  .lage { display: grid; gap: 4px; }
+  .lage-spur { position: relative; height: 8px; border-radius: 999px; background: linear-gradient(90deg, var(--hauch-w), var(--hauch-k)); border: 1px solid var(--linie); }
+  .lage-spur b { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; background: var(--tinte); border: 3px solid var(--flaeche); transform: translate(-50%, -50%); }
+  .lage-text { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--leise); }
+  .firma .blase, .firma .gedanke { font-size: 0.95rem; }
+  .kundenbox { display: grid; gap: 10px; background: var(--flaeche); border: 1px solid var(--linie); border-radius: 14px; padding: 16px; margin-bottom: 18px; }
+  .kundenbox h3 { margin: 0; font: 800 1.4rem/1 var(--display); }
+  .kunden-zitate { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  .kunden-zitat { margin: 0; font: italic 400 0.98rem/1.45 var(--stimme); padding: 10px 12px; border-radius: 10px; background: var(--flaeche-2); }
+  .kunden-zitat span { display: block; font: 600 0.75rem/1.3 var(--text); font-style: normal; color: var(--leise); margin-top: 6px; }
+
   /* Spiel: Du bist die Aufsicht */
   .fall { background: var(--flaeche); border: 1px solid var(--linie); border-radius: 16px; padding: 20px; box-shadow: var(--schatten); display: grid; gap: 16px; }
   @media (max-width: 560px) { .fall { padding: 14px; border-radius: 12px; } }
@@ -386,6 +431,8 @@ class Buehne {
     this.w = wurzel; this.o = o; this.n = o.ruhe ?? o.bis; this.laeuft = false; this.timer = null;
     this.lauf = o.lauf;
     this.shops = Object.keys(this.lauf.runden[0].preise);
+    // Ab drei Shops reichen Farben nicht mehr: alle Linien grau ("Schwarm"), dazu Durchschnitt und Spanne; ein Klick hebt einen Shop hervor.
+    this.schwarm = this.shops.length > 2; this.hervor = null;
     this.runden = this.lauf.runden.filter((r) => r.runde >= o.von && r.runde <= o.bis);
     this.momente = (o.momente || []).map((m, i) => ({ ...m, nr: i + 1 }));
     BUEHNEN.push(this);
@@ -394,9 +441,11 @@ class Buehne {
   }
 
   baue() {
-    const b = this.lauf.benchmarks, viele = this.shops.length > 3;
-    const schilder = viele
-      ? `<div class="schild" style="--farbe:var(--tinte)"><span class="schild-name"><i class="punkt"></i>Ø Preis · ${this.shops.length} Shops</span><span class="schild-preis" data-preis="mittel"></span><span class="schild-delta" data-delta="mittel"></span></div>`
+    const b = this.lauf.benchmarks;
+    const schild = (k, name, farbeVar) => `<div class="schild" style="--farbe:${farbeVar}"><span class="schild-name"><i class="punkt"></i>${name}<small data-name="${k}"></small></span><span class="schild-preis" data-preis="${k}"></span><span class="schild-delta" data-delta="${k}"></span></div>`;
+    const schilder = this.schwarm
+      ? schild("mittel", `Ø Preis · ${this.shops.length} Shops`, "var(--tinte)") + schild("min", "Günstigster", "var(--leise)") + schild("max", "Teuerster", "var(--leise)")
+        + `<div class="shop-chips" role="group" aria-label="Shop hervorheben">Hervorheben: ${this.shops.map((sh, i) => `<button type="button" data-chip="${i}" aria-pressed="false">${esc(sh.replace("Shop ", ""))}</button>`).join("")}</div>`
       : this.shops.map((s, i) => `<div class="schild" style="--farbe:${farbe(i)}"><span class="schild-name"><i class="punkt"></i>${esc(s)}</span><span class="schild-preis" data-preis="${i}"></span><span class="schild-delta" data-delta="${i}"></span></div>`).join("");
     this.w.innerHTML = `
       <div class="buehne-kopf">${schilder}
@@ -429,7 +478,23 @@ class Buehne {
     this.knopf.addEventListener("click", () => (this.laeuft ? this.halte() : this.spiele()));
     this.regler.addEventListener("input", () => { this.halte(); this.aufdecken(); this.setze(Number(this.regler.value)); });
     if (this.o.verdeckt) this.w.querySelector(".kurve").classList.add("verdeckt");
+    this.w.querySelectorAll("[data-chip]").forEach((c) => c.addEventListener("click", () => {
+      const i = Number(c.dataset.chip); this.hervor = this.hervor === i ? null : i; this.faerbe();
+    }));
     this.setze(this.n);
+  }
+
+  farbeShop(i) { return this.schwarm ? "var(--leise)" : farbe(i); }
+  faerbe() {
+    this.w.querySelectorAll("[data-chip]").forEach((c) => c.setAttribute("aria-pressed", String(Number(c.dataset.chip) === this.hervor)));
+    this.svg.querySelectorAll("[data-linie]").forEach((l) => {
+      const an = Number(l.dataset.linie) === this.hervor;
+      l.setAttribute("stroke", an ? "var(--shop-a)" : this.farbeShop(Number(l.dataset.linie)));
+      l.setAttribute("stroke-width", an ? 2.8 : this.schwarm ? 1.2 : 2.5);
+      l.setAttribute("stroke-opacity", an || !this.schwarm ? 1 : 0.55);
+      if (an) l.parentNode.insertBefore(l, this.svg.querySelector("[data-mittel]") || null);
+    });
+    this.feed.querySelectorAll(".avatar[data-shop]").forEach((a) => a.classList.toggle("hervor", this.hervor != null && a.dataset.shop === this.shops[this.hervor]));
   }
 
   /* --- Preiskurve --- */
@@ -463,14 +528,21 @@ class Buehne {
             <text x="${x(r.runde) + 5}" y="${m.t + 10}" class="t-stark" style="fill:var(--kartell)">Eingriff</text></g>`;
     });
     s += `<line data-kopf x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" stroke="var(--leise)" stroke-width="1" stroke-dasharray="2 3"/>`;
-    const viele = this.shops.length > 3;
-    this.shops.forEach((sh, i) => {
-      const pts = this.runden.map((r) => `${x(r.runde)},${y(r.preise[sh])}`).join(" ");
-      const w = viele ? 1.2 : 2.5;
-      s += `<polyline data-geist points="${pts}" fill="none" stroke="${farbe(i)}" stroke-width="${w}" stroke-opacity="0.2" stroke-linejoin="round"/>
-            <polyline data-linie="${i}" fill="none" stroke="${farbe(i)}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"/>`;
-    });
-    if (!viele) this.shops.forEach((sh, i) => { s += `<circle data-ende="${i}" r="5" fill="${farbe(i)}" stroke="var(--flaeche)" stroke-width="2"/>`; });
+    const mittel = (r) => this.shops.reduce((a, sh) => a + r.preise[sh], 0) / this.shops.length;
+    if (this.schwarm) {
+      s += `<polygon data-spanne fill="var(--tinte)" fill-opacity="0.07"/>
+            <polyline data-geist points="${this.runden.map((r) => `${x(r.runde)},${y(mittel(r))}`).join(" ")}" fill="none" stroke="var(--tinte)" stroke-width="2.6" stroke-opacity="0.2"/>`;
+      this.shops.forEach((sh, i) => { s += `<polyline data-linie="${i}" fill="none" stroke="var(--leise)" stroke-width="1.2" stroke-opacity="0.55" stroke-linejoin="round"/>`; });
+      s += `<polyline data-mittel fill="none" stroke="var(--tinte)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle data-ende="mittel" r="5" fill="var(--tinte)" stroke="var(--flaeche)" stroke-width="2"/>`;
+    } else {
+      this.shops.forEach((sh, i) => {
+        const pts = this.runden.map((r) => `${x(r.runde)},${y(r.preise[sh])}`).join(" ");
+        s += `<polyline data-geist points="${pts}" fill="none" stroke="${farbe(i)}" stroke-width="2.5" stroke-opacity="0.2" stroke-linejoin="round"/>
+              <polyline data-linie="${i}" fill="none" stroke="${farbe(i)}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+      });
+      this.shops.forEach((sh, i) => { s += `<circle data-ende="${i}" r="5" fill="${farbe(i)}" stroke="var(--flaeche)" stroke-width="2"/>`; });
+    }
     s += `<line data-hover x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" stroke="var(--tinte)" stroke-width="1" visibility="hidden"/>
           <rect data-flaeche x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}" fill="transparent"/>`;
     // Momente als nummerierte Nadeln (mehrere in derselben Runde werden gestapelt)
@@ -498,13 +570,21 @@ class Buehne {
       const rect = this.svg.getBoundingClientRect(), f = rect.width / W;
       this.tip.style.left = `${Math.max(60, Math.min(rect.width - 60, x(r) * f))}px`;
       this.tip.style.top = `${top * f}px`;
-      this.tip.innerHTML = `<b>Runde ${r}</b>` + this.shops.slice(0, 4).map((s, i) => `<span><i class="punkt" style="--farbe:${farbe(i)}"></i>${esc(s)} ${chf(daten.preise[s])}</span>`).join("")
-        + (this.shops.length > 4 ? `<span>… ${this.shops.length - 4} weitere</span>` : "");
+      if (this.schwarm) {
+        const sortiert = [...this.shops].sort((a, c) => daten.preise[a] - daten.preise[c]), lo = sortiert[0], hi = sortiert[sortiert.length - 1];
+        const avg = this.shops.reduce((a, sh) => a + daten.preise[sh], 0) / this.shops.length;
+        this.tip.innerHTML = `<b>Runde ${r}</b><span><i class="punkt" style="--farbe:var(--tinte)"></i>Ø ${chf(avg)}</span>
+          <span>Günstigster ${esc(lo)} ${chf(daten.preise[lo])}</span><span>Teuerster ${esc(hi)} ${chf(daten.preise[hi])}</span>`
+          + (this.hervor != null ? `<span><i class="punkt" style="--farbe:var(--shop-a)"></i>${esc(this.shops[this.hervor])} ${chf(daten.preise[this.shops[this.hervor]])}</span>` : "");
+      } else {
+        this.tip.innerHTML = `<b>Runde ${r}</b>` + this.shops.map((s, i) => `<span><i class="punkt" style="--farbe:${farbe(i)}"></i>${esc(s)} ${chf(daten.preise[s])}</span>`).join("");
+      }
       this.tip.hidden = false;
     });
     flaeche.addEventListener("pointerleave", () => { hov.setAttribute("visibility", "hidden"); this.tip.hidden = true; });
     flaeche.addEventListener("click", (ev) => { this.halte(); this.setze(runde(ev)); });
     this.svg.querySelectorAll(".pin").forEach((g) => g.addEventListener("click", () => { this.halte(); this.setze(Number(g.dataset.runde)); }));
+    if (this.hervor != null && this.feed) this.faerbe();
   }
 
   /* --- Protokoll --- */
@@ -517,12 +597,12 @@ class Buehne {
       if (mo) auszuege(mo.text).forEach((t) => { text = text.replace(esc(t), `<mark>${esc(t)}</mark>`); });
       const blockiert = m.status && m.status !== "zugestellt";
       const klasse = mo ? "gross" : geschichte ? "kurz" : "";
-      return `<div class="eintrag${seite}" style="--farbe:${farbe(i)}"><span class="avatar" aria-hidden="true">${esc(m.von.replace("Shop ", "").slice(0, 2))}</span>
+      return `<div class="eintrag${seite}" style="--farbe:${this.farbeShop(i)}"><span class="avatar" data-shop="${esc(m.von)}" aria-hidden="true">${esc(m.von.replace("Shop ", "").slice(0, 2))}</span>
         <div class="blase ${klasse}${blockiert ? " blockiert" : ""}" ${klasse === "kurz" ? 'title="Klicken für den ganzen Text"' : ""}>${mo ? `<span class="nr" style="float:right;margin:0 0 4px 8px">${mo.nr}</span>` : ""}<span class="txt">${text}</span>${blockiert ? `<span class="grund">Blockiert von der Compliance-Abteilung${m.compliance?.begruendung ? ": " + esc(m.compliance.begruendung) : ""}</span>` : ""}</div></div>`;
     };
     const gedanke = (shop, text, mo, kurz) => {
       const i = idx(shop);
-      return `<div class="eintrag${links && i === 1 ? " rechts" : ""}" style="--farbe:${farbe(i)}"><span class="avatar" aria-hidden="true">${esc(shop.replace("Shop ", "").slice(0, 2))}</span>
+      return `<div class="eintrag${links && i === 1 ? " rechts" : ""}" style="--farbe:${this.farbeShop(i)}"><span class="avatar" data-shop="${esc(shop)}" aria-hidden="true">${esc(shop.replace("Shop ", "").slice(0, 2))}</span>
         <div class="gedanke${mo ? " gross" : ""}${kurz ? " kurz" : ""}"><div class="gedanke-kopf">${AUGE} privat · ${esc(shop)}${mo ? `<span class="nr" style="margin-left:auto">${mo.nr}</span>` : ""}</div><span class="txt">${esc(text)}</span></div></div>`;
     };
     const regie = (mo) => (mo.kommentar ? `<div class="regie"><span class="nr">${mo.nr}</span><span>${esc(mo.kommentar)}</span></div>` : "");
@@ -567,9 +647,18 @@ class Buehne {
     const alt = this.n; this.n = n;
     const r = this.runden.find((q) => q.runde === n) || this.runden[this.runden.length - 1];
     const vor = this.runden.find((q) => q.runde === n - 1);
-    const b = this.lauf.benchmarks, viele = this.shops.length > 3;
+    const b = this.lauf.benchmarks;
     const mittel = (q) => this.shops.reduce((a, s) => a + q.preise[s], 0) / this.shops.length;
-    const werte = viele ? [["mittel", mittel(r), vor && mittel(vor)]] : this.shops.map((s, i) => [i, r.preise[s], vor?.preise[s]]);
+    const extrem = (q, f) => this.shops.reduce((best, s) => (best == null || f(q.preise[s], q.preise[best]) ? s : best), null);
+    let werte;
+    if (this.schwarm) {
+      const lo = extrem(r, (a, c) => a < c), hi = extrem(r, (a, c) => a > c);
+      const gleich = r.preise[lo] === r.preise[hi];
+      this.w.querySelector('[data-name="min"]').textContent = gleich ? "alle gleich" : lo;
+      this.w.querySelector('[data-name="max"]').textContent = gleich ? "alle gleich" : hi;
+      werte = [["mittel", mittel(r), vor && mittel(vor)], ["min", r.preise[lo], vor && Math.min(...this.shops.map((s) => vor.preise[s]))],
+               ["max", r.preise[hi], vor && Math.max(...this.shops.map((s) => vor.preise[s]))]];
+    } else werte = this.shops.map((s, i) => [i, r.preise[s], vor?.preise[s]]);
     werte.forEach(([k, p, pv]) => {
       const el = this.w.querySelector(`[data-preis="${k}"]`), neu = `${preisHtml(p)}<small>CHF</small>`;
       if (el.innerHTML !== neu) { el.innerHTML = neu; if (animiert && !REDUZIERT) { el.classList.remove("kipp"); void el.offsetWidth; el.classList.add("kipp"); } }
@@ -591,6 +680,13 @@ class Buehne {
       const c = this.svg.querySelector(`[data-ende="${i}"]`);
       if (c) { c.setAttribute("cx", this.x(n)); c.setAttribute("cy", this.y(r.preise[s])); }
     });
+    if (this.schwarm) {
+      const oben = sicht.map((q) => `${this.x(q.runde)},${this.y(Math.max(...this.shops.map((s) => q.preise[s])))}`);
+      const unten = sicht.map((q) => `${this.x(q.runde)},${this.y(Math.min(...this.shops.map((s) => q.preise[s])))}`).reverse();
+      this.svg.querySelector("[data-spanne]").setAttribute("points", [...oben, ...unten].join(" "));
+      this.svg.querySelector("[data-mittel]").setAttribute("points", sicht.map((q) => `${this.x(q.runde)},${this.y(mittel(q))}`).join(" "));
+      const c = this.svg.querySelector('[data-ende="mittel"]'); c.setAttribute("cx", this.x(n)); c.setAttribute("cy", this.y(mittel(r)));
+    }
     const k = this.svg.querySelector("[data-kopf]"); k.setAttribute("x1", this.x(n)); k.setAttribute("x2", this.x(n));
     this.svg.querySelectorAll(".pin").forEach((g) => g.setAttribute("visibility", Number(g.dataset.runde) <= n ? "visible" : "hidden"));
     this.svg.querySelectorAll("[data-ab]").forEach((g) => g.setAttribute("visibility", Number(g.dataset.ab) <= n ? "visible" : "hidden"));
@@ -684,6 +780,8 @@ function zeichneKapitel() {
       quiz.querySelector("[data-ueberspringen]").addEventListener("click", () => { aufloesen(null); el._buehne.spiele(); });
     }
   });
+  zeichneKapitelVier(liste.length + 1);
+  zeichneKapitelFuenf(liste.length + (DATEN.versuche.some((v) => v.kapitel === 4) ? 2 : 1));
   // Grosses Preisschild aus dem ersten Kapitel: Preis am Ende, Runde ab der beide gleich sind
   const a = liste[0], lauf = DATEN.versuche[a.versuch].durchgaenge[a.durchgang], letzte = lauf.runden[lauf.runden.length - 1];
   const shops = Object.keys(letzte.preise), p = letzte.preise[shops[0]];
@@ -694,6 +792,203 @@ function zeichneKapitel() {
   }
 }
 
+/* ---------------------------------------------------------------- Kapitel 4: mehr Shops ----------------------------------------------- */
+function kennzahlen(v) {
+  const ds = v.durchgaenge, b = ds[0].benchmarks;
+  const haelften = ds.map((d) => d.runden.slice(Math.floor(d.runden.length / 2)));
+  const mittel = (r) => { const p = Object.values(r.preise); return p.reduce((a, x) => a + x, 0) / p.length; };
+  const preis = haelften.flat().reduce((a, r) => a + mittel(r), 0) / Math.max(1, haelften.flat().length);
+  const msgs = ds.reduce((a, d) => a + d.runden.reduce((x, r) => x + (r.nachrichten || []).length, 0), 0) / ds.reduce((a, d) => a + d.runden.length, 0);
+  const ki = ds.reduce((a, d) => a + d.ki, 0) / ds.length;
+  // ein typischer Satz: die längste Nachricht der zweiten Hälfte, die ein Preisniveau vorschlägt
+  const kandidaten = haelften.flat().flatMap((r) => (r.nachrichten || []).filter((m) => /schlage|lasst uns|gemeinsam|alle|niveau/i.test(m.text)));
+  const zitat = kandidaten.sort((a, c) => c.text.length - a.text.length)[0];
+  const art = ds.reduce((a, d) => { const k = d.kanal_art || {}; ["nachrichten", "vorschlag", "werbung", "ansage"].forEach((x) => { a[x] += k[x] || 0; }); return a; },
+    { nachrichten: 0, vorschlag: 0, werbung: 0, ansage: 0 });
+  const meist = art.nachrichten ? [["Vorschläge", art.vorschlag], ["Werbung", art.werbung], ["Preisansagen", art.ansage]].sort((a, c) => c[1] - a[1])[0] : null;
+  return { shops: v.shops || Object.keys(ds[0].runden[0].preise).length, ki, preis, ueber: (preis / b.nash_preis - 1) * 100, msgs,
+           art: meist && meist[1] ? `${meist[0]} (${Math.round(100 * meist[1] / art.nachrichten)} %)` : art.nachrichten ? "sonstiges" : "keine", artRoh: art,
+           kartell: ds.filter((d) => d.ki > 0.5).length, laeufe: ds.length, zitat, runden: ds[0].runden.length,
+           // Durchgänge, deren Preise in der zweiten Hälfte im Mittel über dem Kartellpreis liegen (dann sinkt der Index trotz hoher Preise)
+           drueber: haelften.filter((h) => h.reduce((a, r) => a + mittel(r), 0) / Math.max(1, h.length) > b.monopol_preis).length };
+}
+function zeichneKapitelVier(nummer) {
+  const gruppe = DATEN.versuche.map((v, vi) => ({ v, vi })).filter(({ v }) => v.kapitel === 4);
+  if (!gruppe.length) return;
+  // Gemessen am Preis (Aufschlag auf den Wettbewerbspreis, zweite Hälfte): Der Kollusionsindex misst Gewinne und fällt,
+  // wenn Preise weit über den Kartellpreis schiessen – dann wäre „schwerer“ eine falsche Lesart.
+  const k = gruppe.map(({ v }) => kennzahlen(v)), wenig = k[0], viel = k[k.length - 1], diff = viel.ueber - wenig.ueber;
+  const richtig = gruppe.length < 2 ? null : diff <= -10 ? 0 : diff >= 10 ? 2 : 1;
+  const optionen = ["Ja, deutlich tiefer: Mehr Konkurrenz wirkt.", "Kaum ein Unterschied.", "Nein, eher sogar höher."];
+  const pz = (x) => `${x.ueber >= 0 ? "+" : "−"}${Math.abs(Math.round(x.ueber))} %`;
+  const zusammen = k.map((x) => `${x.shops} Shops: ${pz(x)} zum Wettbewerbspreis`).join(" · ");
+  const alleArt = k.reduce((a, x) => { ["nachrichten", "vorschlag", "werbung", "ansage"].forEach((f) => { a[f] += x.artRoh[f]; }); return a; }, { nachrichten: 0, vorschlag: 0, werbung: 0, ansage: 0 });
+  const antwort = richtig === 2 ? "Nein. Mit mehr Shops werden die Preise eher höher." : richtig === 0 ? "Ja. Mit mehr Shops sinken die Preise deutlich." : "Kaum ein Unterschied.";
+  const warum = richtig === 0 ? "" : `Das passt nicht zur Theorie, nach der mehr Konkurrenz die Preise drückt. ${alleArt.nachrichten ? `Die Shops schlagen nichts vor (${alleArt.vorschlag} von ${alleArt.nachrichten} Nachrichten), sie kündigen ihre Preise an (${Math.round(100 * alleArt.ansage / alleArt.nachrichten)} %). ` : ""}Wo das Modell hoch einsteigt, sinken die Preise in ${wenig.runden} Runden nur langsam.${k.some((x) => x.drueber) ? ` Achtung beim Kollusionsindex: ${k.filter((x) => x.drueber).map((x) => `Mit ${x.shops} Shops liegt ${x.drueber === 1 ? "ein Durchgang" : `${x.drueber} Durchgänge`}`).join(", ")} sogar über dem Kartellpreis. Dann sinkt der Gewinn und damit der Index, obwohl die Preise hoch sind.` : ""}`;
+  $("wegweiser").querySelector('a[href="#aufsicht"]')?.parentElement.insertAdjacentHTML("beforebegin",
+    `<li><a href="#kap-${nummer}"><span class="w-nr">Kapitel ${nummer} · Mehr Konkurrenz</span><span class="w-frage">Was ändert sich mit mehr Shops?</span><span class="w-antwort">Erst tippen, dann auflösen</span></a></li>`);
+  $("kapitel-liste").insertAdjacentHTML("beforeend", `<section class="kap rahmen" id="kap-${nummer}">
+    <div class="kap-kopf">
+      <div><span class="kap-nr">Kapitel ${nummer}</span><h2>Mehr Konkurrenz</h2><p class="kap-frage">Was ändert sich mit ${k.map((x) => x.shops).join(", ").replace(/, (?=[^,]*$)/, " oder ")} Shops?</p></div>
+      <div class="kap-text">${richtig == null ? "" : `<div class="quiz" data-quiz="vier">
+          <span class="etikett">Was glaubst du?</span>
+          <p class="quiz-frage">Mit ${viel.shops} Shops statt ${wenig.shops}: Werden die Preise tiefer?</p>
+          <div class="optionen">${optionen.map((o, i) => `<button type="button" class="option" data-i="${i}" data-wertung="${i === richtig ? "richtig" : "falsch"}"><span class="marke">${"ABC"[i]}</span><span>${o}</span><span class="urteil"></span></button>`).join("")}</div>
+          <div class="quiz-fuss"><button type="button" class="textknopf" data-ueberspringen>Ohne Tipp auflösen</button></div>
+        </div>`}
+        <div class="aufloesung" data-aufloesung="vier" ${richtig == null ? "" : "hidden"}>
+          <p class="rueckmeldung" data-rueckmeldung></p>
+          <p class="kap-antwort">${esc(antwort)}</p>
+          <p>${esc(zusammen)}. ${esc(warum)}</p>
+          <p class="quelle">Alle Läufe mit demselben Modell (${esc(gruppe[0].v.durchgaenge[0].modell)}), ${new Set(k.map((x) => x.laeufe)).size === 1 ? `je ${wenig.laeufe} ${wenig.laeufe === 1 ? "Lauf" : "Läufe"}` : `${k.map((x) => x.laeufe).join("/")} Läufe`} à ${wenig.runden} Runden. Eine Tendenz, kein Beweis.</p>
+        </div></div>
+    </div>
+    <div data-vier-inhalt ${richtig == null ? "" : "hidden"}>
+      <div class="vergleich">${gruppe.map(({ v, vi }, i) => {
+        const x = k[i];
+        return `<button type="button" class="vgl-karte" data-vi="${vi}" aria-pressed="${i === k.length - 1}">
+          <h3>${x.shops} Shops</h3>${fallKurve(v.durchgaenge[0], true)}
+          <dl class="vgl-zahlen"><div><dt>Kollusionsindex</dt><dd>${x.ki.toFixed(2)}</dd></div><div><dt>Ø Preis, 2. Hälfte</dt><dd>${x.ueber >= 0 ? "+" : "−"}${Math.abs(Math.round(x.ueber))} % zum Wettbewerb</dd></div>
+          <div><dt>Nachrichten pro Runde</dt><dd>${x.msgs.toFixed(1)}</dd></div><div><dt>Im Kartell</dt><dd>${x.kartell} von ${x.laeufe}</dd></div>
+          <div style="grid-column:1/-1"><dt>Meiste Nachrichten sind</dt><dd>${x.art}</dd></div></dl>
+          ${x.zitat ? `<p class="vgl-zitat">„${esc(x.zitat.text)}“ – ${esc(x.zitat.von)}</p>` : ""}</button>`;
+      }).join("")}</div>
+      <div class="durchgaenge" data-vier-durchgang style="margin:14px 0 12px"></div>
+      <div class="buehne" id="buehne-vier"></div>
+    </div>
+  </section>`);
+  const lade = (vi, di = 0) => {
+    const ds = DATEN.versuche[vi].durchgaenge, lauf = ds[di], dg = document.querySelector("[data-vier-durchgang]");
+    dg.innerHTML = ds.length > 1 ? ds.map((x, i) => `<button type="button" aria-pressed="${i === di}" data-d="${i}">Durchgang ${x.wiederholung}</button>`).join("") : "";
+    dg.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => lade(vi, Number(b.dataset.d))));
+    const letzte = lauf.runden[lauf.runden.length - 1].runde;
+    document.querySelectorAll(".vgl-karte").forEach((c) => c.setAttribute("aria-pressed", String(Number(c.dataset.vi) === vi)));
+    new Buehne($("buehne-vier"), { lauf, von: lauf.runden[0].runde, bis: letzte, ruhe: letzte, modus: "alle", notizen: false, tempo: 520 });
+  };
+  document.querySelectorAll(".vgl-karte").forEach((c) => c.addEventListener("click", () => lade(Number(c.dataset.vi))));
+  const quiz = document.querySelector('[data-quiz="vier"]'), auf = document.querySelector('[data-aufloesung="vier"]'), inhalt = document.querySelector("[data-vier-inhalt]");
+  let geladen = false;
+  const zeigen = () => { inhalt.hidden = false; if (!geladen) { geladen = true; lade(gruppe[gruppe.length - 1].vi); } };
+  if (!quiz) { zeigen(); return; }
+  const aufloesen = (gewaehlt) => {
+    if (quiz.dataset.fertig) return; quiz.dataset.fertig = "1";
+    quiz.querySelectorAll(".option").forEach((b) => {
+      const w = b.dataset.wertung, eigen = gewaehlt != null && Number(b.dataset.i) === gewaehlt; b.disabled = true;
+      if (w === "richtig") { b.classList.add("gezeigt"); b.querySelector(".marke").innerHTML = HAKEN; b.querySelector(".urteil").textContent = eigen ? "Dein Tipp · richtig" : "Richtig"; }
+      else if (eigen) { b.classList.add("gewaehlt"); b.querySelector(".marke").innerHTML = KREUZ; b.querySelector(".urteil").textContent = "Dein Tipp"; }
+      else b.classList.add("blass");
+    });
+    quiz.querySelector(".quiz-fuss").hidden = true;
+    auf.querySelector("[data-rueckmeldung]").innerHTML = gewaehlt == null ? "" : `<b>${gewaehlt === richtig ? "Richtig." : "Daneben."}</b>`;
+    auf.hidden = false; zeigen();
+  };
+  quiz.querySelectorAll(".option").forEach((b) => b.addEventListener("click", () => aufloesen(Number(b.dataset.i))));
+  quiz.querySelector("[data-ueberspringen]").addEventListener("click", () => aufloesen(null));
+}
+
+/* ---------------------------------------------------------------- Kapitel 5: Firmen mit eigenen Interessen ------------------------- */
+function quizVerdrahten(quiz, auf, richtig, beiAufloesung) {
+  const aufloesen = (gewaehlt) => {
+    if (quiz.dataset.fertig) return; quiz.dataset.fertig = "1";
+    quiz.querySelectorAll(".option").forEach((b) => {
+      const w = b.dataset.wertung, eigen = gewaehlt != null && Number(b.dataset.i) === gewaehlt; b.disabled = true;
+      if (w === "richtig") { b.classList.add("gezeigt"); b.querySelector(".marke").innerHTML = HAKEN; b.querySelector(".urteil").textContent = eigen ? "Dein Tipp · richtig" : "Richtig"; }
+      else if (eigen) { b.classList.add("gewaehlt"); b.querySelector(".marke").innerHTML = KREUZ; b.querySelector(".urteil").textContent = "Dein Tipp"; }
+      else b.classList.add("blass");
+    });
+    quiz.querySelector(".quiz-fuss").hidden = true;
+    auf.querySelector("[data-rueckmeldung]").innerHTML = gewaehlt == null ? "" : `<b>${gewaehlt === richtig ? "Richtig." : "Daneben."}</b>`;
+    auf.hidden = false; beiAufloesung();
+  };
+  quiz.querySelectorAll(".option").forEach((b) => b.addEventListener("click", () => aufloesen(Number(b.dataset.i))));
+  quiz.querySelector("[data-ueberspringen]").addEventListener("click", () => aufloesen(null));
+}
+function zeichneKapitelFuenf(nummer) {
+  const gruppe = DATEN.versuche.map((v, vi) => ({ v, vi })).filter(({ v }) => v.kapitel === 5 && v.durchgaenge[0].firmen);
+  if (!gruppe.length) return;
+  const haupt = gruppe.find(({ v }) => v.durchgaenge[0].kanal) || gruppe[0];
+  const firmenH = haupt.v.durchgaenge[0].firmen;
+  // Wofür nutzen die Firmen den Kanal? Summe über alle Durchgänge des Versuchs mit Kanal
+  const art = haupt.v.durchgaenge.reduce((a, d) => { const k = d.kanal_art || {}; ["nachrichten", "vorschlag", "werbung", "ansage"].forEach((x) => { a[x] += k[x] || 0; }); return a; },
+    { nachrichten: 0, vorschlag: 0, werbung: 0, ansage: 0 });
+  const runden = haupt.v.durchgaenge.reduce((a, d) => a + d.runden.length, 0);
+  const richtig = art.nachrichten < runden * 0.3 ? 2 : art.vorschlag >= art.werbung ? 0 : 1;
+  const optionen = ["Für Preisabsprachen mit der Konkurrenz.", "Für Werbung für ihr eigenes Angebot.", "Sie schweigen."];
+  const anteil = (x) => `${Math.round(100 * x / Math.max(1, art.nachrichten))} %`;
+  // Den Kanal lesen laut Auftrag nur die Shops; sieht die Kundschaft ihn nicht, wirbt jede Firma bei ihrer Konkurrenz
+  const blind = haupt.v.durchgaenge[0].kunden_lesen_kanal === false;
+  const antwort = richtig === 1 ? (blind ? "Für Werbung, und zwar bei der Konkurrenz. Die Kundschaft liest gar nicht mit." : "Für Werbung. Aus dem Kartell-Chat wird ein Schaufenster.") : richtig === 0 ? "Für Absprachen, trotz ganz verschiedener Interessen." : "Sie schweigen.";
+  // Wer ist am günstigsten, wer am teuersten – je Durchgang, denn die Rollen wechseln
+  const pos = haupt.v.durchgaenge.map((d) => { const s = [...d.firmen].sort((a, b) => a.preis - b.preis); return [s[0].name, s[s.length - 1].name]; });
+  const posText = pos.every((p) => p[0] === pos[0][0] && p[1] === pos[0][1]) ? `${pos[0][0]} am günstigsten, ${pos[0][1]} am teuersten`
+    : pos.map((p, i) => `Durchgang ${haupt.v.durchgaenge[i].wiederholung}: ${p[0]} am günstigsten, ${p[1]} am teuersten`).join("; ");
+  // Fairer Vergleich: dasselbe Modell mit gleichen Shops ohne eigene Interessen (Kapitel 4), aus den Daten statt fest im Text
+  const vglArt = DATEN.versuche.filter((v) => v.kapitel === 4).flatMap((v) => v.durchgaenge).reduce((a, d) => {
+    const k = d.kanal_art || {}; ["nachrichten", "vorschlag", "werbung", "ansage"].forEach((x) => { a[x] += k[x] || 0; }); return a; }, { nachrichten: 0, vorschlag: 0, werbung: 0, ansage: 0 });
+  const vglText = vglArt.nachrichten ? `Zum Vergleich, dasselbe Modell mit gleichen Shops (Kapitel 4): ${vglArt.vorschlag} von ${vglArt.nachrichten} Nachrichten sind Vorschläge, ${Math.round(100 * vglArt.werbung / vglArt.nachrichten)} % Werbung, ${Math.round(100 * vglArt.ansage / vglArt.nachrichten)} % Preisansagen. ${vglArt.vorschlag ? "" : "Absprachen schlägt dieses Modell also nie vor. Neu ist mit echten Firmen die Werbung. "}` : "";
+  const ohne = gruppe.find(({ v }) => !v.durchgaenge[0].kanal), pMit = kennzahlen(haupt.v).preis, pOhne = ohne && kennzahlen(ohne.v).preis;
+  const ohneText = !ohne || ohne === haupt ? "" : ` Ohne Kanal sind die Preise ${pOhne >= pMit * 0.95 ? "nicht tiefer" : "tiefer"} (Ø ${chf(pOhne)} statt ${chf(pMit)} CHF)${pOhne >= pMit * 0.95 ? ": Die hohen Preise kommen nicht vom Kanal." : "."}`;
+  $("wegweiser").querySelector('a[href="#aufsicht"]')?.parentElement.insertAdjacentHTML("beforebegin",
+    `<li><a href="#kap-${nummer}"><span class="w-nr">Kapitel ${nummer} · Echte Firmen</span><span class="w-frage">Was tun Firmen mit eigenen Interessen?</span><span class="w-antwort">Erst tippen, dann auflösen</span></a></li>`);
+  $("kapitel-liste").insertAdjacentHTML("beforeend", `<section class="kap rahmen" id="kap-${nummer}">
+    <div class="kap-kopf">
+      <div><span class="kap-nr">Kapitel ${nummer}</span><h2>Echte Firmen</h2><p class="kap-frage">Was tun Firmen mit eigenen Interessen?</p></div>
+      <div class="kap-text"><div class="quiz" data-quiz="fuenf">
+          <span class="etikett">Was glaubst du?</span>
+          <p class="quiz-frage">${firmenH.length} Firmen mit ganz verschiedenen Interessen, vom Discounter mit Investor bis zum Familienbetrieb, dürfen sich öffentlich schreiben. Wofür nutzen sie den Kanal?</p>
+          <div class="optionen">${optionen.map((o, i) => `<button type="button" class="option" data-i="${i}" data-wertung="${i === richtig ? "richtig" : "falsch"}"><span class="marke">${"ABC"[i]}</span><span>${o}</span><span class="urteil"></span></button>`).join("")}</div>
+          <div class="quiz-fuss"><button type="button" class="textknopf" data-ueberspringen>Ohne Tipp auflösen</button></div>
+        </div>
+        <div class="aufloesung" data-aufloesung="fuenf" hidden>
+          <p class="rueckmeldung" data-rueckmeldung></p>
+          <p class="kap-antwort">${esc(antwort)}</p>
+          <p>Von ${art.nachrichten} Nachrichten sind ${anteil(art.werbung)} Werbung, ${anteil(art.vorschlag)} Vorschläge an die Konkurrenz und ${anteil(art.ansage)} reine Preisansagen.${richtig === 1 && blind ? " Das Seltsame daran: Den Kanal lesen laut Auftrag nur die Shops, die Kundschaft sieht ihn nie. Die Firmen preisen Beratung, Garantie und Lieferung also ihren Konkurrenten an." : ""} Die Preise sind trotzdem hoch: Die KI-Kundschaft zahlt viel, und jede Firma positioniert sich anders (${esc(posText)}).${esc(ohneText)} Jede Firma kennt nur ihre eigene Geschichte und ihre Kosten; niemand sagt ihr, wie sie sich verhalten soll.</p>
+          <p class="quelle">${esc(vglText)}${haupt.v.durchgaenge.length === 1 ? "Ein Lauf" : `${haupt.v.durchgaenge.length} Läufe`} à ${haupt.v.durchgaenge[0].runden.length} Runden: ein Hinweis, kein Beweis.</p>
+        </div></div>
+    </div>
+    <div data-fuenf-inhalt hidden>
+      ${gruppe.length > 1 ? `<div class="umschalter" role="group" aria-label="Variante">${gruppe.map(({ v, vi }) => `<button type="button" data-fuenf-vi="${vi}" aria-pressed="${vi === haupt.vi}">${v.durchgaenge[0].kanal ? "Mit Kanal" : "Ohne Kanal"}</button>`).join("")}</div>` : ""}
+      <div class="durchgaenge" data-fuenf-durchgang style="margin-bottom:12px"></div>
+      <div class="firmen" data-firmen></div>
+      <div class="kundenbox" data-kunden></div>
+      <div class="buehne" id="buehne-fuenf"></div>
+    </div>
+  </section>`);
+  const zeige = (vi, di) => {
+    const v = DATEN.versuche[vi], d = v.durchgaenge[di];
+    document.querySelectorAll("[data-fuenf-vi]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.fuenfVi) === vi)));
+    const dg = document.querySelector("[data-fuenf-durchgang]");
+    dg.innerHTML = v.durchgaenge.length > 1 ? v.durchgaenge.map((x, i) => `<button type="button" aria-pressed="${i === di}" data-d="${i}">Durchgang ${x.wiederholung}</button>`).join("") : "";
+    dg.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => zeige(vi, Number(b.dataset.d))));
+    document.querySelector("[data-firmen]").innerHTML = (d.firmen || []).map((f) => {
+      const proz = Math.round((f.preis / f.nash - 1) * 100), lage = Math.max(0, Math.min(100, (0.15 + f.lage * 0.7) * 100));
+      return `<article class="firma"><h3>${esc(f.name)}</h3>
+        <p class="firma-profil" title="Klicken für das ganze Profil">${esc(f.profil)}</p>
+        <dl class="firma-zahlen"><div><dt>Stückkosten</dt><dd>${chf(f.kosten)} CHF</dd></div><div><dt>Preis, 2. Hälfte</dt><dd>${chf(f.preis)} CHF</dd></div>
+          <div><dt>Marktanteil</dt><dd>${Math.round(f.anteil * 100)} %</dd></div><div><dt>Gewinn, ganzer Lauf</dt><dd>${Math.round(f.gewinn)} CHF</dd></div></dl>
+        <div class="lage" aria-label="Preis zwischen eigenem Wettbewerbs- und Kartellpreis"><div class="lage-spur"><b style="left:${lage}%"></b></div>
+          <div class="lage-text"><span>Wettbewerb ${chf(f.nash)}</span><span>${proz >= 0 ? "+" : "−"}${Math.abs(proz)} %</span><span>Kartell ${chf(f.monopol)}</span></div></div>
+        ${f.stimme ? `<div class="blase"><span class="etikett">Öffentlich · Runde ${f.stimme.runde}</span><br><span class="txt">${esc(f.stimme.text)}</span></div>` : d.kanal ? `<p class="still">– schreibt nichts in den Kanal –</p>` : ""}
+        ${f.gedanke ? `<div class="gedanke"><div class="gedanke-kopf">${AUGE} privat · Runde ${f.gedanke.runde}</div><span class="txt">${esc(f.gedanke.text)}</span></div>` : ""}
+      </article>`;
+    }).join("");
+    document.querySelectorAll(".firma-profil").forEach((el) => el.addEventListener("click", () => el.classList.toggle("offen")));
+    const k = d.kunden_stimmen || {};
+    document.querySelector("[data-kunden]").innerHTML = k.zitate?.length ? `<h3>Was die Kundschaft sagt</h3>
+      <p class="rueckmeldung">In der zweiten Hälfte kaufen ${Math.round(k.nicht_kauf * 100)} % der 30 Personen pro Runde nichts.</p>
+      <div class="kunden-zitate">${k.zitate.map((z) => `<p class="kunden-zitat">„${esc(z.grund)}“<span>${esc(z.name)} · ${z.kauf === "nichts" ? "kauft nichts" : "kauft bei " + esc(z.kauf)} · Runde ${z.runde}</span></p>`).join("")}</div>` : "";
+    document.querySelector("[data-kunden]").hidden = !k.zitate?.length;
+    const letzte = d.runden[d.runden.length - 1].runde;
+    new Buehne($("buehne-fuenf"), { lauf: d, von: d.runden[0].runde, bis: letzte, ruhe: letzte, modus: "alle", notizen: true, tempo: 600 });
+  };
+  document.querySelectorAll("[data-fuenf-vi]").forEach((b) => b.addEventListener("click", () => zeige(Number(b.dataset.fuenfVi), 0)));
+  let gezeigt = false;
+  quizVerdrahten(document.querySelector('[data-quiz="fuenf"]'), document.querySelector('[data-aufloesung="fuenf"]'), richtig, () => {
+    document.querySelector("[data-fuenf-inhalt]").hidden = false;
+    if (!gezeigt) { gezeigt = true; zeige(haupt.vi, 0); }
+  });
+}
+
 /* ---------------------------------------------------------------- Spiel: Du bist die Aufsicht -------------------------------------- */
 // Fälle: klare Läufe aus den drei Kapiteln (Kartell = Kollusionsindex über 0.5; im Spiel nur ≥ 0.6 oder ≤ 0.2)
 const SPIEL_FAELLE = 6, VERRAET = /koopera|absprach|gleichgewicht|halte|signal|unterbiet|preiskampf|preiskrieg|niveau/i;
@@ -701,7 +996,7 @@ let spiel = null;
 function mischen(liste) { const l = [...liste]; for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [l[i], l[j]] = [l[j], l[i]]; } return l; }
 function neuesSpiel() {
   const pool = [];
-  DATEN.versuche.forEach((v, vi) => { if (!v.kapitel) return; v.durchgaenge.forEach((d, di) => { if (d.ki >= 0.6 || d.ki <= 0.2) pool.push({ vi, di, kartell: d.ki > 0.5 }); }); });
+  DATEN.versuche.forEach((v, vi) => { if (!v.kapitel || v.kapitel > 3) return; v.durchgaenge.forEach((d, di) => { if (d.ki >= 0.6 || d.ki <= 0.2) pool.push({ vi, di, kartell: d.ki > 0.5 }); }); });
   const k = mischen(pool.filter((f) => f.kartell)), w = mischen(pool.filter((f) => !f.kartell)), halb = Math.floor(SPIEL_FAELLE / 2);
   spiel = { faelle: mischen([...k.slice(0, halb), ...w.slice(0, SPIEL_FAELLE - halb)]), i: 0, ergebnisse: [] };
   zeichneFall();
@@ -720,7 +1015,9 @@ function fallKurve(lauf, band) {
     <text x="${W - m.r + 7}" y="${y(b.monopol_preis) + 4}" style="fill:var(--kartell);font-weight:600">Kartell</text>`;
   s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(b.nash_preis)}" y2="${y(b.nash_preis)}" stroke="var(--wettbewerb)" stroke-width="1.5" stroke-dasharray="6 4"/>
     <text x="${W - m.r + 7}" y="${y(b.nash_preis) + 4}" style="fill:var(--tinte);font-weight:600">Wettbewerb</text>`;
-  shops.forEach((sh, i) => { s += `<polyline points="${rs.map((r, j) => `${x(j)},${y(r.preise[sh])}`).join(" ")}" fill="none" stroke="${farbe(i)}" stroke-width="2.2" stroke-linejoin="round"/>`; });
+  const schwarm = shops.length > 2;
+  shops.forEach((sh, i) => { s += `<polyline points="${rs.map((r, j) => `${x(j)},${y(r.preise[sh])}`).join(" ")}" fill="none" stroke="${schwarm ? "var(--leise)" : farbe(i)}" stroke-width="${schwarm ? 1.1 : 2.2}" stroke-opacity="${schwarm ? 0.5 : 1}" stroke-linejoin="round"/>`; });
+  if (schwarm) s += `<polyline points="${rs.map((r, j) => `${x(j)},${y(shops.reduce((a, sh) => a + r.preise[sh], 0) / shops.length)}`).join(" ")}" fill="none" stroke="var(--tinte)" stroke-width="2.6" stroke-linejoin="round"/>`;
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Preise beider Shops über alle Runden">${s}</svg>`;
 }
 function zeichneFall() {
@@ -789,7 +1086,9 @@ function zeichneWand() {
       v.durchgaenge.forEach((d, di) => {
         const n = d.runden.length, X = (i) => (n === 1 ? 50 : (i / (n - 1)) * 100), Y = (p) => 2 + (hi - p) / (hi - lo) * 42;
         const shops = Object.keys(d.runden[0].preise);
-        const linien = shops.map((s, i) => `<polyline points="${d.runden.map((r, j) => `${X(j).toFixed(1)},${Y(r.preise[s]).toFixed(1)}`).join(" ")}" fill="none" stroke="${farbe(i)}" stroke-width="${shops.length > 3 ? 0.8 : 1.6}" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`).join("");
+        const schwarm = shops.length > 2;
+        const linien = shops.map((s, i) => `<polyline points="${d.runden.map((r, j) => `${X(j).toFixed(1)},${Y(r.preise[s]).toFixed(1)}`).join(" ")}" fill="none" stroke="${schwarm ? "var(--leise)" : farbe(i)}" stroke-opacity="${schwarm ? 0.45 : 1}" stroke-width="${schwarm ? 0.8 : 1.6}" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`).join("")
+          + (schwarm ? `<polyline points="${d.runden.map((r, j) => `${X(j).toFixed(1)},${Y(shops.reduce((a, s) => a + r.preise[s], 0) / shops.length).toFixed(1)}`).join(" ")}" fill="none" stroke="var(--tinte)" stroke-width="1.8" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>` : "");
         html += `<button class="kachel" type="button" data-v="${vi}" data-d="${di}" aria-label="${esc(v.kurz)}, Durchgang ${d.wiederholung}, Kollusionsindex ${d.ki.toFixed(2)}">
           <svg viewBox="0 0 100 46" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="${Y(b.monopol_preis)}" width="100" height="${Y(b.nash_preis) - Y(b.monopol_preis)}" fill="var(--band)"/>
           <line x1="0" x2="100" y1="${Y(b.nash_preis)}" y2="${Y(b.nash_preis)}" stroke="var(--wettbewerb)" stroke-width="1" stroke-dasharray="3 2" vector-effect="non-scaling-stroke"/>${linien}</svg>

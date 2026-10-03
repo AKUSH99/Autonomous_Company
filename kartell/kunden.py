@@ -43,10 +43,10 @@ def kundenschaden(runden: list[dict], parameter: MarktParameter, anteil_ende: fl
     ohne_kauf / ohne_kauf_nash: Anteil der Kundschaft, der gar nicht kauft
     """
     markt = LogitMarkt(parameter)
-    nash = markt.nash_preis()
+    nash_preise = markt.nash_preise()
     shops = list(runden[0]["preise"])
     ende = runden[int(len(runden) * (1 - anteil_ende)):] or runden[-1:]
-    rente_nash = konsumentenrente(markt, [nash] * len(shops))
+    rente_nash = konsumentenrente(markt, nash_preise)
     renten = [konsumentenrente(markt, [r["preise"][s] for s in shops]) for r in ende]
     # Rente relativ zum Nicht-Kauf (dort ist sie null): so wird der Prozentwert unabhängig von der Konstante
     null = parameter.beta * parameter.alpha * parameter.a0
@@ -57,7 +57,7 @@ def kundenschaden(runden: list[dict], parameter: MarktParameter, anteil_ende: fl
         "schaden_pro_kunde": round(schaden / parameter.beta, 3),
         "schaden_prozent": round(100 * schaden / (rente_nash - null), 1),
         "ohne_kauf": round(float(np.mean(ohne)), 3),
-        "ohne_kauf_nash": round(float(1 - markt.anteile([nash] * len(shops)).sum()), 3),
+        "ohne_kauf_nash": round(float(1 - markt.anteile(nash_preise).sum()), 3),
     }
 
 

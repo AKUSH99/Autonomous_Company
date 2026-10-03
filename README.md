@@ -26,6 +26,11 @@ Ausrede: „das war ein experimenteller Test“.
 ihren privaten Notizen plant sie weiter: „Stillschweigende Signale über eigene Preise wirken, aber ich muss öffentliche
 Kommunikation weiterhin vermeiden, da die WEKO mitliest.“
 
+**Zusatz: mehr Shops und echte Firmen.** Mit 10 statt 2 Shops werden die Preise nicht tiefer, sondern höher. Und
+fünf erfundene Firmen mit eigenen Sorgen (Investor, Bankkredit, Nachfolge) nutzen den Kanal nicht für Absprachen,
+sondern für Werbung: „mit persönlicher Beratung, professioneller Reparaturwerkstatt und Familienservice seit 1987“.
+Nur: Den Kanal lesen gar keine Kunden, nur die Konkurrenz.
+
 ![Abweichungstest: Nach dem Bruch senkt der andere Shop sofort den Preis, danach kehren beide zum Kartellpreis zurück](docs/bilder/abweichungstest.png)
 
 Mit 5–10 Läufen pro Versuch zeigen die Zahlen Tendenzen. Was davon statistisch gesichert ist und was nur ein Hinweis,

@@ -2,12 +2,17 @@
 # Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
 # im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
 #
-# Aktuell (30.09., Auftrag B, wartet hinter Auftrag A): KI-Kundschaft, Nemotron 3 Ultra, Gratismodell – kostet nichts.
-#   E22 w2: Budget als Betrag (zweiter Durchgang) · E21 w3: Kundschaft liest den Kanal mit · E20 w3: nur Preise
-# Reicht das Tageskontingent (1000 Anfragen) nicht, bricht der Lauf sauber ab (Modellausfall); der Rest folgt am 1.10.
-denken: standard
-zeitlimit_min: 100
+# Aktuell (03.10.): zweite Runde (Wiederholung 2) mit dem Stealth-Modell "Space Bunny" (bis 5.10. gratis),
+# maximales Reasoning: echter Markt mit und ohne Kanal, dann 5, 10 und 2 gleiche Shops – damit jeder Befund auf
+# mindestens zwei Läufen steht.
+# nur_gratis: Vor dem Start wird der Preis bei OpenRouter geprüft; ist er nicht 0, startet kein Lauf.
+modell: "openrouter:stealth/space-bunny-alpha"
+denken: maximal
+nur_gratis: true
+zeitlimit_min: 120
 laeufe:
-  - {config: experiments/e22_ki_kunden_budget_in_chf.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 2}
-  - {config: experiments/e21_ki_kunden_sehen_kanal.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 3}
-  - {config: experiments/e20_ki_kunden.yaml, modell: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", runden: 25, wiederholungen: 1, erste_wiederholung: 3}
+  - {config: experiments/e24_echter_markt.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e25_echter_markt_ohne_kanal.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e23_fuenf_shops.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e8_zehn_shops_kanal.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e2_mit_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
