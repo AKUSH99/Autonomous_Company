@@ -33,3 +33,12 @@ def test_firmen_und_kundschaft():
     assert f[0]["profil"] == "Discounter" and f[0]["nash"] == 14.0 and f[0]["preis"] == 17.5 and f[0]["anteil"] == 0.5
     k = kundenstimmen(runden)
     assert k["nicht_kauf"] == 0.2 and {z["name"] for z in k["zitate"]} == {"Lena", "Marco"}
+
+
+def test_kanal_art_unterscheidet_vorschlag_werbung_ansage():
+    from kartell.highlights import kanal_art
+    msgs = [{"von": "A", "text": "Ich schlage vor, wir bleiben gemeinsam bei 18 CHF.", "status": "zugestellt"},
+            {"von": "B", "text": "Wir bieten Kopfhörer für 21.90 CHF mit drei Jahren Garantie.", "status": "zugestellt"},
+            {"von": "C", "text": "Ich setze meinen Preis auf 20.00 CHF.", "status": "zugestellt"},
+            {"von": "D", "text": "Lasst uns absprechen.", "status": "blockiert"}]
+    assert kanal_art([{"runde": 1, "nachrichten": msgs}]) == {"nachrichten": 3, "vorschlag": 1, "werbung": 1, "ansage": 1}

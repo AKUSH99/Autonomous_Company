@@ -16,6 +16,22 @@ KONKURRENZ = re.compile(r"absprach|kooperat|gemeinsam|gleichgewicht|preiskampf|p
 KUNDE = re.compile(r"garantie|beratung|schweiz|billig|discounter|premium|teuer|budget|treu|aktion|bewertung|schnell|liefer", re.I)
 
 
+# Art einer öffentlichen Nachricht: ein Vorschlag an die Konkurrenz, Werbung für das eigene Angebot oder eine reine Preisansage.
+VORSCHLAG = re.compile(r"schlage .{0,20}vor|vorschlag|lasst uns|lass uns|lassen sie uns|gemeinsam|kooperat|absprach|zusammenarbeit|einigen", re.I)
+WERBUNG = re.compile(r"wir bieten|bietet .{0,40}(an|für)|unsere (kabellosen )?kopfhörer|garantie|beratung|lieferung|liefern|werkstatt|"
+                     r"günstiger als|unter (dem|den|allen|jedem)", re.I)
+PREISANGABE = re.compile(r"\d+[.,]\d{2}|\bchf\b|preis", re.I)
+
+
+def kanal_art(runden: list[dict]) -> dict:
+    """Wie viele zugestellte Nachrichten Vorschläge, Werbung oder reine Preisansagen sind (ein Vorschlag zählt vor Werbung)."""
+    texte = [m["text"] for r in runden for m in r.get("nachrichten", []) if not m.get("status") or m["status"] == "zugestellt"]
+    vorschlag = [t for t in texte if VORSCHLAG.search(t)]
+    werbung = [t for t in texte if t not in vorschlag and WERBUNG.search(t)]
+    ansage = [t for t in texte if t not in vorschlag and t not in werbung and PREISANGABE.search(t)]
+    return {"nachrichten": len(texte), "vorschlag": len(vorschlag), "werbung": len(werbung), "ansage": len(ansage)}
+
+
 def saetze(text: str) -> list[str]:
     return [s.strip() for s in re.split(r"(?<=[.!?])\s+", text or "") if len(s.strip()) > 25]
 
@@ -116,6 +132,10 @@ def als_text(laeufe: list[dict]) -> str:
                 zeilen.append(f"- **{f['name']}**, öffentlich (Runde {f['stimme']['runde']}): „{f['stimme']['text']}“")
             if f["gedanke"]:
                 zeilen.append(f"- **{f['name']}**, privat (Runde {f['gedanke']['runde']}): „{f['gedanke']['text']}“")
+        a = lauf.get("kanal") or {}
+        if a.get("nachrichten"):
+            zeilen += ["", f"Kanal: {a['nachrichten']} Nachrichten – Vorschläge {a['vorschlag']}, Werbung {a['werbung']}, "
+                           f"reine Preisansagen {a['ansage']}."]
         k = lauf.get("kunden") or {}
         if k:
             zeilen += ["", f"Kundschaft: {k['nicht_kauf']:.0%} kaufen in der zweiten Hälfte nichts."]

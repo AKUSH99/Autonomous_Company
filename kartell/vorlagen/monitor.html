@@ -118,7 +118,9 @@
   .shop-chips button { border: 1px solid var(--linie); background: var(--flaeche); color: var(--tinte); border-radius: 999px; padding: 4px 10px;
     font: 600 0.8rem/1 var(--text); cursor: pointer; }
   .shop-chips button[aria-pressed="true"] { background: var(--shop-a); border-color: var(--shop-a); color: var(--flaeche); }
-  .schild-name small { font: 500 0.78rem/1 var(--text); color: var(--leise); margin-left: 4px; }
+  .schild-name { flex-wrap: wrap; }
+  .schild-name small { font: 500 0.78rem/1.2 var(--text); color: var(--leise); flex: 1 1 100%; margin-left: 18px; min-width: 0; overflow-wrap: anywhere; }
+  .schild-name small:empty { display: none; }
   .avatar.hervor { background: var(--shop-a) !important; }
   .pegel { flex: 2 1 300px; min-width: 0; padding: 10px 14px; border-radius: 10px; background: var(--flaeche-2); display: grid; gap: 7px; }
   .pegel-kopf { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -801,7 +803,11 @@ function kennzahlen(v) {
   // ein typischer Satz: die längste Nachricht der zweiten Hälfte, die ein Preisniveau vorschlägt
   const kandidaten = haelften.flat().flatMap((r) => (r.nachrichten || []).filter((m) => /schlage|lasst uns|gemeinsam|alle|niveau/i.test(m.text)));
   const zitat = kandidaten.sort((a, c) => c.text.length - a.text.length)[0];
+  const art = ds.reduce((a, d) => { const k = d.kanal_art || {}; ["nachrichten", "vorschlag", "werbung", "ansage"].forEach((x) => { a[x] += k[x] || 0; }); return a; },
+    { nachrichten: 0, vorschlag: 0, werbung: 0, ansage: 0 });
+  const meist = art.nachrichten ? [["Vorschläge", art.vorschlag], ["Werbung", art.werbung], ["Preisansagen", art.ansage]].sort((a, c) => c[1] - a[1])[0] : null;
   return { shops: v.shops || Object.keys(ds[0].runden[0].preise).length, ki, preis, ueber: (preis / b.nash_preis - 1) * 100, msgs,
+           art: meist && meist[1] ? `${meist[0]} (${Math.round(100 * meist[1] / art.nachrichten)} %)` : art.nachrichten ? "sonstiges" : "keine",
            kartell: ds.filter((d) => d.ki > 0.5).length, laeufe: ds.length, zitat, runden: ds[0].runden.length };
 }
 function zeichneKapitelVier(nummer) {
@@ -835,7 +841,8 @@ function zeichneKapitelVier(nummer) {
         return `<button type="button" class="vgl-karte" data-vi="${vi}" aria-pressed="${i === k.length - 1}">
           <h3>${x.shops} Shops</h3>${fallKurve(v.durchgaenge[0], true)}
           <dl class="vgl-zahlen"><div><dt>Kollusionsindex</dt><dd>${x.ki.toFixed(2)}</dd></div><div><dt>Ø Preis, 2. Hälfte</dt><dd>${x.ueber >= 0 ? "+" : "−"}${Math.abs(Math.round(x.ueber))} % zum Wettbewerb</dd></div>
-          <div><dt>Nachrichten pro Runde</dt><dd>${x.msgs.toFixed(1)}</dd></div><div><dt>Im Kartell</dt><dd>${x.kartell} von ${x.laeufe}</dd></div></dl>
+          <div><dt>Nachrichten pro Runde</dt><dd>${x.msgs.toFixed(1)}</dd></div><div><dt>Im Kartell</dt><dd>${x.kartell} von ${x.laeufe}</dd></div>
+          <div style="grid-column:1/-1"><dt>Meiste Nachrichten sind</dt><dd>${x.art}</dd></div></dl>
           ${x.zitat ? `<p class="vgl-zitat">„${esc(x.zitat.text)}“ – ${esc(x.zitat.von)}</p>` : ""}</button>`;
       }).join("")}</div>
       <div class="buehne" id="buehne-vier"></div>
@@ -888,12 +895,16 @@ function zeichneKapitelFuenf(nummer) {
   const gruppe = DATEN.versuche.map((v, vi) => ({ v, vi })).filter(({ v }) => v.kapitel === 5 && v.durchgaenge[0].firmen);
   if (!gruppe.length) return;
   const haupt = gruppe.find(({ v }) => v.durchgaenge[0].kanal) || gruppe[0];
-  const firmenH = haupt.v.durchgaenge[0].firmen, hoch = firmenH.filter((f) => f.lage >= 0.5);
-  const richtig = hoch.length >= firmenH.length - 1 ? 0 : hoch.length <= 1 ? 2 : 1;
-  const optionen = ["Ja, (fast) alle halten die Preise hoch.", "Einige ja, andere spielen nicht mit.", "Nein, jede kämpft für sich."];
-  const antwort = richtig === 0 ? "Ja. Trotz ganz verschiedener Interessen halten fast alle die Preise hoch."
-    : richtig === 2 ? "Nein. Mit eigenen Interessen kämpft jede Firma für sich." : "Teilweise. Einige halten die Preise hoch, andere spielen nicht mit.";
-  const namenHoch = hoch.map((f) => f.name).join(", ") || "keine";
+  const firmenH = haupt.v.durchgaenge[0].firmen;
+  // Wofür nutzen die Firmen den Kanal? Summe über alle Durchgänge des Versuchs mit Kanal
+  const art = haupt.v.durchgaenge.reduce((a, d) => { const k = d.kanal_art || {}; ["nachrichten", "vorschlag", "werbung", "ansage"].forEach((x) => { a[x] += k[x] || 0; }); return a; },
+    { nachrichten: 0, vorschlag: 0, werbung: 0, ansage: 0 });
+  const runden = haupt.v.durchgaenge.reduce((a, d) => a + d.runden.length, 0);
+  const richtig = art.nachrichten < runden * 0.3 ? 2 : art.vorschlag >= art.werbung ? 0 : 1;
+  const optionen = ["Für Preisabsprachen mit der Konkurrenz.", "Für Werbung für ihr eigenes Angebot.", "Sie schweigen."];
+  const anteil = (x) => `${Math.round(100 * x / Math.max(1, art.nachrichten))} %`;
+  const antwort = richtig === 1 ? "Für Werbung. Aus dem Kartell-Chat wird ein Schaufenster." : richtig === 0 ? "Für Absprachen, trotz ganz verschiedener Interessen." : "Sie schweigen.";
+  const nachPreis = [...firmenH].sort((a, b) => a.preis - b.preis);
   $("wegweiser").querySelector('a[href="#aufsicht"]')?.parentElement.insertAdjacentHTML("beforebegin",
     `<li><a href="#kap-${nummer}"><span class="w-nr">Kapitel ${nummer} · Echte Firmen</span><span class="w-frage">Was tun Firmen mit eigenen Interessen?</span><span class="w-antwort">Erst tippen, dann auflösen</span></a></li>`);
   $("kapitel-liste").insertAdjacentHTML("beforeend", `<section class="kap rahmen" id="kap-${nummer}">
@@ -901,14 +912,15 @@ function zeichneKapitelFuenf(nummer) {
       <div><span class="kap-nr">Kapitel ${nummer}</span><h2>Echte Firmen</h2><p class="kap-frage">Was tun Firmen mit eigenen Interessen?</p></div>
       <div class="kap-text"><div class="quiz" data-quiz="fuenf">
           <span class="etikett">Was glaubst du?</span>
-          <p class="quiz-frage">${firmenH.length} Firmen mit ganz verschiedenen Interessen, vom Discounter mit Investor bis zum Familienbetrieb. Sprechen sie sich trotzdem ab?</p>
+          <p class="quiz-frage">${firmenH.length} Firmen mit ganz verschiedenen Interessen, vom Discounter mit Investor bis zum Familienbetrieb, dürfen sich öffentlich schreiben. Wofür nutzen sie den Kanal?</p>
           <div class="optionen">${optionen.map((o, i) => `<button type="button" class="option" data-i="${i}" data-wertung="${i === richtig ? "richtig" : "falsch"}"><span class="marke">${"ABC"[i]}</span><span>${o}</span><span class="urteil"></span></button>`).join("")}</div>
           <div class="quiz-fuss"><button type="button" class="textknopf" data-ueberspringen>Ohne Tipp auflösen</button></div>
         </div>
         <div class="aufloesung" data-aufloesung="fuenf" hidden>
           <p class="rueckmeldung" data-rueckmeldung></p>
           <p class="kap-antwort">${esc(antwort)}</p>
-          <p>Näher am eigenen Kartellpreis als am eigenen Wettbewerbspreis: ${esc(namenHoch)}. Jede Firma kennt nur ihre eigene Geschichte und ihre Kosten. Niemand sagt ihr, wie sie sich verhalten soll. Die Kundschaft besteht aus 30 KI-Personen mit Budget in CHF.</p>
+          <p>Von ${art.nachrichten} Nachrichten sind ${anteil(art.werbung)} Werbung, ${anteil(art.vorschlag)} Vorschläge an die Konkurrenz und ${anteil(art.ansage)} reine Preisansagen. Die Preise sind trotzdem hoch: Die KI-Kundschaft zahlt viel, und jede Firma positioniert sich anders, ${esc(nachPreis[0].name)} am günstigsten, ${esc(nachPreis[nachPreis.length - 1].name)} am teuersten. Jede Firma kennt nur ihre eigene Geschichte und ihre Kosten; niemand sagt ihr, wie sie sich verhalten soll.</p>
+          <p class="quelle">Zum Vergleich: Bei DeepSeek mit gleichen Shops sind 72 bis 100 % der Nachrichten Vorschläge. ${haupt.v.durchgaenge.length === 1 ? "Ein Lauf" : `${haupt.v.durchgaenge.length} Läufe`} à ${haupt.v.durchgaenge[0].runden.length} Runden: ein starker Hinweis, kein Beweis.</p>
         </div></div>
     </div>
     <div data-fuenf-inhalt hidden>

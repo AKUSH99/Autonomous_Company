@@ -203,10 +203,11 @@ def lade(ordner: Path) -> dict | None:
     if not runden or "kollusionsindex" not in ergebnis:
         return None
     profile = (meta["config"].get("agenten") or {}).get("profile") or []
-    besonderes = {}
+    from .highlights import kanal_art
+    besonderes = {"kanal_art": kanal_art(roh)} if meta["config"]["kommunikation"]["aktiv"] else {}
     if profile:  # echte Firmen: Kennzahlen, Zitate je Firma und Stimmen der Kundschaft (wörtlich aus den Rohdaten)
         from .highlights import firmen, kundenstimmen
-        besonderes = {"firmen": firmen(roh, profile, meta["benchmarks"]), "kunden_stimmen": kundenstimmen(roh)}
+        besonderes |= {"firmen": firmen(roh, profile, meta["benchmarks"]), "kunden_stimmen": kundenstimmen(roh)}
         for f, k in zip(besonderes["firmen"], LogitMarkt(MarktParameter(**meta["config"]["markt"])).kostenvektor):
             f["kosten"] = round(float(k), 2)
     parameter = MarktParameter(**meta["config"]["markt"])

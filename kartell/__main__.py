@@ -384,7 +384,7 @@ def _monitor(args) -> None:
 
 
 def _highlights(args) -> None:
-    from .highlights import als_text, firmen, kundenstimmen
+    from .highlights import als_text, firmen, kanal_art, kundenstimmen
     laeufe = []
     for meta_datei in sorted(Path(args.laeufe).rglob("meta.json")):
         meta = json.loads(meta_datei.read_text(encoding="utf-8"))
@@ -395,7 +395,7 @@ def _highlights(args) -> None:
         roh = [json.loads(z) for z in datei.read_text(encoding="utf-8").splitlines() if z.strip()]
         if roh:
             laeufe.append({"name": meta["name"], "wiederholung": meta["wiederholung"],
-                           "firmen": firmen(roh, profile, meta["benchmarks"]), "kunden": kundenstimmen(roh)})
+                           "firmen": firmen(roh, profile, meta["benchmarks"]), "kunden": kundenstimmen(roh), "kanal": kanal_art(roh)})
     text = als_text(laeufe) if laeufe else "Keine Läufe mit Firmenprofilen gefunden."
     if args.ausgabe:
         Path(args.ausgabe).write_text(text, encoding="utf-8")
