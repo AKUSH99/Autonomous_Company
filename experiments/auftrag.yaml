@@ -2,14 +2,17 @@
 # Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
 # im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
 #
-# Aktuell (02.10., wartet hinter dem Lauf mit 5, 10 und 2 Shops): echterer Markt mit dem Stealth-Modell "Space Bunny"
-# (bis 5.10. gratis), maximales Reasoning. Fünf Firmen mit eigenen Profilen und Kosten, KI-Kundschaft mit 30 Personen
-# (Budget in CHF, eigene Gewohnheiten). Je ein Lauf à 25 Runden mit und ohne Kanal.
+# Aktuell (03.10.): zweite Runde (Wiederholung 2) mit dem Stealth-Modell "Space Bunny" (bis 5.10. gratis),
+# maximales Reasoning: echter Markt mit und ohne Kanal, dann 5, 10 und 2 gleiche Shops – damit jeder Befund auf
+# mindestens zwei Läufen steht.
 # nur_gratis: Vor dem Start wird der Preis bei OpenRouter geprüft; ist er nicht 0, startet kein Lauf.
 modell: "openrouter:stealth/space-bunny-alpha"
 denken: maximal
 nur_gratis: true
-zeitlimit_min: 150
+zeitlimit_min: 120
 laeufe:
-  - {config: experiments/e24_echter_markt.yaml, runden: 25, wiederholungen: 1}
-  - {config: experiments/e25_echter_markt_ohne_kanal.yaml, runden: 25, wiederholungen: 1}
+  - {config: experiments/e24_echter_markt.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e25_echter_markt_ohne_kanal.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e23_fuenf_shops.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e8_zehn_shops_kanal.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
+  - {config: experiments/e2_mit_kommunikation.yaml, runden: 25, wiederholungen: 1, erste_wiederholung: 2}
