@@ -807,17 +807,24 @@ function kennzahlen(v) {
     { nachrichten: 0, vorschlag: 0, werbung: 0, ansage: 0 });
   const meist = art.nachrichten ? [["Vorschläge", art.vorschlag], ["Werbung", art.werbung], ["Preisansagen", art.ansage]].sort((a, c) => c[1] - a[1])[0] : null;
   return { shops: v.shops || Object.keys(ds[0].runden[0].preise).length, ki, preis, ueber: (preis / b.nash_preis - 1) * 100, msgs,
-           art: meist && meist[1] ? `${meist[0]} (${Math.round(100 * meist[1] / art.nachrichten)} %)` : art.nachrichten ? "sonstiges" : "keine",
-           kartell: ds.filter((d) => d.ki > 0.5).length, laeufe: ds.length, zitat, runden: ds[0].runden.length };
+           art: meist && meist[1] ? `${meist[0]} (${Math.round(100 * meist[1] / art.nachrichten)} %)` : art.nachrichten ? "sonstiges" : "keine", artRoh: art,
+           kartell: ds.filter((d) => d.ki > 0.5).length, laeufe: ds.length, zitat, runden: ds[0].runden.length,
+           // Durchgänge, deren Preise in der zweiten Hälfte im Mittel über dem Kartellpreis liegen (dann sinkt der Index trotz hoher Preise)
+           drueber: haelften.filter((h) => h.reduce((a, r) => a + mittel(r), 0) / Math.max(1, h.length) > b.monopol_preis).length };
 }
 function zeichneKapitelVier(nummer) {
   const gruppe = DATEN.versuche.map((v, vi) => ({ v, vi })).filter(({ v }) => v.kapitel === 4);
   if (!gruppe.length) return;
-  const k = gruppe.map(({ v }) => kennzahlen(v)), wenig = k[0], viel = k[k.length - 1], diff = viel.ki - wenig.ki;
-  const richtig = gruppe.length < 2 ? null : diff <= -0.15 ? 1 : diff >= 0.15 ? 0 : 2;
-  const optionen = ["Leichter: Mehr Shops können mehr absprechen.", "Schwerer: Zu viele müssen mitmachen.", "Kein grosser Unterschied."];
-  const zusammen = k.map((x) => `${x.shops} Shops: Index ${x.ki.toFixed(2)}`).join(" · ");
-  const antwort = richtig === 1 ? "Schwerer. Je mehr Shops, desto tiefer der Preis." : richtig === 0 ? "Leichter. Mehr Shops, höhere Preise." : "Kaum ein Unterschied.";
+  // Gemessen am Preis (Aufschlag auf den Wettbewerbspreis, zweite Hälfte): Der Kollusionsindex misst Gewinne und fällt,
+  // wenn Preise weit über den Kartellpreis schiessen – dann wäre „schwerer“ eine falsche Lesart.
+  const k = gruppe.map(({ v }) => kennzahlen(v)), wenig = k[0], viel = k[k.length - 1], diff = viel.ueber - wenig.ueber;
+  const richtig = gruppe.length < 2 ? null : diff <= -10 ? 0 : diff >= 10 ? 2 : 1;
+  const optionen = ["Ja, deutlich tiefer: Mehr Konkurrenz wirkt.", "Kaum ein Unterschied.", "Nein, eher sogar höher."];
+  const pz = (x) => `${x.ueber >= 0 ? "+" : "−"}${Math.abs(Math.round(x.ueber))} %`;
+  const zusammen = k.map((x) => `${x.shops} Shops: ${pz(x)} zum Wettbewerbspreis`).join(" · ");
+  const alleArt = k.reduce((a, x) => { ["nachrichten", "vorschlag", "werbung", "ansage"].forEach((f) => { a[f] += x.artRoh[f]; }); return a; }, { nachrichten: 0, vorschlag: 0, werbung: 0, ansage: 0 });
+  const antwort = richtig === 2 ? "Nein. Mit mehr Shops werden die Preise eher höher." : richtig === 0 ? "Ja. Mit mehr Shops sinken die Preise deutlich." : "Kaum ein Unterschied.";
+  const warum = richtig === 0 ? "" : `Das passt nicht zur Theorie, nach der mehr Konkurrenz die Preise drückt. ${alleArt.nachrichten ? `Die Shops schlagen nichts vor (${alleArt.vorschlag} von ${alleArt.nachrichten} Nachrichten), sie kündigen ihre Preise an (${Math.round(100 * alleArt.ansage / alleArt.nachrichten)} %). ` : ""}Wo das Modell hoch einsteigt, sinken die Preise in ${wenig.runden} Runden nur langsam.${k.some((x) => x.drueber) ? ` Achtung beim Kollusionsindex: ${k.filter((x) => x.drueber).map((x) => `Mit ${x.shops} Shops liegt ${x.drueber === 1 ? "ein Durchgang" : `${x.drueber} Durchgänge`}`).join(", ")} sogar über dem Kartellpreis. Dann sinkt der Gewinn und damit der Index, obwohl die Preise hoch sind.` : ""}`;
   $("wegweiser").querySelector('a[href="#aufsicht"]')?.parentElement.insertAdjacentHTML("beforebegin",
     `<li><a href="#kap-${nummer}"><span class="w-nr">Kapitel ${nummer} · Mehr Konkurrenz</span><span class="w-frage">Was ändert sich mit mehr Shops?</span><span class="w-antwort">Erst tippen, dann auflösen</span></a></li>`);
   $("kapitel-liste").insertAdjacentHTML("beforeend", `<section class="kap rahmen" id="kap-${nummer}">
@@ -825,14 +832,15 @@ function zeichneKapitelVier(nummer) {
       <div><span class="kap-nr">Kapitel ${nummer}</span><h2>Mehr Konkurrenz</h2><p class="kap-frage">Was ändert sich mit ${k.map((x) => x.shops).join(", ").replace(/, (?=[^,]*$)/, " oder ")} Shops?</p></div>
       <div class="kap-text">${richtig == null ? "" : `<div class="quiz" data-quiz="vier">
           <span class="etikett">Was glaubst du?</span>
-          <p class="quiz-frage">Mit ${viel.shops} Shops statt ${wenig.shops}: Wird ein Kartell leichter oder schwerer?</p>
+          <p class="quiz-frage">Mit ${viel.shops} Shops statt ${wenig.shops}: Werden die Preise tiefer?</p>
           <div class="optionen">${optionen.map((o, i) => `<button type="button" class="option" data-i="${i}" data-wertung="${i === richtig ? "richtig" : "falsch"}"><span class="marke">${"ABC"[i]}</span><span>${o}</span><span class="urteil"></span></button>`).join("")}</div>
           <div class="quiz-fuss"><button type="button" class="textknopf" data-ueberspringen>Ohne Tipp auflösen</button></div>
         </div>`}
         <div class="aufloesung" data-aufloesung="vier" ${richtig == null ? "" : "hidden"}>
           <p class="rueckmeldung" data-rueckmeldung></p>
           <p class="kap-antwort">${esc(antwort)}</p>
-          <p>${esc(zusammen)}. Alle Läufe mit demselben Modell (${esc(gruppe[0].v.durchgaenge[0].modell)}), ${new Set(k.map((x) => x.laeufe)).size === 1 ? `je ${wenig.laeufe} ${wenig.laeufe === 1 ? "Lauf" : "Läufe"}` : `${k.map((x) => x.laeufe).join("/")} Läufe`} à ${wenig.runden} Runden. Eine Tendenz, kein Beweis.</p>
+          <p>${esc(zusammen)}. ${esc(warum)}</p>
+          <p class="quelle">Alle Läufe mit demselben Modell (${esc(gruppe[0].v.durchgaenge[0].modell)}), ${new Set(k.map((x) => x.laeufe)).size === 1 ? `je ${wenig.laeufe} ${wenig.laeufe === 1 ? "Lauf" : "Läufe"}` : `${k.map((x) => x.laeufe).join("/")} Läufe`} à ${wenig.runden} Runden. Eine Tendenz, kein Beweis.</p>
         </div></div>
     </div>
     <div data-vier-inhalt ${richtig == null ? "" : "hidden"}>
@@ -845,11 +853,15 @@ function zeichneKapitelVier(nummer) {
           <div style="grid-column:1/-1"><dt>Meiste Nachrichten sind</dt><dd>${x.art}</dd></div></dl>
           ${x.zitat ? `<p class="vgl-zitat">„${esc(x.zitat.text)}“ – ${esc(x.zitat.von)}</p>` : ""}</button>`;
       }).join("")}</div>
+      <div class="durchgaenge" data-vier-durchgang style="margin:14px 0 12px"></div>
       <div class="buehne" id="buehne-vier"></div>
     </div>
   </section>`);
-  const lade = (vi) => {
-    const lauf = DATEN.versuche[vi].durchgaenge[0], letzte = lauf.runden[lauf.runden.length - 1].runde;
+  const lade = (vi, di = 0) => {
+    const ds = DATEN.versuche[vi].durchgaenge, lauf = ds[di], dg = document.querySelector("[data-vier-durchgang]");
+    dg.innerHTML = ds.length > 1 ? ds.map((x, i) => `<button type="button" aria-pressed="${i === di}" data-d="${i}">Durchgang ${x.wiederholung}</button>`).join("") : "";
+    dg.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => lade(vi, Number(b.dataset.d))));
+    const letzte = lauf.runden[lauf.runden.length - 1].runde;
     document.querySelectorAll(".vgl-karte").forEach((c) => c.setAttribute("aria-pressed", String(Number(c.dataset.vi) === vi)));
     new Buehne($("buehne-vier"), { lauf, von: lauf.runden[0].runde, bis: letzte, ruhe: letzte, modus: "alle", notizen: false, tempo: 520 });
   };
@@ -904,7 +916,16 @@ function zeichneKapitelFuenf(nummer) {
   const optionen = ["Für Preisabsprachen mit der Konkurrenz.", "Für Werbung für ihr eigenes Angebot.", "Sie schweigen."];
   const anteil = (x) => `${Math.round(100 * x / Math.max(1, art.nachrichten))} %`;
   const antwort = richtig === 1 ? "Für Werbung. Aus dem Kartell-Chat wird ein Schaufenster." : richtig === 0 ? "Für Absprachen, trotz ganz verschiedener Interessen." : "Sie schweigen.";
-  const nachPreis = [...firmenH].sort((a, b) => a.preis - b.preis);
+  // Wer ist am günstigsten, wer am teuersten – je Durchgang, denn die Rollen wechseln
+  const pos = haupt.v.durchgaenge.map((d) => { const s = [...d.firmen].sort((a, b) => a.preis - b.preis); return [s[0].name, s[s.length - 1].name]; });
+  const posText = pos.every((p) => p[0] === pos[0][0] && p[1] === pos[0][1]) ? `${pos[0][0]} am günstigsten, ${pos[0][1]} am teuersten`
+    : pos.map((p, i) => `Durchgang ${haupt.v.durchgaenge[i].wiederholung}: ${p[0]} am günstigsten, ${p[1]} am teuersten`).join("; ");
+  // Fairer Vergleich: dasselbe Modell mit gleichen Shops ohne eigene Interessen (Kapitel 4), aus den Daten statt fest im Text
+  const vglArt = DATEN.versuche.filter((v) => v.kapitel === 4).flatMap((v) => v.durchgaenge).reduce((a, d) => {
+    const k = d.kanal_art || {}; ["nachrichten", "vorschlag", "werbung", "ansage"].forEach((x) => { a[x] += k[x] || 0; }); return a; }, { nachrichten: 0, vorschlag: 0, werbung: 0, ansage: 0 });
+  const vglText = vglArt.nachrichten ? `Zum Vergleich, dasselbe Modell mit gleichen Shops (Kapitel 4): ${vglArt.vorschlag} von ${vglArt.nachrichten} Nachrichten sind Vorschläge, ${Math.round(100 * vglArt.werbung / vglArt.nachrichten)} % Werbung, ${Math.round(100 * vglArt.ansage / vglArt.nachrichten)} % Preisansagen. ${vglArt.vorschlag ? "" : "Absprachen schlägt dieses Modell also nie vor. Neu ist mit echten Firmen die Werbung. "}` : "";
+  const ohne = gruppe.find(({ v }) => !v.durchgaenge[0].kanal), pMit = kennzahlen(haupt.v).preis, pOhne = ohne && kennzahlen(ohne.v).preis;
+  const ohneText = !ohne || ohne === haupt ? "" : ` Ohne Kanal sind die Preise ${pOhne >= pMit * 0.95 ? "nicht tiefer" : "tiefer"} (Ø ${chf(pOhne)} statt ${chf(pMit)} CHF)${pOhne >= pMit * 0.95 ? ": Die hohen Preise kommen nicht vom Kanal." : "."}`;
   $("wegweiser").querySelector('a[href="#aufsicht"]')?.parentElement.insertAdjacentHTML("beforebegin",
     `<li><a href="#kap-${nummer}"><span class="w-nr">Kapitel ${nummer} · Echte Firmen</span><span class="w-frage">Was tun Firmen mit eigenen Interessen?</span><span class="w-antwort">Erst tippen, dann auflösen</span></a></li>`);
   $("kapitel-liste").insertAdjacentHTML("beforeend", `<section class="kap rahmen" id="kap-${nummer}">
@@ -919,8 +940,8 @@ function zeichneKapitelFuenf(nummer) {
         <div class="aufloesung" data-aufloesung="fuenf" hidden>
           <p class="rueckmeldung" data-rueckmeldung></p>
           <p class="kap-antwort">${esc(antwort)}</p>
-          <p>Von ${art.nachrichten} Nachrichten sind ${anteil(art.werbung)} Werbung, ${anteil(art.vorschlag)} Vorschläge an die Konkurrenz und ${anteil(art.ansage)} reine Preisansagen. Die Preise sind trotzdem hoch: Die KI-Kundschaft zahlt viel, und jede Firma positioniert sich anders, ${esc(nachPreis[0].name)} am günstigsten, ${esc(nachPreis[nachPreis.length - 1].name)} am teuersten. Jede Firma kennt nur ihre eigene Geschichte und ihre Kosten; niemand sagt ihr, wie sie sich verhalten soll.</p>
-          <p class="quelle">Zum Vergleich: Bei DeepSeek mit gleichen Shops sind 72 bis 100 % der Nachrichten Vorschläge. ${haupt.v.durchgaenge.length === 1 ? "Ein Lauf" : `${haupt.v.durchgaenge.length} Läufe`} à ${haupt.v.durchgaenge[0].runden.length} Runden: ein starker Hinweis, kein Beweis.</p>
+          <p>Von ${art.nachrichten} Nachrichten sind ${anteil(art.werbung)} Werbung, ${anteil(art.vorschlag)} Vorschläge an die Konkurrenz und ${anteil(art.ansage)} reine Preisansagen. Die Preise sind trotzdem hoch: Die KI-Kundschaft zahlt viel, und jede Firma positioniert sich anders (${esc(posText)}).${esc(ohneText)} Jede Firma kennt nur ihre eigene Geschichte und ihre Kosten; niemand sagt ihr, wie sie sich verhalten soll.</p>
+          <p class="quelle">${esc(vglText)}${haupt.v.durchgaenge.length === 1 ? "Ein Lauf" : `${haupt.v.durchgaenge.length} Läufe`} à ${haupt.v.durchgaenge[0].runden.length} Runden: ein Hinweis, kein Beweis.</p>
         </div></div>
     </div>
     <div data-fuenf-inhalt hidden>
@@ -973,7 +994,7 @@ let spiel = null;
 function mischen(liste) { const l = [...liste]; for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [l[i], l[j]] = [l[j], l[i]]; } return l; }
 function neuesSpiel() {
   const pool = [];
-  DATEN.versuche.forEach((v, vi) => { if (!v.kapitel) return; v.durchgaenge.forEach((d, di) => { if (d.ki >= 0.6 || d.ki <= 0.2) pool.push({ vi, di, kartell: d.ki > 0.5 }); }); });
+  DATEN.versuche.forEach((v, vi) => { if (!v.kapitel || v.kapitel > 3) return; v.durchgaenge.forEach((d, di) => { if (d.ki >= 0.6 || d.ki <= 0.2) pool.push({ vi, di, kartell: d.ki > 0.5 }); }); });
   const k = mischen(pool.filter((f) => f.kartell)), w = mischen(pool.filter((f) => !f.kartell)), halb = Math.floor(SPIEL_FAELLE / 2);
   spiel = { faelle: mischen([...k.slice(0, halb), ...w.slice(0, SPIEL_FAELLE - halb)]), i: 0, ergebnisse: [] };
   zeichneFall();

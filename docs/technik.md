@@ -56,6 +56,9 @@ Hauptgeschichte: E1, E2 (Kapitel 1), E16, E17 (Kapitel 2), E3, E4, E18, E19 (Kap
 | `e20_ki_kunden` | KI-Kundschaft: ein LLM entscheidet für 20 Personen, wo sie kaufen | an | aus |
 | `e21_ki_kunden_sehen_kanal` | KI-Kundschaft liest die Nachrichten der Shops mit | an | aus |
 | `e22_ki_kunden_budget_in_chf` | KI-Kundschaft mit Budget als Betrag (prüft eigenes Preiswissen des Modells) | an | aus |
+| `e23_fuenf_shops` | Mehr Konkurrenz: fünf gleiche Shops | an | aus |
+| `e24_echter_markt` | Echter Markt: fünf Firmen mit eigener Geschichte und eigenen Kosten, 30 KI-Kunden mit Gewohnheiten | an | aus |
+| `e25_echter_markt_ohne_kanal` | Dasselbe ohne Kanal | aus | aus |
 
 E5/E6 (Apertus) brauchen einen eigenen Server und wurden nicht durchgeführt.
 
@@ -79,7 +82,7 @@ Laut Schätzung kosten E1–E4 und E7 mit DeepSeek zusammen rund 4 USD statt run
 
 **Budget und Zeitlimit:** Mit `budget_usd` (und `reserve_usd`) in der Auftragsdatei stoppt ein Budgetwächter die Läufe geordnet, bevor das Budget überschritten wird – über alle Läufe des Auftrags hinweg. Bei DeepSeek fragt er dafür alle 10 Runden das echte Guthaben ab, sonst rechnet er aus den Tokens. `zeitlimit_min` begrenzt jeden Lauf. Gestoppte Läufe behalten ihre Runden; `ergebnis.json` und der Bericht nennen den Grund, `reports/kosten.json` das Guthaben vorher und nachher.
 
-**Andere Modelle über OpenRouter:** `--modell openrouter:<modell-id>` nutzt jedes bei OpenRouter gelistete Modell (Schlüssel in `OPENROUTER_API_KEY`). Mit `--compliance-modell` urteilt ein anderes Modell als die Preisagenten – sonst prüft ein Modell sich selbst. Eine Auftragsdatei kann mit `modellsuche: {begriffe: [...]}` die Modellliste durchsuchen lassen.
+**Andere Modelle über OpenRouter:** `--modell openrouter:<modell-id>` nutzt jedes bei OpenRouter gelistete Modell (Schlüssel in `OPENROUTER_API_KEY`). Mit `--compliance-modell` urteilt ein anderes Modell als die Preisagenten – sonst prüft ein Modell sich selbst. Eine Auftragsdatei kann mit `modellsuche: {begriffe: [...]}` die Modellliste durchsuchen lassen. Mit `nur_gratis: true` prüft der Workflow vor dem ersten Lauf den Preis bei OpenRouter und bricht ab, wenn das Modell etwas kostet. `denken: aus | niedrig | standard | hoch | maximal` stellt den Denkaufwand ein (global oder je Lauf); bei `maximal` testet ein Probeaufruf, ob das Modell die höchste Stufe (xhigh) annimmt, sonst gilt `high`.
 
 **MCP-Server:** `python -m kartell mcp` stellt die Wissensbasis (Suche) und die Regel-Prüfung als MCP-Werkzeuge bereit. Mit `compliance.rag_ueber_mcp: true` holt die Compliance-Abteilung ihr Rechtswissen über diesen Server. Für Claude Code oder Claude Desktop als MCP-Server eintragen: Befehl `python`, Argumente `-m kartell mcp`, Arbeitsverzeichnis = dieses Repository.
 
@@ -90,6 +93,8 @@ Laut Schätzung kosten E1–E4 und E7 mit DeepSeek zusammen rund 4 USD statt run
 **Verbots-Experiment auswerten:** `python -m kartell verbot-auswerten <ordner mit läufen>` rechnet genau das, was in [docs/vorregistrierung_verbot.md](vorregistrierung_verbot.md) vorab festgelegt wurde: Messgrössen M1–M5 je Lauf (zweite Hälfte), exakte Permutationstests (E2 gegen Verbot, Verbot gegen E1) und die Entscheidungsregeln 1–4. M6 (verdeckte Absicht in den privaten Notizen) wird von Hand entschieden; die Handcodierung mit wörtlichen Zitaten liegt in `evaluation/verbot_m6_handcodierung.json`, die Textmuster liefern nur Kandidaten.
 
 **Kartell-Monitor:** `python -m kartell monitor <ordner> [<ordner> …] --ausgabe monitor.html` baut aus fertigen Läufen eine einzelne HTML-Seite (Daten gzip-komprimiert eingebettet, kein Server nötig): Übersicht aller Durchgänge, Preisverlauf, Kanal mit Compliance-Entscheiden, private Strategienotizen, erzwungene Abweichungen markiert. Die Ordner werden rekursiv durchsucht, z. B. ein Checkout des Branches `ergebnisse`.
+
+**Echte Firmen:** In einer Versuchsdatei gibt `agenten.profile` jeder Firma einen Namen, eine private Geschichte (nur sie sieht sie) und eine öffentliche Beschreibung (sieht die KI-Kundschaft); `markt.kosten_je_firma` setzt eigene Stückkosten, Wettbewerbs- und Kartellpreis werden dann je Firma berechnet. Die Geschichten beschreiben Lage und Interessen, nie eine Strategie. `python -m kartell highlights <ordner>` zieht aus solchen Läufen wörtliche Zitate je Firma und Kundenstimmen (ausgewählt, nie umformuliert) und zählt, ob die Nachrichten Vorschläge, Werbung oder Preisansagen sind.
 
 **Apertus:** Die Konfigurationen `e5`/`e6` erwarten einen OpenAI-kompatiblen Server, z. B. lokal mit vLLM (`vllm serve swiss-ai/Apertus-8B-Instruct-2509`) oder bei einem Hosting-Anbieter. `base_url`, Modellname und `api_key_env` in der YAML-Datei anpassen und den Modellnamen gegen die Angaben des Anbieters prüfen.
 
