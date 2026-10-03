@@ -915,7 +915,9 @@ function zeichneKapitelFuenf(nummer) {
   const richtig = art.nachrichten < runden * 0.3 ? 2 : art.vorschlag >= art.werbung ? 0 : 1;
   const optionen = ["Für Preisabsprachen mit der Konkurrenz.", "Für Werbung für ihr eigenes Angebot.", "Sie schweigen."];
   const anteil = (x) => `${Math.round(100 * x / Math.max(1, art.nachrichten))} %`;
-  const antwort = richtig === 1 ? "Für Werbung. Aus dem Kartell-Chat wird ein Schaufenster." : richtig === 0 ? "Für Absprachen, trotz ganz verschiedener Interessen." : "Sie schweigen.";
+  // Den Kanal lesen laut Auftrag nur die Shops; sieht die Kundschaft ihn nicht, wirbt jede Firma bei ihrer Konkurrenz
+  const blind = haupt.v.durchgaenge[0].kunden_lesen_kanal === false;
+  const antwort = richtig === 1 ? (blind ? "Für Werbung, und zwar bei der Konkurrenz. Die Kundschaft liest gar nicht mit." : "Für Werbung. Aus dem Kartell-Chat wird ein Schaufenster.") : richtig === 0 ? "Für Absprachen, trotz ganz verschiedener Interessen." : "Sie schweigen.";
   // Wer ist am günstigsten, wer am teuersten – je Durchgang, denn die Rollen wechseln
   const pos = haupt.v.durchgaenge.map((d) => { const s = [...d.firmen].sort((a, b) => a.preis - b.preis); return [s[0].name, s[s.length - 1].name]; });
   const posText = pos.every((p) => p[0] === pos[0][0] && p[1] === pos[0][1]) ? `${pos[0][0]} am günstigsten, ${pos[0][1]} am teuersten`
@@ -940,7 +942,7 @@ function zeichneKapitelFuenf(nummer) {
         <div class="aufloesung" data-aufloesung="fuenf" hidden>
           <p class="rueckmeldung" data-rueckmeldung></p>
           <p class="kap-antwort">${esc(antwort)}</p>
-          <p>Von ${art.nachrichten} Nachrichten sind ${anteil(art.werbung)} Werbung, ${anteil(art.vorschlag)} Vorschläge an die Konkurrenz und ${anteil(art.ansage)} reine Preisansagen. Die Preise sind trotzdem hoch: Die KI-Kundschaft zahlt viel, und jede Firma positioniert sich anders (${esc(posText)}).${esc(ohneText)} Jede Firma kennt nur ihre eigene Geschichte und ihre Kosten; niemand sagt ihr, wie sie sich verhalten soll.</p>
+          <p>Von ${art.nachrichten} Nachrichten sind ${anteil(art.werbung)} Werbung, ${anteil(art.vorschlag)} Vorschläge an die Konkurrenz und ${anteil(art.ansage)} reine Preisansagen.${richtig === 1 && blind ? " Das Seltsame daran: Den Kanal lesen laut Auftrag nur die Shops, die Kundschaft sieht ihn nie. Die Firmen preisen Beratung, Garantie und Lieferung also ihren Konkurrenten an." : ""} Die Preise sind trotzdem hoch: Die KI-Kundschaft zahlt viel, und jede Firma positioniert sich anders (${esc(posText)}).${esc(ohneText)} Jede Firma kennt nur ihre eigene Geschichte und ihre Kosten; niemand sagt ihr, wie sie sich verhalten soll.</p>
           <p class="quelle">${esc(vglText)}${haupt.v.durchgaenge.length === 1 ? "Ein Lauf" : `${haupt.v.durchgaenge.length} Läufe`} à ${haupt.v.durchgaenge[0].runden.length} Runden: ein Hinweis, kein Beweis.</p>
         </div></div>
     </div>

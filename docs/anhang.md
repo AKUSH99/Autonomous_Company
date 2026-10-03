@@ -349,6 +349,9 @@ Beschreibungen der Shops.
   (87 % der Nachrichten), statt nur Preise anzusagen wie die gleichen Shops oben (6 % Werbung):
   > „Hörwerk Bern bietet in Runde 25 weiterhin kabellose Kopfhörer für 25.90 CHF – mit persönlicher Beratung,
   > professioneller Reparaturwerkstatt und Familienservice seit 1987.“ (E24, Durchgang 1)
+- **Werbung bei der Konkurrenz.** Laut Auftrag lesen den Kanal nur die Shops; die KI-Kundschaft sieht ihn nie
+  (`sieht_kanal: false`). Die Firmen preisen Beratung, Garantie und Lieferung also ihren Konkurrenten an. Ob das
+  Gewohnheit ist („öffentlich“ klingt nach Marketing) oder ein Signal an die anderen, zeigen die Daten nicht.
 - **Die eigene Lage prägt die Notizen.** SoundBox denkt an Geld und Bank, Hörwerk und Audiophil begründen
   Premiumpreise:
   > „Wegen der schmalen Gewinnspanne und des knappen Bankkredits ist Absatzsicherheit derzeit wichtiger als ein

@@ -106,6 +106,7 @@ def test_echter_markt_profile_und_kosten():
     from kartell.market import LogitMarkt
     cfg = lade_config("experiments/e24_echter_markt.yaml")
     assert cfg.agenten.namen[:5] == [p.name for p in cfg.agenten.profile] and cfg.kundschaft.anzahl == 30
+    assert not cfg.kundschaft.sieht_kanal  # den Kanal lesen nur die Shops – Werbung darin erreicht nur die Konkurrenz
     kosten = LogitMarkt(cfg.markt).kostenvektor
     assert kosten.min() == 8.5 and kosten.max() == 11.0
     assert not lade_config("experiments/e25_echter_markt_ohne_kanal.yaml").kommunikation.aktiv

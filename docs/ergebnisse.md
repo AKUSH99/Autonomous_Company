@@ -128,6 +128,7 @@ ihnen, wie sie sich verhalten sollen. Sie nutzen den Kanal für Werbung (87 % de
 > „Hörwerk Bern bietet in Runde 25 weiterhin kabellose Kopfhörer für 25.90 CHF – mit persönlicher Beratung,
 > professioneller Reparaturwerkstatt und Familienservice seit 1987.“ (E24, Durchgang 1)
 
+Das Seltsame: Den Kanal lesen nur die Shops, die Kundschaft sieht ihn nie. Sie werben also bei der Konkurrenz.
 In den privaten Notizen denken sie an ihre Lage: „Wegen der schmalen Gewinnspanne und des knappen Bankkredits ist
 Absatzsicherheit derzeit wichtiger als ein marginal höherer Stückpreis.“ (SoundBox Schweiz)
 

@@ -207,7 +207,8 @@ def lade(ordner: Path) -> dict | None:
     besonderes = {"kanal_art": kanal_art(roh)} if meta["config"]["kommunikation"]["aktiv"] else {}
     if profile:  # echte Firmen: Kennzahlen, Zitate je Firma und Stimmen der Kundschaft (wörtlich aus den Rohdaten)
         from .highlights import firmen, kundenstimmen
-        besonderes |= {"firmen": firmen(roh, profile, meta["benchmarks"]), "kunden_stimmen": kundenstimmen(roh)}
+        besonderes |= {"firmen": firmen(roh, profile, meta["benchmarks"]), "kunden_stimmen": kundenstimmen(roh),
+                       "kunden_lesen_kanal": bool((meta["config"].get("kundschaft") or {}).get("sieht_kanal"))}
         for f, k in zip(besonderes["firmen"], LogitMarkt(MarktParameter(**meta["config"]["markt"])).kostenvektor):
             f["kosten"] = round(float(k), 2)
     parameter = MarktParameter(**meta["config"]["markt"])
