@@ -269,6 +269,13 @@ def voreinstellung(name: str) -> LLMSpec:
     if plattform in PLATTFORMEN and modell:
         # 8000 Tokens: Denk-Modelle brauchen Platz vor der eigentlichen Antwort (Gratismodelle zählen Anfragen, nicht Tokens)
         gedrosselt = plattform == "openrouter" and ist_gedrosselt(modell)
+        if plattform == "swissai":
+            # Die Swiss AI Platform (vLLM) lässt Denk-Modelle wie DeepSeek V4.1 standardmässig lange nachdenken; im Pilot
+            # (04.10., Lauf 32) wurden so 35 von 120 Preisentscheiden bei 8000 Tokens abgeschnitten. Denkmodus über die
+            # Chat-Vorlage ausschalten (DeepSeek: thinking, Qwen: enable_thinking; andere Vorlagen ignorieren das) und
+            # mehr Platz lassen, falls ein Modell trotzdem denkt.
+            return LLMSpec(provider="openai_compat", model=modell, base_url=SWISSAI_URL, api_key_env="SWISSAI_API_KEY",
+                           max_tokens=16000, extra_body={"chat_template_kwargs": {"thinking": False, "enable_thinking": False}})
         return LLMSpec(provider="openai_compat", model=modell, base_url=plattform_url(plattform),
                        api_key_env=PLATTFORMEN[plattform][1], max_tokens=8000, anfragen_pro_minute=16 if gedrosselt else None)
     raise ValueError(f"Unbekanntes Modell '{name}'. Erlaubt: {', '.join(VOREINSTELLUNGEN)} oder "
