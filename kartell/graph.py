@@ -190,7 +190,7 @@ class Simulation:
             tokens = self._plus_tokens(tokens, kunden.pop("input_tokens"), kunden.pop("output_tokens"))
             if kunden["anteile"]:
                 mengen = self.cfg.markt.beta * np.asarray(kunden["anteile"][:-1])
-        gewinne = (np.asarray(preise) - self.markt.kostenvektor) * mengen
+        gewinne = (np.asarray(preise) - self.markt.kostenvektor) * mengen - self.cfg.markt.fixkosten
         eintrag = {
             "runde": s["runde"],
             "preise": {n: round(float(p), 2) for n, p in zip(namen, preise)},

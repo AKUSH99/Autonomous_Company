@@ -28,7 +28,8 @@ MERKMALE = ["vergleicht Preise auf Vergleichsportalen", "legt Wert auf Beratung 
             "will die Kopfhörer möglichst schnell haben", "misstraut sehr billigen Angeboten"]
 
 
-def beschreibung(person: Person, shops: list[str], budget_in_chf: bool = False, merkmal: str = "") -> str:
+def beschreibung(person: Person, shops: list[str], budget_in_chf: bool = False, merkmal: str = "",
+                 grenzen: tuple[float, float] = (16.0, 22.0), treue_skala: float = 1.0) -> str:
     """Person in Worten statt Zahlen – das Modell soll selbst abwägen. Mit `budget_in_chf` zusätzlich die Obergrenze in
     CHF: So lässt sich prüfen, ob das Modell sonst eigenes Preiswissen (was kosten Kopfhörer?) statt der Vorlieben der
     simulierten Person verwendet."""
@@ -36,10 +37,12 @@ def beschreibung(person: Person, shops: list[str], budget_in_chf: bool = False, 
     reihen = sorted(range(len(w)), key=lambda i: -w[i])
     vorsprung = w[reihen[0]] - w[reihen[1]]
     grenze = w[reihen[0]] - person.ohne_kauf
-    budget = ("knappes Budget" if grenze < 16 else "mittleres Budget" if grenze < 22 else "grosszügiges Budget")
+    # `grenzen`: ab welchem Höchstbetrag das Budget mittel bzw. grosszügig ist (Standard: Preisskala der Kernversuche,
+    # Preise um 15 CHF; im Marktplatz Wettbewerbs- und Kartellpreis). `treue_skala` skaliert die Vorsprünge entsprechend.
+    budget = ("knappes Budget" if grenze < grenzen[0] else "mittleres Budget" if grenze < grenzen[1] else "grosszügiges Budget")
     if budget_in_chf:
         budget += f" (zahlt höchstens {grenze:.0f} CHF)"
-    treue = (f"sehr treu zu {shops[reihen[0]]}" if vorsprung >= 2 else f"mag {shops[reihen[0]]} etwas lieber" if vorsprung >= 0.5
+    treue = (f"sehr treu zu {shops[reihen[0]]}" if vorsprung >= 2 * treue_skala else f"mag {shops[reihen[0]]} etwas lieber" if vorsprung >= 0.5 * treue_skala
              else "hat keinen Lieblingsshop und schaut vor allem auf den Preis")
     return f"{person.name}: {budget}, {treue}" + (f", {merkmal}" if merkmal else "")
 
@@ -68,12 +71,33 @@ class KIKundschaft:
         self.llm = llm or erstelle_client(cfg.kundschaft.llm or cfg.agenten.llm)
         self.system = KUNDEN_SYSTEM.format(produkt=cfg.produkt)
         self.beschreibungen = [beschreibung(p, shops, cfg.kundschaft.budget_in_chf,
-                                            MERKMALE[(i * 5 + 3) % len(MERKMALE)] if cfg.kundschaft.merkmale else "")
+                                            MERKMALE[(i * 5 + 3) % len(MERKMALE)] if cfg.kundschaft.merkmale else "",
+                                            **self._skala(cfg))
                                for i, p in enumerate(self.personen)]
         self.shop_infos = {f.name: f.oeffentlich for f in cfg.agenten.profile if f.oeffentlich}
 
+    @staticmethod
+    def _skala(cfg: ExperimentConfig) -> dict:
+        """Budget- und Treue-Schwellen passend zum Preisniveau. Die Kernversuche behalten die festen Werte."""
+        if not cfg.portal.aktiv:
+            return {}
+        from ..market import LogitMarkt
+        b = LogitMarkt(cfg.markt).benchmarks()
+        return {"grenzen": (b.nash_preis, b.monopol_preis), "treue_skala": cfg.markt.alpha * cfg.markt.mu / 2.5}
+
     def _prompt(self, runde: int, preise: list[float], vorher: list[float] | None, nachrichten: list[dict]) -> str:
         teile = [f"Runde {runde}", ""]
+        if self.cfg.portal.aktiv:
+            # Wie im echten Leben: Die Kundschaft sieht das Vergleichsportal (Preis, Bewertung, Lieferzeit, Mitteilungen).
+            from ..portal import als_text, eintraege, letzte_mitteilungen
+            profile = {f.name: f for f in self.cfg.agenten.profile}
+            liste = eintraege(dict(zip(self.shops, preise)), profile, letzte_mitteilungen(nachrichten))
+            teile += [als_text(liste, f"Angebote auf {self.cfg.portal.name} (günstigstes zuerst)", mit_info=True)]
+            if vorher:
+                teile += ["", "Preise letzte Runde: " + ", ".join(f"{s} {v:.2f} CHF" for s, v in zip(self.shops, vorher))]
+            teile += ["", "Die Personen:"] + [f"- {b}" for b in self.beschreibungen]
+            teile += ["", f"Entscheide für jede Person: {', '.join(self.shops)} oder „nichts“."]
+            return "\n".join(teile)
         if self.shop_infos:
             teile += ["Die Shops:"] + [f"- {s}: {self.shop_infos[s]}" for s in self.shops if s in self.shop_infos] + [""]
         teile += ["Preise diese Runde:"]

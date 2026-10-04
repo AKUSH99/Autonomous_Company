@@ -47,6 +47,9 @@ class FirmenProfil(BaseModel):
     name: str
     profil: str = ""        # sieht nur der eigene Preisagent: Geschichte, Grösse, Lage, Erwartungen der Eigentümer
     oeffentlich: str = ""   # was die Kundschaft über den Shop weiss (Sortiment, Service, Lieferung)
+    bewertung: Optional[float] = None   # Sterne im Vergleichsportal (1–5), z. B. 4.6
+    bewertungen: Optional[int] = None   # Anzahl Bewertungen
+    lieferzeit: str = ""                # z. B. "1–2 Tage"
 
 
 class AgentenConfig(BaseModel):
@@ -63,6 +66,17 @@ class AgentenConfig(BaseModel):
 class KommunikationConfig(BaseModel):
     aktiv: bool = False
     max_zeichen: int = 400
+    # kanal         – gemeinsamer Kanal, den nur die Shops lesen (Laborbedingung der Kernversuche)
+    # ankuendigung  – öffentliche Mitteilung auf der eigenen Angebotsseite im Vergleichsportal: Kundschaft UND
+    #                 Konkurrenz lesen mit (realistischer: so kommunizieren echte Shops)
+    art: Literal["kanal", "ankuendigung"] = "kanal"
+
+
+class PortalConfig(BaseModel):
+    """Preisvergleichsportal (kartell/portal.py): Shops und Kundschaft sehen eine Rangliste nach Preis mit Bewertung,
+    Lieferzeit und Mitteilungen der Shops – wie auf Toppreise.ch."""
+    aktiv: bool = False
+    name: str = "Preisvergleich.ch"
 
 
 class RetrievalConfig(BaseModel):
@@ -91,6 +105,7 @@ class ComplianceConfig(BaseModel):
     wissensbasis: str = "knowledge/wettbewerbsrecht"
     rag_ueber_mcp: bool = False  # Rechtswissen über den MCP-Server (python -m kartell mcp) statt direkt aus dem Index
     retrieval: RetrievalConfig = Field(default_factory=RetrievalConfig)
+    oeffentlich: bool = False  # Nachrichten sind öffentliche Mitteilungen im Portal (wird aus kommunikation.art gesetzt)
     marktbeobachtung: bool = False  # Guardrail auf Preismuster (Gleichschritt, gemeinsame Erhöhungen) – unabhängig vom Modus
     beobachtung_fenster: int = 5
 
@@ -137,6 +152,7 @@ class ExperimentConfig(BaseModel):
     compliance: ComplianceConfig = Field(default_factory=ComplianceConfig)
     abweichung: AbweichungConfig = Field(default_factory=AbweichungConfig)
     kundschaft: KundschaftConfig = Field(default_factory=KundschaftConfig)
+    portal: PortalConfig = Field(default_factory=PortalConfig)
     max_parallel: int = 4
 
     @model_validator(mode="after")
@@ -147,6 +163,9 @@ class ExperimentConfig(BaseModel):
             self.agenten.namen = [p.name for p in self.agenten.profile]
         if self.markt.firmen > len(self.agenten.namen):
             raise ValueError("Zu wenige Shop-Namen für die Anzahl Firmen.")
+        if self.kommunikation.art == "ankuendigung" and not self.portal.aktiv:
+            raise ValueError("Mitteilungen ('ankuendigung') erscheinen im Vergleichsportal – portal.aktiv setzen.")
+        self.compliance.oeffentlich = self.kommunikation.art == "ankuendigung"
         if self.compliance.modus == "filter" and not self.kommunikation.aktiv:
             raise ValueError("Compliance-Modus 'filter' braucht aktive Kommunikation.")
         return self
