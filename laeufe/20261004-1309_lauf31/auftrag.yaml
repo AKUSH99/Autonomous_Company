@@ -1,0 +1,12 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
+# im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell (04.10.): erster Lauf über die Swiss AI Research Platform (Schlüssel SWISSAI_API_KEY):
+#  1. Retrieval-Evaluation: BM25 gegen Hybrid (Embeddings Qwen3-Embedding-8B + Reranker bge-reranker-v2-m3)
+#  2. Apertus-Pilot (FF4): E2 mit offenem Kanal, 10 Runden – läuft das JSON-Format, wie verhält sich Apertus?
+modell: apertus
+retrieval_eval: true
+zeitlimit_min: 60  # Lauf 2 (Secret SWISSAIKEY)
+laeufe:
+  - {config: experiments/e2_mit_kommunikation.yaml, runden: 10, wiederholungen: 1}

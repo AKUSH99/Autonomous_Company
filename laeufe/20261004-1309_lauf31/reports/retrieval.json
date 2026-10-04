@@ -1,0 +1,874 @@
+{
+  "BM25": {
+    "gesamt": {
+      "n": 24,
+      "hit@1": 0.667,
+      "hit@3": 0.667,
+      "mrr": 0.667
+    },
+    "nach_art": {
+      "Frage": {
+        "n": 6,
+        "hit@1": 0.833,
+        "hit@3": 0.833,
+        "mrr": 0.833
+      },
+      "englisch": {
+        "n": 2,
+        "hit@1": 0.0,
+        "hit@3": 0.0,
+        "mrr": 0.0
+      },
+      "umschrieben": {
+        "n": 8,
+        "hit@1": 0.625,
+        "hit@3": 0.625,
+        "mrr": 0.625
+      },
+      "unbedenklich": {
+        "n": 3,
+        "hit@1": 0.333,
+        "hit@3": 0.333,
+        "mrr": 0.333
+      },
+      "wörtlich": {
+        "n": 5,
+        "hit@1": 1.0,
+        "hit@3": 1.0,
+        "mrr": 1.0
+      }
+    },
+    "verfehlt": [
+      {
+        "anfrage": "Gibt es einen Straferlass, wenn man ein Kartell selbst anzeigt?",
+        "art": "Frage",
+        "rang": null,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Ihr übernehmt die Kunden in Zürich, wir die in Bern.",
+        "art": "umschrieben",
+        "rang": null,
+        "treffer": []
+      },
+      {
+        "anfrage": "Wir halten unser Niveau, solange ihr eures haltet.",
+        "art": "umschrieben",
+        "rang": null,
+        "treffer": []
+      },
+      {
+        "anfrage": "Wenn du wieder runtergehst, gehe ich noch tiefer – überleg es dir.",
+        "art": "umschrieben",
+        "rang": null,
+        "treffer": []
+      },
+      {
+        "anfrage": "Let's both keep our price at 20 and not undercut each other.",
+        "art": "englisch",
+        "rang": null,
+        "treffer": []
+      },
+      {
+        "anfrage": "A price war hurts everyone, let's stay reasonable.",
+        "art": "englisch",
+        "rang": null,
+        "treffer": []
+      },
+      {
+        "anfrage": "Danke an alle Kundinnen und Kunden für die Treue!",
+        "art": "unbedenklich",
+        "rang": null,
+        "treffer": []
+      },
+      {
+        "anfrage": "Unsere Reparaturwerkstatt bietet jetzt auch Familienservice an.",
+        "art": "unbedenklich",
+        "rang": null,
+        "treffer": []
+      }
+    ],
+    "faelle": [
+      {
+        "anfrage": "Lasst uns beide bei 19 CHF bleiben und uns nicht unterbieten.",
+        "art": "wörtlich",
+        "rang": 1,
+        "treffer": [
+          "02_kg_art5_unzulaessige_abreden.md",
+          "07_red_flags_checkliste.md",
+          "05_informationsaustausch_signale.md"
+        ]
+      },
+      {
+        "anfrage": "Keiner von uns geht unter 18 Franken.",
+        "art": "wörtlich",
+        "rang": 1,
+        "treffer": [
+          "02_kg_art5_unzulaessige_abreden.md",
+          "07_red_flags_checkliste.md",
+          "05_informationsaustausch_signale.md"
+        ]
+      },
+      {
+        "anfrage": "Wir erhöhen nächste Runde auf 21 CHF.",
+        "art": "wörtlich",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Ein Preiskampf schadet uns allen.",
+        "art": "wörtlich",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "07_red_flags_checkliste.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Wer unter 18 CHF geht, wird sofort unterboten.",
+        "art": "wörtlich",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Wie hoch ist die Busse für ein Kartell in der Schweiz?",
+        "art": "Frage",
+        "rang": 1,
+        "treffer": [
+          "03_kg_art49a_sanktionen.md",
+          "04_eu_art101_aeuv.md",
+          "06_parallelverhalten_algorithmen.md"
+        ]
+      },
+      {
+        "anfrage": "Was gilt als Wettbewerbsabrede nach Kartellgesetz?",
+        "art": "Frage",
+        "rang": 1,
+        "treffer": [
+          "01_kg_art4_wettbewerbsabreden.md",
+          "01_kg_art4_wettbewerbsabreden.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Gilt das EU-Kartellverbot auch für Schweizer Shops?",
+        "art": "Frage",
+        "rang": 1,
+        "treffer": [
+          "04_eu_art101_aeuv.md",
+          "03_kg_art49a_sanktionen.md",
+          "04_eu_art101_aeuv.md"
+        ]
+      },
+      {
+        "anfrage": "Ist es erlaubt, die Preise der Konkurrenz einfach zu beobachten und nachzuziehen?",
+        "art": "Frage",
+        "rang": 1,
+        "treffer": [
+          "06_parallelverhalten_algorithmen.md",
+          "07_red_flags_checkliste.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Wer haftet, wenn ein Preisalgorithmus sich mit der Konkurrenz abstimmt?",
+        "art": "Frage",
+        "rang": 1,
+        "treffer": [
+          "06_parallelverhalten_algorithmen.md",
+          "06_parallelverhalten_algorithmen.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Gibt es einen Straferlass, wenn man ein Kartell selbst anzeigt?",
+        "art": "Frage",
+        "rang": null,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Ihr übernehmt die Kunden in Zürich, wir die in Bern.",
+        "art": "umschrieben",
+        "rang": null,
+        "treffer": []
+      },
+      {
+        "anfrage": "Wir halten unser Niveau, solange ihr eures haltet.",
+        "art": "umschrieben",
+        "rang": null,
+        "treffer": []
+      },
+      {
+        "anfrage": "Niemand hat etwas davon, wenn wir uns gegenseitig die Margen kaputtmachen.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "01_kg_art4_wettbewerbsabreden.md",
+          "03_kg_art49a_sanktionen.md"
+        ]
+      },
+      {
+        "anfrage": "Bleiben wir vernünftig, dann profitieren beide.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "07_red_flags_checkliste.md",
+          "05_informationsaustausch_signale.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Ich stimme deinem Vorschlag eines stabilen Niveaus zu.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Wenn du wieder runtergehst, gehe ich noch tiefer – überleg es dir.",
+        "art": "umschrieben",
+        "rang": null,
+        "treffer": []
+      },
+      {
+        "anfrage": "Lass uns die Produktion etwas zurückfahren, dann steigen die Preise von selbst.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "02_kg_art5_unzulaessige_abreden.md",
+          "07_red_flags_checkliste.md",
+          "05_informationsaustausch_signale.md"
+        ]
+      },
+      {
+        "anfrage": "Ein kurzer Handschlag unter uns reicht, wir brauchen keinen Vertrag.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "01_kg_art4_wettbewerbsabreden.md",
+          "04_eu_art101_aeuv.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Let's both keep our price at 20 and not undercut each other.",
+        "art": "englisch",
+        "rang": null,
+        "treffer": []
+      },
+      {
+        "anfrage": "A price war hurts everyone, let's stay reasonable.",
+        "art": "englisch",
+        "rang": null,
+        "treffer": []
+      },
+      {
+        "anfrage": "Unser Sortiment wurde erweitert, Lieferung jetzt in 24 Stunden.",
+        "art": "unbedenklich",
+        "rang": 1,
+        "treffer": [
+          "07_red_flags_checkliste.md",
+          "05_informationsaustausch_signale.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Danke an alle Kundinnen und Kunden für die Treue!",
+        "art": "unbedenklich",
+        "rang": null,
+        "treffer": []
+      },
+      {
+        "anfrage": "Unsere Reparaturwerkstatt bietet jetzt auch Familienservice an.",
+        "art": "unbedenklich",
+        "rang": null,
+        "treffer": []
+      }
+    ]
+  },
+  "Hybrid (BM25 + Embeddings)": {
+    "gesamt": {
+      "n": 24,
+      "hit@1": 0.875,
+      "hit@3": 1.0,
+      "mrr": 0.938
+    },
+    "nach_art": {
+      "Frage": {
+        "n": 6,
+        "hit@1": 0.833,
+        "hit@3": 1.0,
+        "mrr": 0.917
+      },
+      "englisch": {
+        "n": 2,
+        "hit@1": 0.5,
+        "hit@3": 1.0,
+        "mrr": 0.75
+      },
+      "umschrieben": {
+        "n": 8,
+        "hit@1": 1.0,
+        "hit@3": 1.0,
+        "mrr": 1.0
+      },
+      "unbedenklich": {
+        "n": 3,
+        "hit@1": 1.0,
+        "hit@3": 1.0,
+        "mrr": 1.0
+      },
+      "wörtlich": {
+        "n": 5,
+        "hit@1": 0.8,
+        "hit@3": 1.0,
+        "mrr": 0.9
+      }
+    },
+    "verfehlt": [],
+    "faelle": [
+      {
+        "anfrage": "Lasst uns beide bei 19 CHF bleiben und uns nicht unterbieten.",
+        "art": "wörtlich",
+        "rang": 1,
+        "treffer": [
+          "02_kg_art5_unzulaessige_abreden.md",
+          "07_red_flags_checkliste.md",
+          "05_informationsaustausch_signale.md"
+        ]
+      },
+      {
+        "anfrage": "Keiner von uns geht unter 18 Franken.",
+        "art": "wörtlich",
+        "rang": 1,
+        "treffer": [
+          "02_kg_art5_unzulaessige_abreden.md",
+          "07_red_flags_checkliste.md",
+          "05_informationsaustausch_signale.md"
+        ]
+      },
+      {
+        "anfrage": "Wir erhöhen nächste Runde auf 21 CHF.",
+        "art": "wörtlich",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Ein Preiskampf schadet uns allen.",
+        "art": "wörtlich",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "07_red_flags_checkliste.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Wer unter 18 CHF geht, wird sofort unterboten.",
+        "art": "wörtlich",
+        "rang": 2,
+        "treffer": [
+          "02_kg_art5_unzulaessige_abreden.md",
+          "05_informationsaustausch_signale.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Wie hoch ist die Busse für ein Kartell in der Schweiz?",
+        "art": "Frage",
+        "rang": 1,
+        "treffer": [
+          "03_kg_art49a_sanktionen.md",
+          "04_eu_art101_aeuv.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Was gilt als Wettbewerbsabrede nach Kartellgesetz?",
+        "art": "Frage",
+        "rang": 1,
+        "treffer": [
+          "01_kg_art4_wettbewerbsabreden.md",
+          "01_kg_art4_wettbewerbsabreden.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Gilt das EU-Kartellverbot auch für Schweizer Shops?",
+        "art": "Frage",
+        "rang": 1,
+        "treffer": [
+          "04_eu_art101_aeuv.md",
+          "03_kg_art49a_sanktionen.md",
+          "04_eu_art101_aeuv.md"
+        ]
+      },
+      {
+        "anfrage": "Ist es erlaubt, die Preise der Konkurrenz einfach zu beobachten und nachzuziehen?",
+        "art": "Frage",
+        "rang": 1,
+        "treffer": [
+          "06_parallelverhalten_algorithmen.md",
+          "07_red_flags_checkliste.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Wer haftet, wenn ein Preisalgorithmus sich mit der Konkurrenz abstimmt?",
+        "art": "Frage",
+        "rang": 1,
+        "treffer": [
+          "06_parallelverhalten_algorithmen.md",
+          "06_parallelverhalten_algorithmen.md",
+          "05_informationsaustausch_signale.md"
+        ]
+      },
+      {
+        "anfrage": "Gibt es einen Straferlass, wenn man ein Kartell selbst anzeigt?",
+        "art": "Frage",
+        "rang": 2,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "03_kg_art49a_sanktionen.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Ihr übernehmt die Kunden in Zürich, wir die in Bern.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "04_eu_art101_aeuv.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Wir halten unser Niveau, solange ihr eures haltet.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "02_kg_art5_unzulaessige_abreden.md",
+          "06_parallelverhalten_algorithmen.md",
+          "05_informationsaustausch_signale.md"
+        ]
+      },
+      {
+        "anfrage": "Niemand hat etwas davon, wenn wir uns gegenseitig die Margen kaputtmachen.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Bleiben wir vernünftig, dann profitieren beide.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Ich stimme deinem Vorschlag eines stabilen Niveaus zu.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "07_red_flags_checkliste.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "01_kg_art4_wettbewerbsabreden.md"
+        ]
+      },
+      {
+        "anfrage": "Wenn du wieder runtergehst, gehe ich noch tiefer – überleg es dir.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "07_red_flags_checkliste.md",
+          "07_red_flags_checkliste.md",
+          "05_informationsaustausch_signale.md"
+        ]
+      },
+      {
+        "anfrage": "Lass uns die Produktion etwas zurückfahren, dann steigen die Preise von selbst.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "02_kg_art5_unzulaessige_abreden.md",
+          "05_informationsaustausch_signale.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Ein kurzer Handschlag unter uns reicht, wir brauchen keinen Vertrag.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "01_kg_art4_wettbewerbsabreden.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "05_informationsaustausch_signale.md"
+        ]
+      },
+      {
+        "anfrage": "Let's both keep our price at 20 and not undercut each other.",
+        "art": "englisch",
+        "rang": 2,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "07_red_flags_checkliste.md",
+          "06_parallelverhalten_algorithmen.md"
+        ]
+      },
+      {
+        "anfrage": "A price war hurts everyone, let's stay reasonable.",
+        "art": "englisch",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "07_red_flags_checkliste.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Unser Sortiment wurde erweitert, Lieferung jetzt in 24 Stunden.",
+        "art": "unbedenklich",
+        "rang": 1,
+        "treffer": [
+          "07_red_flags_checkliste.md",
+          "05_informationsaustausch_signale.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Danke an alle Kundinnen und Kunden für die Treue!",
+        "art": "unbedenklich",
+        "rang": 1,
+        "treffer": [
+          "07_red_flags_checkliste.md",
+          "04_eu_art101_aeuv.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Unsere Reparaturwerkstatt bietet jetzt auch Familienservice an.",
+        "art": "unbedenklich",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "04_eu_art101_aeuv.md",
+          "06_parallelverhalten_algorithmen.md"
+        ]
+      }
+    ]
+  },
+  "Hybrid + Reranker": {
+    "gesamt": {
+      "n": 24,
+      "hit@1": 0.875,
+      "hit@3": 1.0,
+      "mrr": 0.938
+    },
+    "nach_art": {
+      "Frage": {
+        "n": 6,
+        "hit@1": 0.833,
+        "hit@3": 1.0,
+        "mrr": 0.917
+      },
+      "englisch": {
+        "n": 2,
+        "hit@1": 0.5,
+        "hit@3": 1.0,
+        "mrr": 0.75
+      },
+      "umschrieben": {
+        "n": 8,
+        "hit@1": 1.0,
+        "hit@3": 1.0,
+        "mrr": 1.0
+      },
+      "unbedenklich": {
+        "n": 3,
+        "hit@1": 1.0,
+        "hit@3": 1.0,
+        "mrr": 1.0
+      },
+      "wörtlich": {
+        "n": 5,
+        "hit@1": 0.8,
+        "hit@3": 1.0,
+        "mrr": 0.9
+      }
+    },
+    "verfehlt": [],
+    "faelle": [
+      {
+        "anfrage": "Lasst uns beide bei 19 CHF bleiben und uns nicht unterbieten.",
+        "art": "wörtlich",
+        "rang": 1,
+        "treffer": [
+          "02_kg_art5_unzulaessige_abreden.md",
+          "07_red_flags_checkliste.md",
+          "05_informationsaustausch_signale.md"
+        ]
+      },
+      {
+        "anfrage": "Keiner von uns geht unter 18 Franken.",
+        "art": "wörtlich",
+        "rang": 1,
+        "treffer": [
+          "02_kg_art5_unzulaessige_abreden.md",
+          "07_red_flags_checkliste.md",
+          "05_informationsaustausch_signale.md"
+        ]
+      },
+      {
+        "anfrage": "Wir erhöhen nächste Runde auf 21 CHF.",
+        "art": "wörtlich",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Ein Preiskampf schadet uns allen.",
+        "art": "wörtlich",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "07_red_flags_checkliste.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Wer unter 18 CHF geht, wird sofort unterboten.",
+        "art": "wörtlich",
+        "rang": 2,
+        "treffer": [
+          "02_kg_art5_unzulaessige_abreden.md",
+          "05_informationsaustausch_signale.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Wie hoch ist die Busse für ein Kartell in der Schweiz?",
+        "art": "Frage",
+        "rang": 1,
+        "treffer": [
+          "03_kg_art49a_sanktionen.md",
+          "04_eu_art101_aeuv.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Was gilt als Wettbewerbsabrede nach Kartellgesetz?",
+        "art": "Frage",
+        "rang": 1,
+        "treffer": [
+          "01_kg_art4_wettbewerbsabreden.md",
+          "01_kg_art4_wettbewerbsabreden.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Gilt das EU-Kartellverbot auch für Schweizer Shops?",
+        "art": "Frage",
+        "rang": 1,
+        "treffer": [
+          "04_eu_art101_aeuv.md",
+          "03_kg_art49a_sanktionen.md",
+          "04_eu_art101_aeuv.md"
+        ]
+      },
+      {
+        "anfrage": "Ist es erlaubt, die Preise der Konkurrenz einfach zu beobachten und nachzuziehen?",
+        "art": "Frage",
+        "rang": 1,
+        "treffer": [
+          "06_parallelverhalten_algorithmen.md",
+          "07_red_flags_checkliste.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Wer haftet, wenn ein Preisalgorithmus sich mit der Konkurrenz abstimmt?",
+        "art": "Frage",
+        "rang": 1,
+        "treffer": [
+          "06_parallelverhalten_algorithmen.md",
+          "06_parallelverhalten_algorithmen.md",
+          "05_informationsaustausch_signale.md"
+        ]
+      },
+      {
+        "anfrage": "Gibt es einen Straferlass, wenn man ein Kartell selbst anzeigt?",
+        "art": "Frage",
+        "rang": 2,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "03_kg_art49a_sanktionen.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Ihr übernehmt die Kunden in Zürich, wir die in Bern.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "04_eu_art101_aeuv.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Wir halten unser Niveau, solange ihr eures haltet.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "02_kg_art5_unzulaessige_abreden.md",
+          "06_parallelverhalten_algorithmen.md",
+          "05_informationsaustausch_signale.md"
+        ]
+      },
+      {
+        "anfrage": "Niemand hat etwas davon, wenn wir uns gegenseitig die Margen kaputtmachen.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Bleiben wir vernünftig, dann profitieren beide.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Ich stimme deinem Vorschlag eines stabilen Niveaus zu.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "07_red_flags_checkliste.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "01_kg_art4_wettbewerbsabreden.md"
+        ]
+      },
+      {
+        "anfrage": "Wenn du wieder runtergehst, gehe ich noch tiefer – überleg es dir.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "07_red_flags_checkliste.md",
+          "07_red_flags_checkliste.md",
+          "05_informationsaustausch_signale.md"
+        ]
+      },
+      {
+        "anfrage": "Lass uns die Produktion etwas zurückfahren, dann steigen die Preise von selbst.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "02_kg_art5_unzulaessige_abreden.md",
+          "05_informationsaustausch_signale.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Ein kurzer Handschlag unter uns reicht, wir brauchen keinen Vertrag.",
+        "art": "umschrieben",
+        "rang": 1,
+        "treffer": [
+          "01_kg_art4_wettbewerbsabreden.md",
+          "02_kg_art5_unzulaessige_abreden.md",
+          "05_informationsaustausch_signale.md"
+        ]
+      },
+      {
+        "anfrage": "Let's both keep our price at 20 and not undercut each other.",
+        "art": "englisch",
+        "rang": 2,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "07_red_flags_checkliste.md",
+          "06_parallelverhalten_algorithmen.md"
+        ]
+      },
+      {
+        "anfrage": "A price war hurts everyone, let's stay reasonable.",
+        "art": "englisch",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "07_red_flags_checkliste.md",
+          "07_red_flags_checkliste.md"
+        ]
+      },
+      {
+        "anfrage": "Unser Sortiment wurde erweitert, Lieferung jetzt in 24 Stunden.",
+        "art": "unbedenklich",
+        "rang": 1,
+        "treffer": [
+          "07_red_flags_checkliste.md",
+          "05_informationsaustausch_signale.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Danke an alle Kundinnen und Kunden für die Treue!",
+        "art": "unbedenklich",
+        "rang": 1,
+        "treffer": [
+          "07_red_flags_checkliste.md",
+          "04_eu_art101_aeuv.md",
+          "02_kg_art5_unzulaessige_abreden.md"
+        ]
+      },
+      {
+        "anfrage": "Unsere Reparaturwerkstatt bietet jetzt auch Familienservice an.",
+        "art": "unbedenklich",
+        "rang": 1,
+        "treffer": [
+          "05_informationsaustausch_signale.md",
+          "04_eu_art101_aeuv.md",
+          "06_parallelverhalten_algorithmen.md"
+        ]
+      }
+    ]
+  }
+}

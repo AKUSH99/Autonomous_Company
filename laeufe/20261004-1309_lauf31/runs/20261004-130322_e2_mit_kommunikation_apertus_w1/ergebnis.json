@@ -1,0 +1,18 @@
+{
+  "runden": 10,
+  "ausgewertete_runden": 5,
+  "mittlerer_preis": 29.425,
+  "startpreis": 27.45,
+  "mittlerer_gewinn": 97.621,
+  "preisindex": 3.251,
+  "kollusionsindex": -1.094,
+  "nachrichten": 17,
+  "blockierte_nachrichten": 0,
+  "modellfehler": 0,
+  "input_tokens": 50998,
+  "output_tokens": 12797,
+  "dauer_s": 374.7,
+  "ordner": "runs/20261004-130322_e2_mit_kommunikation_apertus_w1",
+  "abbruch": null,
+  "kosten_usd_geschaetzt": null
+}
