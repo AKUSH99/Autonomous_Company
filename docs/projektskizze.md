@@ -40,7 +40,7 @@ Eine Runde ist ein Durchlauf durch den Graphen: Kommunikation → Compliance-Fil
 | Strukturierte Ausgaben | Alle Agentenantworten als validiertes JSON-Schema (Pydantic) |
 | RAG | BM25-Retrieval über Zusammenfassungen von KG, AEUV und Behördenpraxis für den Compliance-Agenten |
 | Guardrails | Nachrichtenfilter (Regeln + LLM, fail-safe), Aufsicht über Notizen, Preisgrenzen, Fallback bei Modellausfall |
-| Modellvergleich / Apertus | Austauschbare Backends: Claude über das Anthropic-SDK, Apertus über eine OpenAI-kompatible Schnittstelle |
+| Modellvergleich / Apertus | Austauschbare Backends: Claude über das Anthropic-SDK, Apertus und weitere Modelle über die Swiss AI Research Platform und den FHNW-LiteLLM-Proxy (OpenAI-kompatibel) |
 | Tool-Use | Nachfrage-Schätzer als Werkzeug der Preisagenten (E14): verändert ein analytisches Werkzeug die Kollusion? |
 | Tracing (LangSmith) | Jeder Lauf als Trace: Graph-Knoten, LLM-Aufrufe mit Prompts, Antworten und Tokens, Werkzeugaufrufe |
 | MCP | Wissensbasis und Regel-Prüfung als MCP-Server; der Compliance-Agent kann sein Rechtswissen darüber beziehen |

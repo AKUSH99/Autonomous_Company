@@ -19,7 +19,7 @@ def test_deepseek_ersetzt_claude_bei_agenten_und_compliance():
 def test_deepseek_laesst_andere_modelle_und_regeln_unveraendert():
     gemischt = mit_modell(lade_config("experiments/e6_gemischter_markt.yaml"), "deepseek")
     modelle = [a.llm.model for a in gemischt.agenten_liste()]
-    assert modelle == ["deepseek-flash", "swiss-ai/Apertus-8B-Instruct-2509"]
+    assert modelle == ["deepseek-flash", "CSCS-Inference/swiss-ai/Apertus-v1.5-70B"]
     demo = mit_modell(lade_config("experiments/demo_absprache_mit_filter.yaml"), "deepseek")
     assert demo.compliance.llm.provider == "regeln"
     assert all(a.llm.provider == "scripted" for a in demo.agenten_liste())
@@ -43,3 +43,24 @@ def test_openrouter_modelle_und_eigener_richter():
     assert ohne_filter.name == "e2_mit_kommunikation_deepseek"  # ohne Compliance kein Richter-Suffix
     with pytest.raises(ValueError, match="openrouter:<modell-id>"):
         voreinstellung("jeff")
+
+
+def test_plattformen_des_moduls(monkeypatch):
+    """Swiss AI Research Platform und FHNW-LiteLLM (SW4) als OpenAI-kompatible Voreinstellungen."""
+    swiss = voreinstellung("swissai:CSCS-Inference/swiss-ai/Apertus-v1.5-70B")
+    assert swiss.provider == "openai_compat" and swiss.base_url == "https://api.swissai.svc.cscs.ch/v1"
+    assert swiss.api_key_env == "SWISSAI_API_KEY" and swiss.model == "CSCS-Inference/swiss-ai/Apertus-v1.5-70B"
+    assert voreinstellung("apertus").base_url == swiss.base_url and "Apertus" in VOREINSTELLUNGEN["apertus"].model
+
+    monkeypatch.delenv("LITELLM_BASE_URL", raising=False)
+    lite = voreinstellung("litellm:gpt-oss-120b")
+    assert lite.base_url == "https://litellm.engines.aisl.science/v1" and lite.api_key_env == "LITELLM_API_KEY"
+    monkeypatch.setenv("LITELLM_BASE_URL", "")  # leere Repository-Variable im Workflow
+    assert voreinstellung("litellm:x").base_url == "https://litellm.engines.aisl.science/v1"
+    monkeypatch.setenv("LITELLM_BASE_URL", "http://localhost:4000/v1")
+    assert voreinstellung("litellm:x").base_url == "http://localhost:4000/v1"
+
+    assert kurz("swissai:CSCS-Inference/swiss-ai/Apertus-v1.5-70B") == "apertus-v1-5-70b"
+    assert kurz("apertus") == "apertus"
+    with pytest.raises(ValueError):
+        voreinstellung("swissai:")

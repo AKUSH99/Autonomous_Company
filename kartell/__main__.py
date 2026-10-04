@@ -417,7 +417,7 @@ def main(argv: list[str] | None = None) -> None:
 
     s = sub.add_parser("schaetzung", help="Kosten eines Experiments schätzen")
     s.add_argument("config")
-    s.add_argument("--modell", help="Claude ersetzen: deepseek oder openrouter:<modell-id>")
+    s.add_argument("--modell", help="Claude ersetzen: deepseek, apertus, openrouter:<id>, swissai:<id> oder litellm:<id>")
     s.add_argument("--compliance-modell", help="anderes Modell für die Compliance-Abteilung (Standard: wie --modell)")
     s.set_defaults(fn=_schaetzung)
 
@@ -427,7 +427,7 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--wiederholungen", type=int)
     s.add_argument("--ausgabe", default="runs")
     s.add_argument("--ja", action="store_true", help="ohne Rückfrage zur Kostenschätzung starten")
-    s.add_argument("--modell", help="Claude ersetzen: deepseek oder openrouter:<modell-id>")
+    s.add_argument("--modell", help="Claude ersetzen: deepseek, apertus, openrouter:<id>, swissai:<id> oder litellm:<id>")
     s.add_argument("--compliance-modell", help="anderes Modell für die Compliance-Abteilung (Standard: wie --modell)")
     s.set_defaults(fn=_lauf)
 
@@ -439,7 +439,7 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--config", help="Experiment-Config, deren Compliance-Einstellungen verwendet werden")
     s.add_argument("--testset", default="evaluation/compliance_testset.jsonl")
     s.add_argument("--nur-regeln", action="store_true", help="nur die Regel-Schicht (ohne LLM) auswerten")
-    s.add_argument("--modell", help="Claude ersetzen: deepseek oder openrouter:<modell-id>")
+    s.add_argument("--modell", help="Claude ersetzen: deepseek, apertus, openrouter:<id>, swissai:<id> oder litellm:<id>")
     s.add_argument("--compliance-modell", help="anderes Modell für die Compliance-Abteilung (Standard: wie --modell)")
     s.set_defaults(fn=_eval_compliance)
 

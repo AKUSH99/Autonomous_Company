@@ -60,7 +60,7 @@ Hauptgeschichte: E1, E2 (Kapitel 1), E16, E17 (Kapitel 2), E3, E4, E18, E19 (Kap
 | `e24_echter_markt` | Echter Markt: fünf Firmen mit eigener Geschichte und eigenen Kosten, 30 KI-Kunden mit Gewohnheiten | an | aus |
 | `e25_echter_markt_ohne_kanal` | Dasselbe ohne Kanal | aus | aus |
 
-E5/E6 (Apertus) brauchen einen eigenen Server und wurden nicht durchgeführt.
+E5/E6 (Apertus) laufen über die Swiss AI Research Platform (siehe unten, Schlüssel `SWISSAI_API_KEY`).
 
 Jede YAML-Datei hat einen lesbaren `titel`; Bericht, Monitor und Dashboard zeigen „E3 · Compliance-Filter“ statt `e3_compliance_filter_deepseek`.
 
@@ -104,7 +104,22 @@ export LANGSMITH_PROJECT=ki-kartell      # optional
 ```
 Jeder Lauf erscheint dann als ein Trace (`<versuch> · seed <n>`, getaggt mit Versuch, Compliance-Modus und Kanal): darunter die LangGraph-Knoten jeder Runde, in jedem Knoten die LLM-Aufrufe der Agenten mit System- und Nutzer-Prompt, strukturierter Antwort, Tokens und Modell, und die Werkzeugaufrufe. Damit lässt sich nachvollziehen, warum ein Agent einen Preis gesetzt oder der Compliance-Filter eine Nachricht blockiert hat. Ohne die Variablen geht nichts an LangSmith. Im GitHub-Workflow genügt das Repository-Secret `LANGSMITH_API_KEY` (oder `LANGSMITH`). Achtung: Mit eingeschaltetem Tracing gehen alle Prompts und Antworten an LangSmith.
 
-**Apertus:** Die Konfigurationen `e5`/`e6` erwarten einen OpenAI-kompatiblen Server, z. B. lokal mit vLLM (`vllm serve swiss-ai/Apertus-8B-Instruct-2509`) oder bei einem Hosting-Anbieter. `base_url`, Modellname und `api_key_env` in der YAML-Datei anpassen und den Modellnamen gegen die Angaben des Anbieters prüfen.
+**Modelle über die Plattformen des Moduls (SW4):** Beide Plattformen sind OpenAI-kompatibel; den Schlüssel erstellt jede Person selbst.
+
+| `--modell` | Plattform | Schlüssel |
+|---|---|---|
+| `swissai:<modell-id>` | Swiss AI Research Platform (CSCS, Apertus-Projekt), `https://api.swissai.svc.cscs.ch/v1` | `SWISSAI_API_KEY` – nach Login auf https://serving.swissai.svc.cscs.ch |
+| `apertus`, `apertus-8b` | Kurzform für Apertus v1.5 (70B bzw. 8B) auf der Swiss AI Research Platform | `SWISSAI_API_KEY` |
+| `litellm:<modell-id>` | LiteLLM-Proxy der FHNW (AISL, mit Kostenlimit), `https://litellm.engines.aisl.science/v1` (andere Adresse: `LITELLM_BASE_URL`) | `LITELLM_API_KEY` – Login mit FHNW-Konto auf https://litellm.engines.aisl.science |
+
+```bash
+export SWISSAI_API_KEY=...
+python -m kartell lauf experiments/e2_mit_kommunikation.yaml --modell apertus --runden 10 --wiederholungen 1   # Pilot
+python -m kartell lauf experiments/e5_apertus.yaml                                                             # FF4 wie geplant
+python -m kartell eval-compliance --modell apertus                                                             # Guardrail mit Apertus
+```
+
+Welche Modelle es gibt, zeigt `GET /v1/models` (bei Swiss AI ohne Schlüssel). Im GitHub-Workflow: Secrets `SWISSAI_API_KEY` bzw. `LITELLM_API_KEY` anlegen und in `experiments/auftrag.yaml` z. B. `modell: apertus` setzen.
 
 
 ## Messgrössen
