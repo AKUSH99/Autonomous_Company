@@ -372,9 +372,38 @@ def _auftrag(args) -> None:
         raise SystemExit(f"{len(ausfaelle)} Lauf/Läufe wegen Modellausfall abgebrochen – Protokoll prüfen.")
 
 
+def _eval_retrieval(args) -> None:
+    """Vergleicht Suchverfahren auf evaluation/retrieval_testset.jsonl (Hit@k, MRR) und schreibt reports/retrieval.json."""
+    from .config import RetrievalConfig
+    from .eval_retrieval import bewerte, lade_testset, tabelle
+    from .rag import erstelle_retriever
+    testset = lade_testset(args.testset)
+    varianten = {"BM25": None}
+    if "hybrid" in args.verfahren:
+        varianten["Hybrid (BM25 + Embeddings)"] = RetrievalConfig(verfahren="hybrid", reranker_modell=None)
+        if not args.ohne_reranker:
+            varianten["Hybrid + Reranker"] = RetrievalConfig(verfahren="hybrid")
+    ergebnisse = {}
+    for name, cfg in varianten.items():
+        retriever = erstelle_retriever(args.wissensbasis, cfg)
+        ergebnisse[name] = bewerte(retriever, testset, args.k)
+        if getattr(retriever, "reranker_fehler", None):
+            print(f"Hinweis: Reranker nicht verfügbar ({retriever.reranker_fehler}) – {name} entspricht der Fusion ohne Reranker.")
+    berichte = Path("reports")
+    berichte.mkdir(exist_ok=True)
+    (berichte / "retrieval.json").write_text(json.dumps(ergebnisse, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"{len(testset)} Anfragen, Wissensbasis {args.wissensbasis}\n")
+    print(tabelle(ergebnisse, args.k))
+    for name, e in ergebnisse.items():
+        for z in e["verfehlt"]:
+            print(f"  verfehlt ({name}): {z['anfrage']} → {', '.join(z['treffer'])}")
+
+
 def _mcp(args) -> None:
     from .mcp_server import erstelle_server
-    erstelle_server(args.wissensbasis).run("stdio")
+    from .config import RetrievalConfig
+    retrieval = RetrievalConfig.model_validate_json(args.retrieval) if args.retrieval else None
+    erstelle_server(args.wissensbasis, retrieval).run("stdio")
 
 
 def _monitor(args) -> None:
@@ -478,8 +507,17 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--ausgabe", help="Ergebnis inkl. M6-Kandidaten als JSON speichern")
     s.set_defaults(fn=_verbot_auswerten)
 
+    s = sub.add_parser("eval-retrieval", help="Suchverfahren vergleichen: BM25 gegen Hybrid (Embeddings + Reranker)")
+    s.add_argument("--testset", default="evaluation/retrieval_testset.jsonl")
+    s.add_argument("--wissensbasis", default="knowledge/wettbewerbsrecht")
+    s.add_argument("--verfahren", nargs="+", default=["bm25", "hybrid"], choices=["bm25", "hybrid"])
+    s.add_argument("--ohne-reranker", action="store_true", help="nur BM25 und Fusion, ohne Reranker")
+    s.add_argument("-k", type=int, default=3)
+    s.set_defaults(fn=_eval_retrieval)
+
     s = sub.add_parser("mcp", help="MCP-Server mit Wissensbasis und Regel-Prüfung starten (stdio)")
     s.add_argument("--wissensbasis", help="Ordner mit Markdown-Dateien (Standard: knowledge/wettbewerbsrecht)")
+    s.add_argument("--retrieval", help='Suchverfahren als JSON, z. B. {"verfahren": "hybrid"} (Standard: BM25)')
     s.set_defaults(fn=_mcp)
 
     s = sub.add_parser("monitor", help="Kartell-Monitor bauen: eine HTML-Seite, die die Läufe Runde für Runde abspielt")

@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 
 from ..config import ComplianceConfig
 from ..llm import LLMClient, LLMFehler, erstelle_client
-from ..rag import BM25Retriever
+from ..rag import BM25Retriever, erstelle_retriever
 from . import prompts
 from .schemas import ComplianceUrteil, PlanUrteil
 
@@ -72,9 +72,9 @@ class ComplianceAbteilung:
         if retriever is None and not self.nur_regeln:
             if cfg.rag_ueber_mcp:
                 from ..mcp_server import MCPRetriever
-                retriever = MCPRetriever(cfg.wissensbasis)
+                retriever = MCPRetriever(cfg.wissensbasis, cfg.retrieval)
             else:
-                retriever = BM25Retriever.aus_ordner(cfg.wissensbasis)
+                retriever = erstelle_retriever(cfg.wissensbasis, cfg.retrieval)
         self.retriever = retriever
 
     @property
