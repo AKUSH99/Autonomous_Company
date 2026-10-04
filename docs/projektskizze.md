@@ -42,6 +42,7 @@ Eine Runde ist ein Durchlauf durch den Graphen: Kommunikation → Compliance-Fil
 | Guardrails | Nachrichtenfilter (Regeln + LLM, fail-safe), Aufsicht über Notizen, Preisgrenzen, Fallback bei Modellausfall |
 | Modellvergleich / Apertus | Austauschbare Backends: Claude über das Anthropic-SDK, Apertus über eine OpenAI-kompatible Schnittstelle |
 | Tool-Use | Nachfrage-Schätzer als Werkzeug der Preisagenten (E14): verändert ein analytisches Werkzeug die Kollusion? |
+| Tracing (LangSmith) | Jeder Lauf als Trace: Graph-Knoten, LLM-Aufrufe mit Prompts, Antworten und Tokens, Werkzeugaufrufe |
 | MCP | Wissensbasis und Regel-Prüfung als MCP-Server; der Compliance-Agent kann sein Rechtswissen darüber beziehen |
 | Verhaltens-Guardrail | Marktbeobachtung erkennt Preismuster (Gleichschritt, gemeinsame Erhöhungen) statt nur Worte (E15) |
 

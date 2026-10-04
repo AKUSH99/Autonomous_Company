@@ -6,6 +6,8 @@ from typing import Callable, Generic, Protocol, TypeVar
 
 from pydantic import BaseModel, ValidationError
 
+from ..tracing import werkzeug_lauf
+
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -48,6 +50,7 @@ class Werkzeug:
             return f"Fehler: {e}", True
 
 
+@werkzeug_lauf
 def fuehre_werkzeug_aus(werkzeuge: list[Werkzeug], name: str, argumente: dict, protokoll: list[dict]) -> tuple[str, bool]:
     werkzeug = next((w for w in werkzeuge if w.name == name), None)
     text, fehler = werkzeug.ausfuehren(argumente) if werkzeug else (f"Fehler: unbekanntes Werkzeug {name}", True)

@@ -96,6 +96,14 @@ Laut Schätzung kosten E1–E4 und E7 mit DeepSeek zusammen rund 4 USD statt run
 
 **Echte Firmen:** In einer Versuchsdatei gibt `agenten.profile` jeder Firma einen Namen, eine private Geschichte (nur sie sieht sie) und eine öffentliche Beschreibung (sieht die KI-Kundschaft); `markt.kosten_je_firma` setzt eigene Stückkosten, Wettbewerbs- und Kartellpreis werden dann je Firma berechnet. Die Geschichten beschreiben Lage und Interessen, nie eine Strategie. `python -m kartell highlights <ordner>` zieht aus solchen Läufen wörtliche Zitate je Firma und Kundenstimmen (ausgewählt, nie umformuliert) und zählt, ob die Nachrichten Vorschläge, Werbung oder Preisansagen sind.
 
+**Tracing mit LangSmith:** Ohne weitere Installation einschalten mit
+```bash
+export LANGSMITH_TRACING=true
+export LANGSMITH_API_KEY=lsv2_...        # https://smith.langchain.com → Settings → API Keys
+export LANGSMITH_PROJECT=ki-kartell      # optional
+```
+Jeder Lauf erscheint dann als ein Trace (`<versuch> · seed <n>`, getaggt mit Versuch, Compliance-Modus und Kanal): darunter die LangGraph-Knoten jeder Runde, in jedem Knoten die LLM-Aufrufe der Agenten mit System- und Nutzer-Prompt, strukturierter Antwort, Tokens und Modell, und die Werkzeugaufrufe. Damit lässt sich nachvollziehen, warum ein Agent einen Preis gesetzt oder der Compliance-Filter eine Nachricht blockiert hat. Ohne die Variablen geht nichts an LangSmith. Im GitHub-Workflow genügt das Repository-Secret `LANGSMITH_API_KEY`. Achtung: Mit eingeschaltetem Tracing gehen alle Prompts und Antworten an LangSmith.
+
 **Apertus:** Die Konfigurationen `e5`/`e6` erwarten einen OpenAI-kompatiblen Server, z. B. lokal mit vLLM (`vllm serve swiss-ai/Apertus-8B-Instruct-2509`) oder bei einem Hosting-Anbieter. `base_url`, Modellname und `api_key_env` in der YAML-Datei anpassen und den Modellnamen gegen die Angaben des Anbieters prüfen.
 
 
@@ -116,6 +124,7 @@ Auf dem selbst geschriebenen Testset: Regel-Schicht allein Precision 1,00 / Reca
 kartell/
   market.py            Logit-Markt, Nash- und Monopolpreis
   graph.py             LangGraph-Orchestrierung einer Runde
+  tracing.py           LangSmith-Tracing für LLM-Aufrufe und Werkzeuge (nur mit LANGSMITH_TRACING)
   agents/pricing.py    LLM-Preisagenten (Kontext, Gedächtnis, Guardrails)
   agents/compliance.py Compliance-Abteilung: Regel-Schicht + LLM-Urteil mit RAG
   agents/scripted.py   feste Strategien für Tests und Demo
