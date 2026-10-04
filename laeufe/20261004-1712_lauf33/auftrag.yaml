@@ -1,0 +1,9 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell (04.10.): Probelauf nach dem Pilot – Denkmodus aus (Pilot: viele Antworten bei 8000 Tokens abgeschnitten).
+# Nur 2 Wochen E27: Kommen Preise, Mitteilungen und Kundschaft jetzt ohne Abbruch?
+modell: "swissai:RCP-AIaaS/deepseek-ai/DeepSeek-V4.1-Flash"
+zeitlimit_min: 30
+laeufe:
+  - {config: experiments/e27_marktplatz_mitteilungen.yaml, runden: 2, wiederholungen: 1}
