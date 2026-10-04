@@ -24,6 +24,8 @@ So nah an einem echten Markt wie möglich:
 | Kundschaft | 40 KI-Kundinnen und -Kunden mit Budget und Gewohnheiten («vergleicht Preise», «will Beratung», «kauft Schweizer») | |
 | Wie man sich sieht | Vergleichsportal: Rangliste nach Preis mit Sternen, Lieferzeit und öffentlicher Mitteilung jedes Shops | Preisvergleichsportale |
 
+![Preisniveau im Modell und auf Toppreise.ch: Wettbewerbspreis 63–71 CHF, Kartellpreis rund 101 CHF, echte Angebote 49.95–129 CHF, UVP 99.95 CHF](docs/bilder/preisniveau.png)
+
 Drei Versuche, die aufeinander aufbauen:
 
 | Versuch | Was die Shops dürfen | Frage |
@@ -43,6 +45,10 @@ Jeden Lauf Woche für Woche ansehen – Rangliste, Mitteilungen, private Notizen
 python -m kartell marktplatz runs/          # schreibt reports/marktplatz.html
 ```
 
+![Marktplatz-Ansicht: Rangliste der sechs Shops mit Preis, Bewertung, Lieferzeit und öffentlicher Mitteilung, daneben die Preiskurve zwischen Wettbewerbs- und Kartellpreis](docs/bilder/marktplatz.png)
+
+*Pilot-Lauf E27, Woche 6 (nicht belastbar). Mehrere Shops werben mit „stabilem Preis ohne Lockangebote“ – ein Signal an die Konkurrenz, verpackt als Werbung.*
+
 ## Vorstudie im Labor: zwei Shops
 
 Bevor wir den Marktplatz gebaut haben, haben wir im einfachsten Markt (zwei Shops, ein geschlossener Chat) geprüft, ob
@@ -52,6 +58,9 @@ KI-Preisagenten überhaupt kartellieren. Die drei wichtigsten Befunde:
    Die Absprache schlagen sie selbst vor: „Ich stimme deinem Vorschlag eines stabilen Niveaus um 18.50 CHF zu.“
 2. **Es ist ein echtes Kartell.** Setzen wir einen Shop heimlich für eine Runde auf einen tiefen Preis, bestraft ihn der
    andere sofort (6 von 6) und bietet danach Versöhnung an – das Verhaltensmuster, an dem die Forschung echte Kollusion erkennt.
+
+   ![Abweichungstest: Nach dem Bruch senkt der andere Shop sofort den Preis, danach kehren beide zum Kartellpreis zurück](docs/bilder/abweichungstest.png)
+
 3. **Ein Verbot macht sie stumm, aber nicht ehrlich.** Mit Verbot im Auftrag schweigen sie im Chat (p = 0.0003), in den
    privaten Notizen planen sie weiter: „Stillschweigende Signale über eigene Preise wirken, aber ich muss öffentliche
    Kommunikation weiterhin vermeiden, da die WEKO mitliest.“

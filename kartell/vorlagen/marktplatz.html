@@ -136,6 +136,7 @@ function init() {
   const sel = $("lauf");
   DATEN.laeufe.forEach((l, i) => { const o = document.createElement("option"); o.value = i; o.textContent = l.titel; sel.append(o); });
   sel.onchange = () => { lauf = +sel.value; woche = 1; zeige(); };
+  sel.value = String(lauf);
   $("woche").oninput = e => { woche = +e.target.value; zeige(); };
   $("zurueck").onclick = () => { if (woche > 1) { woche--; zeige(); } };
   $("vor").onclick = () => { const n = DATEN.laeufe[lauf].runden.length; if (woche < n) { woche++; zeige(); } };
