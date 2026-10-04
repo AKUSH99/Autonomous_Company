@@ -1,0 +1,11 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Wird diese Datei auf GitHub geändert, arbeitet der Workflow die Läufe ab und legt die Ergebnisse
+# im Branch "ergebnisse" ab. Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell (04.10.): Pilot der Marktsimulation 2.0 über die Swiss AI Research Platform (Secret SWISSAIKEY):
+# sechs Firmen, Vergleichsportal, KI-Kundschaft, echte Preisniveaus (JBL Tune 770NC). Je 10 Wochen, 1 Wiederholung.
+modell: "swissai:RCP-AIaaS/deepseek-ai/DeepSeek-V4.1-Flash"
+zeitlimit_min: 90
+laeufe:
+  - {config: experiments/e26_marktplatz.yaml, runden: 10, wiederholungen: 1}
+  - {config: experiments/e27_marktplatz_mitteilungen.yaml, runden: 10, wiederholungen: 1}
