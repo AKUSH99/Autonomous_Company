@@ -47,6 +47,7 @@ def lade_lauf(ordner: Path) -> dict | None:
                             for m in r.get("nachrichten", [])],
             "entscheide": {s: {k: _kurz(e.get(k), 600) for k in ("beobachtungen", "plan", "erkenntnisse")}
                            | ({"erzwungen": True} if e.get("erzwungen") else {})
+                           | ({"ausfall": True} if e.get("fehler") else {})
                            for s, e in r.get("entscheide", {}).items()},
             "anteile_formel": [round(float(a), 3) for a in anteile] + [round(float(1 - anteile.sum()), 3)],
             "ohne_kauf": round(float(1 - anteile.sum()), 3),
