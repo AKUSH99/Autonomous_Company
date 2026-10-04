@@ -279,7 +279,8 @@ def _auftrag(args) -> None:
     """Arbeitet eine Auftragsdatei ab: mehrere Läufe, optional Guardrail-Evaluation, danach der Bericht.
 
     Gedacht für lange Versuchsreihen ohne Aufsicht, z. B. in GitHub Actions. Optionale Felder:
-    budget_usd / reserve_usd (Budgetwächter über alle Läufe), zeitlimit_min (pro Lauf).
+    budget_usd / reserve_usd (Budgetwächter über alle Läufe), zeitlimit_min (pro Lauf),
+    retrieval_eval: true (BM25 gegen Hybrid Retrieval auf dem Retrieval-Testset, braucht SWISSAI_API_KEY).
     """
     from pathlib import Path
 
@@ -292,7 +293,7 @@ def _auftrag(args) -> None:
     import os
     auftrag = yaml.safe_load(Path(args.datei).read_text(encoding="utf-8"))
     print("Schlüssel vorhanden: " + ", ".join(f"{n} {'ja' if os.environ.get(n) else 'nein'}"
-                                              for n in ("DEEPSEEK_API_KEY", "OPENROUTER_API_KEY", "ANTHROPIC_API_KEY")))
+                                              for n in ("DEEPSEEK_API_KEY", "OPENROUTER_API_KEY", "ANTHROPIC_API_KEY", "SWISSAI_API_KEY", "LITELLM_API_KEY")))
     modell, richter = auftrag.get("modell"), auftrag.get("compliance_modell")
     berichte = Path(args.berichte)
     berichte.mkdir(parents=True, exist_ok=True)
@@ -324,6 +325,12 @@ def _auftrag(args) -> None:
         waechter = Budgetwaechter(spec, float(auftrag["budget_usd"]), float(auftrag.get("reserve_usd", 0.5)))
         quelle = f"Guthaben {waechter.start_guthaben:.2f} USD" if waechter.start_guthaben is not None else "ohne Guthaben-Abfrage"
         print(f"Budget {waechter.budget:.2f} USD ({quelle})")
+    if auftrag.get("retrieval_eval"):  # Retrieval braucht nur Embeddings und Reranker, kostet praktisch nichts
+        try:
+            _eval_retrieval(argparse.Namespace(testset="evaluation/retrieval_testset.jsonl", wissensbasis="knowledge/wettbewerbsrecht",
+                                               verfahren=["bm25", "hybrid"], ohne_reranker=False, k=3, berichte=str(berichte)))
+        except Exception as e:  # noqa: BLE001 – die Läufe sollen nicht an der Retrieval-Evaluation scheitern
+            print(f"Retrieval-Evaluation fehlgeschlagen: {e}")
     if auftrag.get("urteile_sammeln"):  # zuerst: kostet wenig und soll nicht am Budget der Läufe scheitern
         _urteile_sammeln(auftrag["urteile_sammeln"], berichte)
     ergebnisse, ausgefallen = [], set()
@@ -389,8 +396,8 @@ def _eval_retrieval(args) -> None:
         ergebnisse[name] = bewerte(retriever, testset, args.k)
         if getattr(retriever, "reranker_fehler", None):
             print(f"Hinweis: Reranker nicht verfügbar ({retriever.reranker_fehler}) – {name} entspricht der Fusion ohne Reranker.")
-    berichte = Path("reports")
-    berichte.mkdir(exist_ok=True)
+    berichte = Path(getattr(args, "berichte", None) or "reports")
+    berichte.mkdir(parents=True, exist_ok=True)
     (berichte / "retrieval.json").write_text(json.dumps(ergebnisse, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"{len(testset)} Anfragen, Wissensbasis {args.wissensbasis}\n")
     print(tabelle(ergebnisse, args.k))
