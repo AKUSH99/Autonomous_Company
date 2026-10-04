@@ -66,12 +66,15 @@ Lesen: `kartell/bericht.py`, `kartell/stichprobe.py`, `docs/ergebnisse.md` (kurz
 
 ## Wer übernimmt was
 
+Fünf Personen, fünf Rollen – dieselbe Aufteilung wie in der [Projektskizze](projektskizze.md#6-arbeitsteilung). Namen dort eintragen.
+
 | Rolle | Module | Kernfragen für die Prüfung |
 |---|---|---|
 | Markt und Auswertung | `market.py`, `metrics.py`, `bericht.py`, `stichprobe.py`, `abweichung.py` | Nash vs. Monopol, Kollusionsindex, Permutationstest, Kappa, Abweichungstest |
-| Agenten und Orchestrierung | `graph.py`, `agents/pricing.py`, `agents/prompts.py`, `agents/werkzeuge.py` | LangGraph-Ablauf, Prompt-Validität, Tool-Use, Guardrails im Agenten |
-| Compliance, RAG, MCP | `agents/compliance.py`, `rag.py`, `mcp_server.py`, `agents/marktbeobachtung.py`, `knowledge/` | Zwei Schichten, Fail-safe, BM25, MCP, Verhaltens-Guardrail |
-| Modelle, Betrieb, Demo | `llm/`, `kosten.py`, `runner.py`, `monitor.py`, `.github/workflows/`, `dashboard/` | Backends, Kosten und Budgetwächter, GitHub Actions, Tests, Monitor und Demo |
+| Agenten und Orchestrierung | `graph.py`, `agents/pricing.py`, `agents/prompts.py`, `agents/werkzeuge.py`, `experiments/` | LangGraph-Ablauf, Prompt-Validität, Tool-Use, Guardrails im Agenten, Verbot (E18/E19) |
+| Compliance und RAG | `agents/compliance.py`, `rag.py`, `mcp_server.py`, `agents/marktbeobachtung.py`, `knowledge/`, `evaluation/` | Zwei Schichten, Fail-safe, BM25, MCP (gebaut, in den Läufen nicht eingeschaltet – warum?), Verhaltens-Guardrail, Prüfer-Vergleich |
+| Modelle und Erweiterungen | `llm/`, `kosten.py`, `runner.py`, `agents/kundschaft.py`, `kunden.py`, `.github/workflows/` | Backends, Modellwahl (DeepSeek, Nemotron, Space Bunny; warum kein Apertus), Kosten und Budgetwächter, KI-Kundschaft, echte Firmen |
+| Demo und Präsentation | `monitor.py`, `vorlagen/monitor.html`, `dashboard/`, `highlights.py`, Folien | Monitor und Demo, Backup bei Ausfall, roter Faden der drei Kapitel, Abgabe |
 
 ## Typische Prüfungsfragen
 

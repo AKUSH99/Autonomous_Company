@@ -3,7 +3,17 @@
 **Sprechen sich KI-Preisagenten ab – und können Guardrails das verhindern?**
 
 Modul Generative KI · FHNW BSc Business Artificial Intelligence · Gruppenarbeit HS 2026
-Team: _Namen ergänzen_ · Stand: 23.09.2026 · Abschlusspräsentation: 23.11.2026
+Team (5 Personen): _Name 1_, _Name 2_, _Name 3_, _Name 4_, _Name 5_ · Stand: 23.09.2026 · Abschlusspräsentation: 23.11.2026
+
+> **Hinweis (Stand 04.10.2026):** Diese Skizze ist der ursprüngliche Plan. In einigen Punkten ist das Projekt anders
+> gelaufen – massgebend sind README, [ergebnisse.md](ergebnisse.md) und [entscheidungen.md](entscheidungen.md):
+>
+> | Geplant | Tatsächlich | Warum |
+> |---|---|---|
+> | Hauptläufe mit Claude, Modellvergleich mit Apertus (FF4, E5/E6) | Hauptläufe mit DeepSeek (`deepseek-flash`), Verbot zusätzlich mit Nemotron 3 Ultra, Zusatz mit Space Bunny; E5/E6 nicht durchgeführt | Kosten (rund 4 statt 80 USD); Apertus ist bei OpenRouter nicht gelistet und bräuchte einen eigenen Server (Entscheide 13, 29, 30) |
+> | Vier Forschungsfragen (FF1–FF4) | Eine Frage, drei Kapitel: Sprechen sie sich ab? Ist es ein echtes Kartell? Kann man sie stoppen? | Übersichtlichkeit für Präsentation und Prüfung (Entscheid 29) |
+> | Zurückgehaltenes zweites Testset, menschliche Labels | Mehrere KI-Richter urteilen über 120 echte Nachrichten; gemessen wird Einigkeit (Kappa), nicht Richtigkeit | Aufwand fürs Team (Entscheid 28) |
+> | Compliance-Agent bezieht Rechtswissen über MCP | MCP-Server gebaut und getestet (`tests/test_mcp.py`), in den Versuchen aber nicht eingeschaltet – dort liest der Compliance-Agent den Index direkt | Derselbe Index dahinter, aber weniger bewegliche Teile in den Läufen; MCP ist für die Demo in Claude Desktop/Code gedacht (Entscheid 22) |
 
 ## 1. Problemstellung und Relevanz
 
@@ -42,7 +52,7 @@ Eine Runde ist ein Durchlauf durch den Graphen: Kommunikation → Compliance-Fil
 | Guardrails | Nachrichtenfilter (Regeln + LLM, fail-safe), Aufsicht über Notizen, Preisgrenzen, Fallback bei Modellausfall |
 | Modellvergleich / Apertus | Austauschbare Backends: Claude über das Anthropic-SDK, Apertus über eine OpenAI-kompatible Schnittstelle |
 | Tool-Use | Nachfrage-Schätzer als Werkzeug der Preisagenten (E14): verändert ein analytisches Werkzeug die Kollusion? |
-| MCP | Wissensbasis und Regel-Prüfung als MCP-Server; der Compliance-Agent kann sein Rechtswissen darüber beziehen |
+| MCP | Wissensbasis und Regel-Prüfung als MCP-Server; der Compliance-Agent kann sein Rechtswissen darüber beziehen (`rag_ueber_mcp`). Gebaut und getestet, in den Versuchsläufen nicht eingeschaltet |
 | Verhaltens-Guardrail | Marktbeobachtung erkennt Preismuster (Gleichschritt, gemeinsame Erhöhungen) statt nur Worte (E15) |
 
 ## 5. Evaluation
@@ -59,14 +69,15 @@ Eine Runde ist ein Durchlauf durch den Graphen: Kommunikation → Compliance-Fil
 
 ## 6. Arbeitsteilung
 
-| Rolle | Verantwortung | Module |
-|---|---|---|
-| Markt und Auswertung | Marktmodell, Benchmarks, Kennzahlen, Bericht und Statistik | `market.py`, `metrics.py`, `bericht.py` |
-| Agenten und Orchestrierung | Preisagenten, Prompts, LangGraph, Experimente durchführen | `graph.py`, `agents/pricing.py`, `agents/prompts.py` |
-| Compliance und RAG | Wissensbasis, Retrieval, Guardrail, Testsets und deren Evaluation | `agents/compliance.py`, `rag.py`, `knowledge/`, `evaluation/` |
-| Modelle, Demo und Präsentation | Apertus-Anbindung, Modellvergleich, Dashboard, Präsentation | `llm/`, `dashboard/`, E5/E6 |
+| Rolle | Person | Verantwortung | Module |
+|---|---|---|---|
+| Markt und Auswertung | _Name_ | Marktmodell, Benchmarks, Kennzahlen, Bericht und Statistik | `market.py`, `metrics.py`, `bericht.py`, `abweichung.py` |
+| Agenten und Orchestrierung | _Name_ | Preisagenten, Prompts, LangGraph, Experimente durchführen | `graph.py`, `agents/pricing.py`, `agents/prompts.py`, `experiments/` |
+| Compliance und RAG | _Name_ | Wissensbasis, Retrieval, MCP, Guardrail, Testsets und Prüfer-Vergleich | `agents/compliance.py`, `rag.py`, `mcp_server.py`, `knowledge/`, `evaluation/` |
+| Modelle und Erweiterungen | _Name_ | Modell-Backends, Modellvergleich, KI-Kundschaft, echte Firmen | `llm/`, `agents/kundschaft.py`, `kunden.py`, E20–E25 |
+| Demo und Präsentation | _Name_ | Kartell-Monitor, Dashboard, Präsentation, Abgabe | `monitor.py`, `dashboard/`, Folien |
 
-Alle kennen den Gesamtablauf und die Entscheidungen in `docs/entscheidungen.md`.
+Alle kennen den Gesamtablauf und die Entscheidungen in `docs/entscheidungen.md`. In der Präsentation und in der mündlichen Prüfung erklärt jede Person ihren Teil selbst.
 
 ## 7. Zeitplan
 
@@ -93,7 +104,7 @@ Alle kennen den Gesamtablauf und die Entscheidungen in `docs/entscheidungen.md`.
 
 ## 9. Ethik und Grenzen
 
-Der Markt ist vollständig simuliert, es werden keine echten Preise beeinflusst. Ziel ist, Risiken agentischer Preissysteme zu verstehen und Schutzmechanismen zu prüfen. Die Wissensbasis fasst Rechtstexte vereinfacht zusammen und ist keine Rechtsberatung. Der Einsatz von KI-Werkzeugen bei der Entwicklung wird in der Abgabe offengelegt.
+Der Markt ist vollständig simuliert, es werden keine echten Preise beeinflusst. Ziel ist, Risiken agentischer Preissysteme zu verstehen und Schutzmechanismen zu prüfen. Die Wissensbasis fasst Rechtstexte vereinfacht zusammen und ist keine Rechtsberatung. **Offenlegung:** Code und Dokumentation sind mit Unterstützung eines KI-Assistenten (Claude Code) entstanden; im Git-Verlauf sind diese Commits als „Claude“ erkennbar. Fragestellung, Versuchsplan, Entscheidungen und Auswertung verantwortet das Team. Die Offenlegung steht auch in der Abgabe und auf einer Folie der Präsentation.
 
 ## 10. Quellen
 
