@@ -98,3 +98,25 @@ def test_mitteilungen_brauchen_das_portal():
     with pytest.raises(ValueError):
         ExperimentConfig(name="x", kommunikation={"aktiv": True, "art": "ankuendigung"})
     assert ExperimentConfig(name="x", kommunikation={"aktiv": True, "art": "ankuendigung"}, portal={"aktiv": True}).compliance.oeffentlich
+
+
+def test_marktplatz_ansicht(tmp_path):
+    """Ein Lauf mit Skript-Shops wird zur HTML-Ansicht mit eingebetteten Daten."""
+    import json
+
+    from kartell.marktplatz_ansicht import baue
+    from kartell.runner import fuehre_experiment_aus
+    cfg = lade_config("experiments/e27_marktplatz_mitteilungen.yaml")
+    cfg.runden, cfg.wiederholungen = 3, 1
+    cfg.agenten.llm = LLMSpec(provider="scripted", model="unterbieten")
+    cfg.kundschaft.art = "formel"
+    fuehre_experiment_aus(cfg, ausgabe=tmp_path / "runs")
+    r = baue([tmp_path / "runs"], tmp_path / "m.html")
+    html = (tmp_path / "m.html").read_text(encoding="utf-8")
+    assert r["laeufe"] == 1 and html.startswith("<!doctype html>") and "<title>KI-Kartell Marktplatz</title>" in html
+    daten = json.loads(html.split("const DATEN = ")[1].split(";\nconst FARBEN")[0])
+    lauf = daten["laeufe"][0]
+    assert len(lauf["runden"]) == 3 and lauf["shops"][0]["bewertung"] == 4.1 and lauf["portal"] == "Preisvergleich.ch"
+    assert abs(sum(lauf["runden"][0]["anteile_formel"]) - 1) < 0.01
+    baue([tmp_path / "runs"], tmp_path / "a.html", artifact=True)
+    assert (tmp_path / "a.html").read_text(encoding="utf-8").startswith("<title>")

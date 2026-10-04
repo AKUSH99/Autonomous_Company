@@ -399,6 +399,12 @@ def _eval_retrieval(args) -> None:
             print(f"  verfehlt ({name}): {z['anfrage']} → {', '.join(z['treffer'])}")
 
 
+def _marktplatz(args) -> None:
+    from .marktplatz_ansicht import baue
+    r = baue([Path(o) for o in args.laeufe], Path(args.ausgabe), artifact=args.artifact)
+    print(f"Marktplatz-Ansicht geschrieben: {r['datei']} ({r['laeufe']} Läufe, {r['kb']} KB) – im Browser öffnen")
+
+
 def _mcp(args) -> None:
     from .mcp_server import erstelle_server
     from .config import RetrievalConfig
@@ -514,6 +520,12 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--ohne-reranker", action="store_true", help="nur BM25 und Fusion, ohne Reranker")
     s.add_argument("-k", type=int, default=3)
     s.set_defaults(fn=_eval_retrieval)
+
+    s = sub.add_parser("marktplatz", help="Läufe als Preisvergleichsportal zum Durchblättern (HTML)")
+    s.add_argument("laeufe", nargs="+", help="Lauf-Ordner oder Ordner mit Läufen (rekursiv)")
+    s.add_argument("--ausgabe", default="reports/marktplatz.html")
+    s.add_argument("--artifact", action="store_true", help="ohne <!doctype>/<head>, zum Veröffentlichen als Artifact")
+    s.set_defaults(fn=_marktplatz)
 
     s = sub.add_parser("mcp", help="MCP-Server mit Wissensbasis und Regel-Prüfung starten (stdio)")
     s.add_argument("--wissensbasis", help="Ordner mit Markdown-Dateien (Standard: knowledge/wettbewerbsrecht)")
