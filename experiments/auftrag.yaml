@@ -7,6 +7,6 @@
 #  2. Apertus-Pilot (FF4): E2 mit offenem Kanal, 10 Runden – läuft das JSON-Format, wie verhält sich Apertus?
 modell: apertus
 retrieval_eval: true
-zeitlimit_min: 60
+zeitlimit_min: 60  # Lauf 2 (Secret SWISSAIKEY)
 laeufe:
   - {config: experiments/e2_mit_kommunikation.yaml, runden: 10, wiederholungen: 1}
