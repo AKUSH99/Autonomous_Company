@@ -2,16 +2,17 @@
 from __future__ import annotations
 
 from ..config import LLMSpec
+from ..tracing import mit_tracing
 from .base import LLMAntwort, LLMClient, LLMFehler, Werkzeug
 
 
 def erstelle_client(spec: LLMSpec) -> LLMClient:
     if spec.provider == "anthropic":
         from .anthropic_backend import AnthropicClient
-        return AnthropicClient(spec)
+        return mit_tracing(AnthropicClient(spec), spec)
     if spec.provider == "openai_compat":
         from .openai_compat import OpenAICompatClient
-        return OpenAICompatClient(spec)
+        return mit_tracing(OpenAICompatClient(spec), spec)
     raise ValueError(f"Provider '{spec.provider}' ist kein LLM-Backend (scripted/regeln werden in den Agenten behandelt).")
 
 
