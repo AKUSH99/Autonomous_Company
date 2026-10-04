@@ -53,9 +53,9 @@ jobs:
     env:
       DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      # Tracing mit LangSmith, sobald das Secret LANGSMITH_API_KEY existiert
-      LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
-      LANGSMITH_TRACING: ${{ secrets.LANGSMITH_API_KEY != '' }}
+      # Tracing mit LangSmith, sobald das Secret LANGSMITH_API_KEY (oder LANGSMITH) existiert
+      LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY || secrets.LANGSMITH }}
+      LANGSMITH_TRACING: ${{ (secrets.LANGSMITH_API_KEY || secrets.LANGSMITH) != '' }}
       LANGSMITH_PROJECT: ki-kartell
       PYTHONUNBUFFERED: "1"
     steps:

@@ -102,7 +102,7 @@ export LANGSMITH_TRACING=true
 export LANGSMITH_API_KEY=lsv2_...        # https://smith.langchain.com → Settings → API Keys
 export LANGSMITH_PROJECT=ki-kartell      # optional
 ```
-Jeder Lauf erscheint dann als ein Trace (`<versuch> · seed <n>`, getaggt mit Versuch, Compliance-Modus und Kanal): darunter die LangGraph-Knoten jeder Runde, in jedem Knoten die LLM-Aufrufe der Agenten mit System- und Nutzer-Prompt, strukturierter Antwort, Tokens und Modell, und die Werkzeugaufrufe. Damit lässt sich nachvollziehen, warum ein Agent einen Preis gesetzt oder der Compliance-Filter eine Nachricht blockiert hat. Ohne die Variablen geht nichts an LangSmith. Im GitHub-Workflow genügt das Repository-Secret `LANGSMITH_API_KEY`. Achtung: Mit eingeschaltetem Tracing gehen alle Prompts und Antworten an LangSmith.
+Jeder Lauf erscheint dann als ein Trace (`<versuch> · seed <n>`, getaggt mit Versuch, Compliance-Modus und Kanal): darunter die LangGraph-Knoten jeder Runde, in jedem Knoten die LLM-Aufrufe der Agenten mit System- und Nutzer-Prompt, strukturierter Antwort, Tokens und Modell, und die Werkzeugaufrufe. Damit lässt sich nachvollziehen, warum ein Agent einen Preis gesetzt oder der Compliance-Filter eine Nachricht blockiert hat. Ohne die Variablen geht nichts an LangSmith. Im GitHub-Workflow genügt das Repository-Secret `LANGSMITH_API_KEY` (oder `LANGSMITH`). Achtung: Mit eingeschaltetem Tracing gehen alle Prompts und Antworten an LangSmith.
 
 **Apertus:** Die Konfigurationen `e5`/`e6` erwarten einen OpenAI-kompatiblen Server, z. B. lokal mit vLLM (`vllm serve swiss-ai/Apertus-8B-Instruct-2509`) oder bei einem Hosting-Anbieter. `base_url`, Modellname und `api_key_env` in der YAML-Datei anpassen und den Modellnamen gegen die Angaben des Anbieters prüfen.
 
