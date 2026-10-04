@@ -10,10 +10,10 @@ Team: Almidin Bangoji, Robin Meier, Jan Steiner, Andrej Mauron, Flavio Sibilia �
 >
 > | Geplant | Tatsächlich | Warum |
 > |---|---|---|
-> | Hauptläufe mit Claude, Modellvergleich mit Apertus (FF4, E5/E6) | Hauptläufe mit DeepSeek (`deepseek-flash`), Verbot zusätzlich mit Nemotron 3 Ultra, Zusatz mit Space Bunny; E5/E6 nicht durchgeführt | Kosten (rund 4 statt 80 USD); Apertus ist bei OpenRouter nicht gelistet und bräuchte einen eigenen Server (Entscheide 13, 29, 30) |
+> | Hauptläufe mit Claude, Modellvergleich mit Apertus (FF4, E5/E6) | Hauptläufe mit DeepSeek (`deepseek-flash`), Verbot zusätzlich mit Nemotron 3 Ultra, Zusatz mit Space Bunny. Apertus ist über die Swiss AI Research Platform angebunden (E5/E6), Ergebnisse dazu stehen noch aus | Kosten (rund 4 statt 80 USD); Apertus war anfangs nur mit eigenem Server erreichbar (Entscheide 13, 29, 30, 32) |
 > | Vier Forschungsfragen (FF1–FF4) | Eine Frage, drei Kapitel: Sprechen sie sich ab? Ist es ein echtes Kartell? Kann man sie stoppen? | Übersichtlichkeit für Präsentation und Prüfung (Entscheid 29) |
 > | Zurückgehaltenes zweites Testset, menschliche Labels | Mehrere KI-Richter urteilen über 120 echte Nachrichten; gemessen wird Einigkeit (Kappa), nicht Richtigkeit | Aufwand fürs Team (Entscheid 28) |
-> | Compliance-Agent bezieht Rechtswissen über MCP | MCP-Server gebaut und getestet (`tests/test_mcp.py`), in den Versuchen aber nicht eingeschaltet – dort liest der Compliance-Agent den Index direkt | Derselbe Index dahinter, aber weniger bewegliche Teile in den Läufen; MCP ist für die Demo in Claude Desktop/Code gedacht (Entscheid 22) |
+> | Compliance-Agent bezieht Rechtswissen über MCP | So umgesetzt in E3, E4, E9 und E15 (seit 04.10.2026). Die bisher ausgewerteten Läufe dieser Versuche liefen noch ohne MCP, mit denselben BM25-Treffern | MCP war zuerst nur gebaut, nicht eingeschaltet (Entscheid 34) |
 
 ## 1. Problemstellung und Relevanz
 
@@ -48,11 +48,12 @@ Eine Runde ist ein Durchlauf durch den Graphen: Kommunikation → Compliance-Fil
 | LangGraph | Zustandsgraph einer Marktrunde mit bedingten Knoten, parallelen Agentenaufrufen und Rundenschleife |
 | Prompt Engineering | Rollen- und Aufgabenprompts ohne Priming auf Kooperation; Prompt-Variation als Robustheitscheck |
 | Strukturierte Ausgaben | Alle Agentenantworten als validiertes JSON-Schema (Pydantic) |
-| RAG | BM25-Retrieval über Zusammenfassungen von KG, AEUV und Behördenpraxis für den Compliance-Agenten |
+| RAG | Chunking der Wissensbasis (KG, AEUV, Behördenpraxis), BM25 oder Hybrid Retrieval (BM25 + Embeddings + Reranker) für den Compliance-Agenten; Retrieval-Evaluation mit Hit@k und MRR |
 | Guardrails | Nachrichtenfilter (Regeln + LLM, fail-safe), Aufsicht über Notizen, Preisgrenzen, Fallback bei Modellausfall |
-| Modellvergleich / Apertus | Austauschbare Backends: Claude über das Anthropic-SDK, Apertus über eine OpenAI-kompatible Schnittstelle |
+| Modellvergleich / Apertus | Austauschbare Backends: Claude über das Anthropic-SDK, Apertus und weitere Modelle über die Swiss AI Research Platform und den FHNW-LiteLLM-Proxy (OpenAI-kompatibel) |
 | Tool-Use | Nachfrage-Schätzer als Werkzeug der Preisagenten (E14): verändert ein analytisches Werkzeug die Kollusion? |
-| MCP | Wissensbasis und Regel-Prüfung als MCP-Server; der Compliance-Agent kann sein Rechtswissen darüber beziehen (`rag_ueber_mcp`). Gebaut und getestet, in den Versuchsläufen nicht eingeschaltet |
+| Tracing (LangSmith) | Jeder Lauf als Trace: Graph-Knoten, LLM-Aufrufe mit Prompts, Antworten und Tokens, Werkzeugaufrufe |
+| MCP | Wissensbasis und Regel-Prüfung als MCP-Server; der Compliance-Agent bezieht sein Rechtswissen in den Compliance-Versuchen darüber |
 | Verhaltens-Guardrail | Marktbeobachtung erkennt Preismuster (Gleichschritt, gemeinsame Erhöhungen) statt nur Worte (E15) |
 
 ## 5. Evaluation

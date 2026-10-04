@@ -65,6 +65,22 @@ class KommunikationConfig(BaseModel):
     max_zeichen: int = 400
 
 
+class RetrievalConfig(BaseModel):
+    """Wie die Compliance-Abteilung ihr Rechtswissen findet (kartell/rag.py).
+
+    bm25    – Stichwortsuche, ohne externe Dienste (Standard; damit gerechnet wurden alle bisherigen Versuche)
+    hybrid  – BM25 + Embeddings (Reciprocal Rank Fusion), danach optional ein Reranker. Embeddings und Reranker
+              standardmässig von der Swiss AI Research Platform (Schlüssel SWISSAI_API_KEY).
+    """
+    verfahren: Literal["bm25", "hybrid"] = "bm25"
+    base_url: str = "https://api.swissai.svc.cscs.ch/v1"
+    api_key_env: str = "SWISSAI_API_KEY"
+    embedding_modell: str = "RCP-AIaaS/Qwen/Qwen3-Embedding-8B"
+    reranker_modell: Optional[str] = "RCP-AIaaS/BAAI/bge-reranker-v2-m3"  # None = ohne Reranker
+    kandidaten: int = 8      # so viele Treffer aus der Fusion bekommt der Reranker
+    cache: Optional[str] = ".cache/embeddings.json"  # Vektoren der Wissensbasis nur einmal berechnen
+
+
 class ComplianceConfig(BaseModel):
     # aus      – keine Aufsicht
     # filter   – prüft jede Nachricht vor der Zustellung, blockiert Absprachen
@@ -74,6 +90,7 @@ class ComplianceConfig(BaseModel):
     top_k: int = 3
     wissensbasis: str = "knowledge/wettbewerbsrecht"
     rag_ueber_mcp: bool = False  # Rechtswissen über den MCP-Server (python -m kartell mcp) statt direkt aus dem Index
+    retrieval: RetrievalConfig = Field(default_factory=RetrievalConfig)
     marktbeobachtung: bool = False  # Guardrail auf Preismuster (Gleichschritt, gemeinsame Erhöhungen) – unabhängig vom Modus
     beobachtung_fenster: int = 5
 
@@ -195,6 +212,27 @@ DENKEN_MAXIMAL_ERSATZ = ("xhigh", "high")
 DENKEN_MIN_TOKENS = {"hoch": 16000, "maximal": 24000}
 
 
+# Die beiden Modell-Plattformen des Moduls (SW4): beide OpenAI-kompatibel, Schlüssel erstellt man selbst.
+#   swissai:<id>  – Swiss AI Research Platform (CSCS, Apertus-Projekt), Schlüssel nach Login auf
+#                   https://serving.swissai.svc.cscs.ch → SWISSAI_API_KEY. Modellliste: GET /v1/models
+#   litellm:<id>  – LiteLLM-Proxy der FHNW (AISL, mit Kostenlimit), Login mit FHNW-Konto auf
+#                   https://litellm.engines.aisl.science → LITELLM_API_KEY. Andere Adresse über LITELLM_BASE_URL.
+SWISSAI_URL = "https://api.swissai.svc.cscs.ch/v1"
+LITELLM_URL = "https://litellm.engines.aisl.science/v1"
+PLATTFORMEN = {"openrouter": (OPENROUTER_URL, "OPENROUTER_API_KEY"), "swissai": (SWISSAI_URL, "SWISSAI_API_KEY"),
+               "litellm": (LITELLM_URL, "LITELLM_API_KEY")}
+# Kurznamen für die Schweizer Modelle; der genaue Modellname steht in der Modellliste der Plattform.
+VOREINSTELLUNGEN["apertus"] = LLMSpec(provider="openai_compat", model="CSCS-Inference/swiss-ai/Apertus-v1.5-70B",
+                                      base_url=SWISSAI_URL, api_key_env="SWISSAI_API_KEY", max_tokens=8000)
+VOREINSTELLUNGEN["apertus-8b"] = VOREINSTELLUNGEN["apertus"].model_copy(update={"model": "CSCS-Inference/swiss-ai/Apertus-v1.5-8B"})
+
+
+def plattform_url(plattform: str) -> str:
+    import os
+    url, _ = PLATTFORMEN[plattform]
+    return (os.environ.get("LITELLM_BASE_URL") or url) if plattform == "litellm" else url
+
+
 def ist_gedrosselt(modell: str) -> bool:
     """Gratis- und Stealth-Modelle bei OpenRouter erlauben nur wenige Anfragen pro Minute."""
     return modell.endswith(":free") or modell.startswith("stealth/")
@@ -208,12 +246,14 @@ def voreinstellung(name: str) -> LLMSpec:
     """
     if name in VOREINSTELLUNGEN:
         return VOREINSTELLUNGEN[name]
-    if name.startswith("openrouter:") and len(name) > len("openrouter:"):
-        modell = name.split(":", 1)[1]
+    plattform, _, modell = name.partition(":")
+    if plattform in PLATTFORMEN and modell:
         # 8000 Tokens: Denk-Modelle brauchen Platz vor der eigentlichen Antwort (Gratismodelle zählen Anfragen, nicht Tokens)
-        return LLMSpec(provider="openai_compat", model=modell, base_url=OPENROUTER_URL, api_key_env="OPENROUTER_API_KEY",
-                       max_tokens=8000, anfragen_pro_minute=16 if ist_gedrosselt(modell) else None)
-    raise ValueError(f"Unbekanntes Modell '{name}'. Erlaubt: {', '.join(VOREINSTELLUNGEN)} oder openrouter:<modell-id>")
+        gedrosselt = plattform == "openrouter" and ist_gedrosselt(modell)
+        return LLMSpec(provider="openai_compat", model=modell, base_url=plattform_url(plattform),
+                       api_key_env=PLATTFORMEN[plattform][1], max_tokens=8000, anfragen_pro_minute=16 if gedrosselt else None)
+    raise ValueError(f"Unbekanntes Modell '{name}'. Erlaubt: {', '.join(VOREINSTELLUNGEN)} oder "
+                     f"{', '.join(f'{p}:<modell-id>' for p in PLATTFORMEN)}")
 
 
 def mit_denken(cfg: ExperimentConfig, stufe: str) -> ExperimentConfig:
@@ -233,7 +273,7 @@ def mit_denken(cfg: ExperimentConfig, stufe: str) -> ExperimentConfig:
 def kurz(name: str) -> str:
     """Kurzer, dateinamentauglicher Name für Versuchsnamen: 'openrouter:swiss-ai/apertus-70b' -> 'apertus-70b',
     'openrouter:google/gemma-4-31b-it:free' -> 'gemma-4-31b-it-free'."""
-    ohne_anbieter = name.split(":", 1)[1] if name.startswith("openrouter:") else name
+    ohne_anbieter = name.split(":", 1)[1] if name.split(":", 1)[0] in PLATTFORMEN else name
     return re.sub(r"[^a-z0-9-]+", "-", ohne_anbieter.split("/")[-1].lower()).strip("-")
 
 

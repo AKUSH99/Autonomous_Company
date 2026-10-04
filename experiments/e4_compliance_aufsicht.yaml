@@ -11,3 +11,4 @@ kommunikation: {aktiv: true, max_zeichen: 400}
 compliance:
   modus: aufsicht
   llm: {provider: anthropic, model: claude-opus-5}
+  rag_ueber_mcp: true  # Rechtswissen über den MCP-Server (gleiche BM25-Treffer, nur über das Protokoll)

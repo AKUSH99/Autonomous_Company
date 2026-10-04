@@ -12,15 +12,16 @@ Innerhalb eines Knotens arbeiten die Agenten parallel (Threads), wie Firmen, die
 from __future__ import annotations
 
 import time
-from concurrent.futures import ThreadPoolExecutor
 from typing import TypedDict
 
 import numpy as np
+from langchain_core.runnables.config import ContextThreadPoolExecutor
 from langgraph.graph import END, START, StateGraph
 
 from .agents import ComplianceAbteilung, Kontext, erstelle_preisagent
 from .config import ExperimentConfig
 from .market import LogitMarkt
+from .tracing import lauf_config
 
 
 class Zustand(TypedDict):
@@ -83,7 +84,8 @@ class Simulation:
             self.marktbeobachtung = Marktbeobachtung(cfg.compliance.beobachtung_fenster)
         self.tokens_gesamt = {"input": 0, "output": 0}
         self.abweichung_start: int | None = None  # Runde, in der die erzwungene Abweichung begann
-        self.pool = ThreadPoolExecutor(max_workers=max(1, cfg.max_parallel))
+        # Reicht den Kontext an die Threads weiter, damit LLM-Aufrufe im Tracing unter ihrem Graph-Knoten hängen.
+        self.pool = ContextThreadPoolExecutor(max_workers=max(1, cfg.max_parallel))
         self.graph = self._baue_graph()
 
     # ---------- Hilfsfunktionen ----------
@@ -279,7 +281,8 @@ class Simulation:
         self._start = time.time()
         try:
             # Pro Runde höchstens 5 Knoten; LangGraph bricht standardmässig nach 25 Schritten ab.
-            ende = self.graph.invoke(start, config={"recursion_limit": self.cfg.runden * 6 + 20})
+            ende = self.graph.invoke(start, config={"recursion_limit": self.cfg.runden * 6 + 20,
+                                                    **lauf_config(self.cfg, self.seed)})
         finally:
             self.pool.shutdown(wait=False)
         return ende["verlauf"]

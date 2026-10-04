@@ -72,8 +72,8 @@ Fünf Personen, fünf Rollen – dieselbe Aufteilung wie in der [Projektskizze](
 |---|---|---|
 | Markt und Auswertung | `market.py`, `metrics.py`, `bericht.py`, `stichprobe.py`, `abweichung.py` | Nash vs. Monopol, Kollusionsindex, Permutationstest, Kappa, Abweichungstest |
 | Agenten und Orchestrierung | `graph.py`, `agents/pricing.py`, `agents/prompts.py`, `agents/werkzeuge.py`, `experiments/` | LangGraph-Ablauf, Prompt-Validität, Tool-Use, Guardrails im Agenten, Verbot (E18/E19) |
-| Compliance und RAG | `agents/compliance.py`, `rag.py`, `mcp_server.py`, `agents/marktbeobachtung.py`, `knowledge/`, `evaluation/` | Zwei Schichten, Fail-safe, BM25, MCP (gebaut, in den Läufen nicht eingeschaltet – warum?), Verhaltens-Guardrail, Prüfer-Vergleich |
-| Modelle und Erweiterungen | `llm/`, `kosten.py`, `runner.py`, `agents/kundschaft.py`, `kunden.py`, `.github/workflows/` | Backends, Modellwahl (DeepSeek, Nemotron, Space Bunny; warum kein Apertus), Kosten und Budgetwächter, KI-Kundschaft, echte Firmen |
+| Compliance und RAG | `agents/compliance.py`, `rag.py`, `eval_retrieval.py`, `mcp_server.py`, `agents/marktbeobachtung.py`, `knowledge/`, `evaluation/` | Zwei Schichten, Fail-safe, Chunking, BM25 vs. Hybrid Retrieval (Hit@k, MRR), MCP in E3/E4/E9/E15, Verhaltens-Guardrail, Prüfer-Vergleich |
+| Modelle und Erweiterungen | `llm/`, `tracing.py`, `kosten.py`, `runner.py`, `agents/kundschaft.py`, `kunden.py`, `.github/workflows/` | Backends, Modellwahl (DeepSeek, Nemotron, Space Bunny, Apertus über Swiss AI Platform / FHNW-LiteLLM), Tracing mit LangSmith, Kosten und Budgetwächter, KI-Kundschaft, echte Firmen |
 | Demo und Präsentation | `monitor.py`, `vorlagen/monitor.html`, `dashboard/`, `highlights.py`, Folien | Monitor und Demo, Backup bei Ausfall, roter Faden der drei Kapitel, Abgabe |
 
 ## Typische Prüfungsfragen

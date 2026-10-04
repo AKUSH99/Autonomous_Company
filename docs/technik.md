@@ -60,7 +60,7 @@ Hauptgeschichte: E1, E2 (Kapitel 1), E16, E17 (Kapitel 2), E3, E4, E18, E19 (Kap
 | `e24_echter_markt` | Echter Markt: fünf Firmen mit eigener Geschichte und eigenen Kosten, 30 KI-Kunden mit Gewohnheiten | an | aus |
 | `e25_echter_markt_ohne_kanal` | Dasselbe ohne Kanal | aus | aus |
 
-E5/E6 (Apertus) brauchen einen eigenen Server und wurden nicht durchgeführt.
+E5/E6 (Apertus) laufen über die Swiss AI Research Platform (siehe unten, Schlüssel `SWISSAI_API_KEY`).
 
 Jede YAML-Datei hat einen lesbaren `titel`; Bericht, Monitor und Dashboard zeigen „E3 · Compliance-Filter“ statt `e3_compliance_filter_deepseek`.
 
@@ -84,7 +84,25 @@ Laut Schätzung kosten E1–E4 und E7 mit DeepSeek zusammen rund 4 USD statt run
 
 **Andere Modelle über OpenRouter:** `--modell openrouter:<modell-id>` nutzt jedes bei OpenRouter gelistete Modell (Schlüssel in `OPENROUTER_API_KEY`). Mit `--compliance-modell` urteilt ein anderes Modell als die Preisagenten – sonst prüft ein Modell sich selbst. Eine Auftragsdatei kann mit `modellsuche: {begriffe: [...]}` die Modellliste durchsuchen lassen. Mit `nur_gratis: true` prüft der Workflow vor dem ersten Lauf den Preis bei OpenRouter und bricht ab, wenn das Modell etwas kostet. `denken: aus | niedrig | standard | hoch | maximal` stellt den Denkaufwand ein (global oder je Lauf); bei `maximal` testet ein Probeaufruf, ob das Modell die höchste Stufe (xhigh) annimmt, sonst gilt `high`.
 
-**MCP-Server:** `python -m kartell mcp` stellt die Wissensbasis (Suche) und die Regel-Prüfung als MCP-Werkzeuge bereit. Mit `compliance.rag_ueber_mcp: true` holt die Compliance-Abteilung ihr Rechtswissen über diesen Server. In den bisherigen Versuchsläufen ist das nicht eingeschaltet; dort liest die Compliance-Abteilung den Index direkt (dahinter steht derselbe BM25-Index; dass der Weg über MCP funktioniert, prüft `tests/test_mcp.py`). Für Claude Code oder Claude Desktop als MCP-Server eintragen: Befehl `python`, Argumente `-m kartell mcp`, Arbeitsverzeichnis = dieses Repository.
+**Retrieval (RAG): Chunking und Hybrid Retrieval.** Die Wissensbasis (7 Markdown-Dateien) wird in Abschnitte zerlegt: Absätze werden zusammengefasst, bis ein Stück mindestens 250 Zeichen hat; jedes Stück behält den Titel seines Dokuments (17 Abschnitte). Gesucht wird standardmässig mit BM25. Wahlweise Hybrid Retrieval:
+
+```yaml
+compliance:
+  retrieval: {verfahren: hybrid}   # BM25 + Embeddings (Qwen3-Embedding-8B) + Reranker (bge-reranker-v2-m3), Swiss AI Platform
+```
+
+BM25 und Embeddings liefern je eine Rangliste; Reciprocal Rank Fusion verbindet sie (Σ 1/(60 + Rang), keine gemeinsame Skala nötig). Ein Reranker liest danach Anfrage und Abschnitt zusammen und sortiert die besten 8 neu; fällt er aus, bleibt die Fusion. Vektoren der Wissensbasis werden in `.cache/embeddings.json` gespeichert. Schlüssel: `SWISSAI_API_KEY`.
+
+Welches Verfahren besser findet, misst ein gelabeltes Testset (`evaluation/retrieval_testset.jsonl`, 24 Anfragen: wörtliche und umschriebene Absprachen, englische Nachrichten, unbedenkliche Nachrichten, Rechtsfragen):
+
+```bash
+python -m kartell eval-retrieval                  # BM25 vs. Hybrid vs. Hybrid + Reranker → reports/retrieval.json
+python -m kartell eval-retrieval --verfahren bm25 # ohne Schlüssel
+```
+
+Stand BM25 (04.10.2026): Hit@1 0.67, Hit@3 0.67, MRR 0.67 – wörtliche Absprachen 1.00, Rechtsfragen 0.83, umschriebene 0.62, unbedenkliche 0.33, **englische 0.00** (BM25 findet ohne gemeinsame Wörter nichts). Hybrid: noch zu messen (braucht `SWISSAI_API_KEY`).
+
+**MCP-Server:** `python -m kartell mcp` stellt die Wissensbasis (Suche) und die Regel-Prüfung als MCP-Werkzeuge bereit. Mit `compliance.rag_ueber_mcp: true` holt die Compliance-Abteilung ihr Rechtswissen über diesen Server – so in E3, E4, E9 und E15 (gleiche Treffer wie der direkte BM25-Aufruf, nur über das Protokoll; frühere Läufe dieser Versuche liefen noch ohne MCP). Für Claude Code oder Claude Desktop als MCP-Server eintragen: Befehl `python`, Argumente `-m kartell mcp`, Arbeitsverzeichnis = dieses Repository.
 
 **Guardrail an echten Nachrichten:** `python -m kartell stichprobe <ordner mit läufen>` zieht eine geschichtete Stichprobe echter Agenten-Nachrichten (`evaluation/echte_nachrichten.jsonl`, aktuell 120 aus 2613). Mehrere KI-Richter (verschiedene Anbieter) beurteilen sie über `urteile_sammeln` in einer Auftragsdatei. Wir haben entschieden, **keine menschlichen Labels** zu erheben (Entscheid 28). Deshalb vergleicht `python -m kartell richter-vergleich --urteile reports/urteile_*.jsonl` die Prüfer untereinander: Regel-Schicht, Filter (so wie er in den Läufen entschied) und KI-Richter – mit Cohen's und Fleiss' Kappa, Mehrheitsurteil und der Liste strittiger Nachrichten. Das zeigt, wie einig die Prüfer sind, nicht, wer recht hat. Das [Label-Werkzeug](https://claude.ai/artifact/9MeAB2xSJ6v4924KHLHr3m) und `labels-auswerten` bleiben für den Fall, dass doch jemand labelt.
 
@@ -96,7 +114,30 @@ Laut Schätzung kosten E1–E4 und E7 mit DeepSeek zusammen rund 4 USD statt run
 
 **Echte Firmen:** In einer Versuchsdatei gibt `agenten.profile` jeder Firma einen Namen, eine private Geschichte (nur sie sieht sie) und eine öffentliche Beschreibung (sieht die KI-Kundschaft); `markt.kosten_je_firma` setzt eigene Stückkosten, Wettbewerbs- und Kartellpreis werden dann je Firma berechnet. Die Geschichten beschreiben Lage und Interessen, nie eine Strategie. `python -m kartell highlights <ordner>` zieht aus solchen Läufen wörtliche Zitate je Firma und Kundenstimmen (ausgewählt, nie umformuliert) und zählt, ob die Nachrichten Vorschläge, Werbung oder Preisansagen sind.
 
-**Apertus:** Die Konfigurationen `e5`/`e6` erwarten einen OpenAI-kompatiblen Server, z. B. lokal mit vLLM (`vllm serve swiss-ai/Apertus-8B-Instruct-2509`) oder bei einem Hosting-Anbieter. `base_url`, Modellname und `api_key_env` in der YAML-Datei anpassen und den Modellnamen gegen die Angaben des Anbieters prüfen.
+**Tracing mit LangSmith:** Ohne weitere Installation einschalten mit
+```bash
+export LANGSMITH_TRACING=true
+export LANGSMITH_API_KEY=lsv2_...        # https://smith.langchain.com → Settings → API Keys
+export LANGSMITH_PROJECT=ki-kartell      # optional
+```
+Jeder Lauf erscheint dann als ein Trace (`<versuch> · seed <n>`, getaggt mit Versuch, Compliance-Modus und Kanal): darunter die LangGraph-Knoten jeder Runde, in jedem Knoten die LLM-Aufrufe der Agenten mit System- und Nutzer-Prompt, strukturierter Antwort, Tokens und Modell, und die Werkzeugaufrufe. Damit lässt sich nachvollziehen, warum ein Agent einen Preis gesetzt oder der Compliance-Filter eine Nachricht blockiert hat. Ohne die Variablen geht nichts an LangSmith. Im GitHub-Workflow genügt das Repository-Secret `LANGSMITH_API_KEY` (oder `LANGSMITH`). Achtung: Mit eingeschaltetem Tracing gehen alle Prompts und Antworten an LangSmith.
+
+**Modelle über die Plattformen des Moduls (SW4):** Beide Plattformen sind OpenAI-kompatibel; den Schlüssel erstellt jede Person selbst.
+
+| `--modell` | Plattform | Schlüssel |
+|---|---|---|
+| `swissai:<modell-id>` | Swiss AI Research Platform (CSCS, Apertus-Projekt), `https://api.swissai.svc.cscs.ch/v1` | `SWISSAI_API_KEY` – nach Login auf https://serving.swissai.svc.cscs.ch |
+| `apertus`, `apertus-8b` | Kurzform für Apertus v1.5 (70B bzw. 8B) auf der Swiss AI Research Platform | `SWISSAI_API_KEY` |
+| `litellm:<modell-id>` | LiteLLM-Proxy der FHNW (AISL, mit Kostenlimit), `https://litellm.engines.aisl.science/v1` (andere Adresse: `LITELLM_BASE_URL`) | `LITELLM_API_KEY` – Login mit FHNW-Konto auf https://litellm.engines.aisl.science |
+
+```bash
+export SWISSAI_API_KEY=...
+python -m kartell lauf experiments/e2_mit_kommunikation.yaml --modell apertus --runden 10 --wiederholungen 1   # Pilot
+python -m kartell lauf experiments/e5_apertus.yaml                                                             # FF4 wie geplant
+python -m kartell eval-compliance --modell apertus                                                             # Guardrail mit Apertus
+```
+
+Welche Modelle es gibt, zeigt `GET /v1/models` (bei Swiss AI ohne Schlüssel). Im GitHub-Workflow: Secrets `SWISSAI_API_KEY` bzw. `LITELLM_API_KEY` anlegen und in `experiments/auftrag.yaml` z. B. `modell: apertus` setzen.
 
 
 ## Messgrössen
@@ -116,6 +157,7 @@ Auf dem selbst geschriebenen Testset: Regel-Schicht allein Precision 1,00 / Reca
 kartell/
   market.py            Logit-Markt, Nash- und Monopolpreis
   graph.py             LangGraph-Orchestrierung einer Runde
+  tracing.py           LangSmith-Tracing für LLM-Aufrufe und Werkzeuge (nur mit LANGSMITH_TRACING)
   agents/pricing.py    LLM-Preisagenten (Kontext, Gedächtnis, Guardrails)
   agents/compliance.py Compliance-Abteilung: Regel-Schicht + LLM-Urteil mit RAG
   agents/scripted.py   feste Strategien für Tests und Demo
@@ -123,7 +165,8 @@ kartell/
   llm/                 Backends: Anthropic-SDK (Claude), OpenAI-kompatibel (Apertus u. a.)
   agents/werkzeuge.py  Tool-Use: Nachfrage-Schätzer für die Preisagenten
   agents/marktbeobachtung.py  Verhaltens-Guardrail auf Preismuster
-  rag.py               BM25-Retrieval über die Wissensbasis
+  rag.py               Retrieval über die Wissensbasis: BM25 (Standard) oder Hybrid (BM25 + Embeddings + Reranker)
+  eval_retrieval.py    Retrieval-Evaluation (Hit@k, MRR) auf evaluation/retrieval_testset.jsonl
   mcp_server.py        Wissensbasis und Regel-Prüfung als MCP-Server
   metrics.py           Preis- und Kollusionsindex, Bootstrap, Permutationstest
   stichprobe.py        Guardrail-Evaluation an echten Nachrichten (Stichprobe, Kappa)
