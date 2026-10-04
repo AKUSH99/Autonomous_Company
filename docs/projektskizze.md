@@ -3,7 +3,7 @@
 **Sprechen sich KI-Preisagenten ab – und können Guardrails das verhindern?**
 
 Modul Generative KI · FHNW BSc Business Artificial Intelligence · Gruppenarbeit HS 2026
-Team (5 Personen): _Name 1_, _Name 2_, _Name 3_, _Name 4_, _Name 5_ · Stand: 23.09.2026 · Abschlusspräsentation: 23.11.2026
+Team: Almidin Bangoji, Robin Meier, Jan Steiner, Andrej Mauron, Flavio Sibilia · Stand: 23.09.2026 · Abschlusspräsentation: 23.11.2026
 
 > **Hinweis (Stand 04.10.2026):** Diese Skizze ist der ursprüngliche Plan. In einigen Punkten ist das Projekt anders
 > gelaufen – massgebend sind README, [ergebnisse.md](ergebnisse.md) und [entscheidungen.md](entscheidungen.md):
