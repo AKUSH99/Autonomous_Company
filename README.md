@@ -8,7 +8,9 @@ Zwei KI-Agenten führen je einen Online-Shop und setzen Runde für Runde ihre Pr
 zusammenarbeiten sollen. Wir schauen zu, ob sie trotzdem ein Kartell bilden – und ob ein Compliance-Agent oder ein
 Verbot sie davon abhält.
 
-Gruppenarbeit im Modul Generative KI, FHNW BSc Business Artificial Intelligence · Präsentation 23.11.2026
+Gruppenarbeit im Modul Generative KI & Agentensysteme, FHNW BSc Business Artificial Intelligence · Präsentation 23.11.2026
+
+**Team:** Almidin Bangoji, Robin Meier, Jan Steiner, Andrej Mauron, Flavio Sibilia · Stand 04.10.2026
 
 ## Drei Fragen, drei Antworten
 
@@ -45,16 +47,32 @@ Kartelle erkennen: **[Kartell-Monitor](https://claude.ai/artifact/DwakevS33U9rD7
 flowchart LR
     subgraph Runde["Eine Runde (LangGraph)"]
         K["kommunikation<br/>Agenten schreiben in den Kanal"] --> F["compliance_filter<br/>Regeln + LLM + RAG"]
-        F --> P["preisentscheid<br/>Agenten setzen Preise"]
+        F --> P["preisentscheid<br/>Agenten setzen Preise<br/>(optional mit Werkzeug)"]
         P --> A["aufsicht<br/>prüft Strategienotizen"]
         A --> M["markt<br/>Logit-Nachfrage, Gewinne"]
     end
     M -->|nächste Runde| K
-    W[("Wissensbasis<br/>Kartellrecht")] -.->|BM25| F
+    W[("Wissensbasis<br/>Kartellrecht")] -.->|"MCP-Server<br/>BM25 oder Hybrid"| F
     M --> L[("runden.jsonl")] --> D["Dashboard / Bericht / Monitor"]
+    Runde -.->|optional| T["LangSmith-Tracing"]
 ```
 
 Knoten werden je Versuchsbedingung zu- oder weggeschaltet: ohne Kanal fehlen `kommunikation` und `compliance_filter`, ohne Aufsicht fehlt `aufsicht`.
+
+## Was aus dem Modul drinsteckt
+
+| Konzept | Umsetzung | Mehr dazu |
+|---|---|---|
+| Multi-Agent-System | Konkurrierende Preisagenten, Compliance-Agent, Marktbeobachtung, KI-Kundschaft | [technik.md](docs/technik.md) |
+| LangGraph | Zustandsgraph einer Marktrunde mit bedingten Knoten und Rundenschleife | `kartell/graph.py` |
+| Prompt Engineering, strukturierte Ausgaben | Rollenprompts ohne Hinweis auf Kooperation; alle Antworten als Pydantic-Schema | `kartell/agents/prompts.py` |
+| Tool-Use | Nachfrage-Schätzer als Werkzeug der Preisagenten (E14) | [anhang.md](docs/anhang.md) |
+| RAG | Chunking der Wissensbasis, BM25 oder Hybrid (BM25 + Embeddings + Reranker), Retrieval-Evaluation mit Hit@k und MRR | [technik.md](docs/technik.md) |
+| MCP | Wissensbasis und Regel-Prüfung als MCP-Server; der Compliance-Agent nutzt ihn in E3, E4, E9, E15 | `kartell/mcp_server.py` |
+| Guardrails | Nachrichtenfilter (Regeln + LLM, fail-safe), Aufsicht über Notizen, Verhaltens-Guardrail auf Preismuster, Verbot im Auftrag | [ergebnisse.md](docs/ergebnisse.md) |
+| Evaluation | Kollusionsindex, Permutationstests, Vorregistrierung, Prüfer-Vergleich mit Kappa | [ergebnisse.md](docs/ergebnisse.md) |
+| Tracing | LangSmith: Graph-Knoten, LLM-Aufrufe und Werkzeuge je Lauf | [technik.md](docs/technik.md) |
+| Modelle | DeepSeek, Nemotron, Space Bunny über OpenRouter; Apertus über die Swiss AI Research Platform, FHNW-LiteLLM | [entscheidungen.md](docs/entscheidungen.md) |
 
 ## Ausprobieren
 
@@ -75,7 +93,11 @@ Echte Läufe mit LLMs, GitHub-Workflow und alle Befehle: [docs/technik.md](docs/
 | [docs/technik.md](docs/technik.md) | Befehle, Versuchsdateien, Messgrössen, Projektstruktur |
 | [docs/entscheidungen.md](docs/entscheidungen.md) | Warum wir was so gebaut haben – mit Alternativen |
 | [docs/lernpfad.md](docs/lernpfad.md) | Lernpfad und Prüfungsfragen fürs Team |
-| [docs/projektskizze.md](docs/projektskizze.md) | Ursprüngliche Projektskizze |
+| [docs/projektskizze.md](docs/projektskizze.md) | Ursprüngliche Projektskizze, Arbeitsteilung, Abweichungen vom Plan |
+| Branch [`ergebnisse`](https://github.com/AKUSH99/Autonomous_Company/tree/ergebnisse) | Rohdaten aller Läufe |
+
+Code und Dokumentation sind mit Unterstützung eines KI-Assistenten (Claude Code) entstanden; Fragestellung, Versuchsplan,
+Entscheidungen und Auswertung verantwortet das Team.
 
 ## Quellen
 
