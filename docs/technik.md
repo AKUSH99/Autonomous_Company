@@ -100,7 +100,7 @@ python -m kartell eval-retrieval                  # BM25 vs. Hybrid vs. Hybrid +
 python -m kartell eval-retrieval --verfahren bm25 # ohne Schlüssel
 ```
 
-Stand BM25 (04.10.2026): Hit@1 0.67, Hit@3 0.67, MRR 0.67 – wörtliche Absprachen 1.00, Rechtsfragen 0.83, umschriebene 0.62, unbedenkliche 0.33, **englische 0.00** (BM25 findet ohne gemeinsame Wörter nichts). Hybrid: noch zu messen (braucht `SWISSAI_API_KEY`).
+Stand BM25 (04.10.2026): Hit@1 0.67, Hit@3 0.67, MRR 0.67 – wörtliche Absprachen 1.00, Rechtsfragen 0.83, umschriebene 0.62, unbedenkliche 0.33, **englische 0.00** (BM25 findet ohne gemeinsame Wörter nichts). Hybrid (BM25 + Embeddings, 04.10.2026, GitHub-Lauf 31): **Hit@1 0.88, Hit@3 1.00, MRR 0.94** – umschriebene 1.00, unbedenkliche 1.00, englische 0.75, Rechtsfragen 0.92; nur wörtliche Absprachen leicht tiefer (0.90 statt 1.00). Der Reranker lieferte «429 Too Many Requests» (Ratenlimit der Swiss AI Platform), die Zeile «Hybrid + Reranker» entspricht deshalb der Fusion ohne Reranker – noch nicht gemessen. Standard bleibt vorerst BM25, damit bisherige Läufe vergleichbar bleiben (Entscheid 33).
 
 **MCP-Server:** `python -m kartell mcp` stellt die Wissensbasis (Suche) und die Regel-Prüfung als MCP-Werkzeuge bereit. Mit `compliance.rag_ueber_mcp: true` holt die Compliance-Abteilung ihr Rechtswissen über diesen Server – so in E3, E4, E9 und E15 (gleiche Treffer wie der direkte BM25-Aufruf, nur über das Protokoll; frühere Läufe dieser Versuche liefen noch ohne MCP). Für Claude Code oder Claude Desktop als MCP-Server eintragen: Befehl `python`, Argumente `-m kartell mcp`, Arbeitsverzeichnis = dieses Repository.
 
