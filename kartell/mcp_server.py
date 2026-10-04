@@ -3,7 +3,8 @@
 Start (stdio):  python -m kartell mcp
 Nutzen lässt er sich auf zwei Wegen:
   1. Im System selbst: Mit `compliance.rag_ueber_mcp: true` holt die Compliance-Abteilung ihr Rechtswissen
-     über MCP statt direkt aus dem BM25-Index – Agent und Wissensbasis sind dann über ein Protokoll entkoppelt.
+     über MCP statt direkt aus dem Index – Agent und Wissensbasis sind dann über ein Protokoll entkoppelt.
+     Das Suchverfahren (BM25 oder Hybrid, `compliance.retrieval`) gibt der Agent dem Server beim Start mit.
   2. Von aussen: Claude Desktop, Claude Code oder ein anderer MCP-Client kann die Wissensbasis durchsuchen und
      Nachrichten prüfen lassen, z. B. live in der Präsentation.
 """
@@ -20,7 +21,7 @@ from mcp.server.mcpserver import MCPServer
 from pydantic import BaseModel
 
 from .agents.compliance import regel_pruefung
-from .rag import Abschnitt, BM25Retriever
+from .rag import Abschnitt, erstelle_retriever
 
 STANDARD_WISSENSBASIS = Path(__file__).resolve().parent.parent / "knowledge" / "wettbewerbsrecht"
 
@@ -43,16 +44,17 @@ class Regelbefund(BaseModel):
     kategorie: str
 
 
-def erstelle_server(wissensbasis: str | Path | None = None) -> MCPServer:
+def erstelle_server(wissensbasis: str | Path | None = None, retrieval=None) -> MCPServer:
     ordner = Path(wissensbasis) if wissensbasis else STANDARD_WISSENSBASIS
-    retriever = BM25Retriever.aus_ordner(ordner)
+    retriever = erstelle_retriever(ordner, retrieval)
+    verfahren = "BM25" if retrieval is None or retrieval.verfahren == "bm25" else "Hybrid: BM25 + Embeddings + Reranker"
     server = MCPServer(
         name="kartellrecht",
         instructions="Vereinfachte Zusammenfassungen zu Schweizer und EU-Wettbewerbsrecht (KG, AEUV, Behördenpraxis) "
                      "für die Prüfung von Nachrichten zwischen Konkurrenten. Keine Rechtsberatung.",
     )
 
-    @server.tool(description="Durchsucht die Wissensbasis zum Wettbewerbsrecht (BM25) und liefert die passendsten Abschnitte.")
+    @server.tool(description=f"Durchsucht die Wissensbasis zum Wettbewerbsrecht ({verfahren}) und liefert die passendsten Abschnitte.")
     def suche_wettbewerbsrecht(anfrage: str, top_k: int = 3) -> Suchergebnis:
         treffer = retriever.suche(anfrage, max(1, min(top_k, 10)))
         return Suchergebnis(treffer=[Fundstelle(quelle=a.quelle, titel=a.titel, text=a.text, score=s) for a, s in treffer])
@@ -75,11 +77,13 @@ class MCPRetriever:
     Die MCP-Sitzung läuft in einem eigenen Event-Loop-Thread; Aufrufe aus den Agenten-Threads werden serialisiert.
     """
 
-    def __init__(self, wissensbasis: str | Path | None = None):
+    def __init__(self, wissensbasis: str | Path | None = None, retrieval=None):
         from mcp import Client, StdioServerParameters
         self._loop = asyncio.new_event_loop()
         threading.Thread(target=self._loop.run_forever, daemon=True, name="mcp-client").start()
         argumente = ["-m", "kartell", "mcp"] + (["--wissensbasis", str(Path(wissensbasis).resolve())] if wissensbasis else [])
+        if retrieval is not None and retrieval.verfahren != "bm25":
+            argumente += ["--retrieval", retrieval.model_dump_json()]
         self._client = Client(StdioServerParameters(command=sys.executable, args=argumente,
                                                     cwd=str(Path(__file__).resolve().parent.parent)))
         self._sperre = asyncio.Lock()

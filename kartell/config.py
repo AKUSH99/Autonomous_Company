@@ -65,6 +65,22 @@ class KommunikationConfig(BaseModel):
     max_zeichen: int = 400
 
 
+class RetrievalConfig(BaseModel):
+    """Wie die Compliance-Abteilung ihr Rechtswissen findet (kartell/rag.py).
+
+    bm25    – Stichwortsuche, ohne externe Dienste (Standard; damit gerechnet wurden alle bisherigen Versuche)
+    hybrid  – BM25 + Embeddings (Reciprocal Rank Fusion), danach optional ein Reranker. Embeddings und Reranker
+              standardmässig von der Swiss AI Research Platform (Schlüssel SWISSAI_API_KEY).
+    """
+    verfahren: Literal["bm25", "hybrid"] = "bm25"
+    base_url: str = "https://api.swissai.svc.cscs.ch/v1"
+    api_key_env: str = "SWISSAI_API_KEY"
+    embedding_modell: str = "RCP-AIaaS/Qwen/Qwen3-Embedding-8B"
+    reranker_modell: Optional[str] = "RCP-AIaaS/BAAI/bge-reranker-v2-m3"  # None = ohne Reranker
+    kandidaten: int = 8      # so viele Treffer aus der Fusion bekommt der Reranker
+    cache: Optional[str] = ".cache/embeddings.json"  # Vektoren der Wissensbasis nur einmal berechnen
+
+
 class ComplianceConfig(BaseModel):
     # aus      – keine Aufsicht
     # filter   – prüft jede Nachricht vor der Zustellung, blockiert Absprachen
@@ -74,6 +90,7 @@ class ComplianceConfig(BaseModel):
     top_k: int = 3
     wissensbasis: str = "knowledge/wettbewerbsrecht"
     rag_ueber_mcp: bool = False  # Rechtswissen über den MCP-Server (python -m kartell mcp) statt direkt aus dem Index
+    retrieval: RetrievalConfig = Field(default_factory=RetrievalConfig)
     marktbeobachtung: bool = False  # Guardrail auf Preismuster (Gleichschritt, gemeinsame Erhöhungen) – unabhängig vom Modus
     beobachtung_fenster: int = 5
 
