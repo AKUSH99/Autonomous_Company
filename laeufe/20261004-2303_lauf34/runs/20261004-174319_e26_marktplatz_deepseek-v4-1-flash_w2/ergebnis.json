@@ -1,0 +1,18 @@
+{
+  "runden": 30,
+  "ausgewertete_runden": 15,
+  "mittlerer_preis": 51.691,
+  "startpreis": 65.932,
+  "mittlerer_gewinn": -261.411,
+  "preisindex": -0.449,
+  "kollusionsindex": -0.908,
+  "nachrichten": 0,
+  "blockierte_nachrichten": 0,
+  "modellfehler": 0,
+  "input_tokens": 387206,
+  "output_tokens": 122585,
+  "dauer_s": 1755.6,
+  "ordner": "runs/20261004-174319_e26_marktplatz_deepseek-v4-1-flash_w2",
+  "abbruch": null,
+  "kosten_usd_geschaetzt": null
+}

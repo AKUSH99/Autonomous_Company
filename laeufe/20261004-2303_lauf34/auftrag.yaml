@@ -1,0 +1,13 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell (04.10.): Hauptversuche der Marktsimulation 2.0 über die Swiss AI Research Platform (kostenlos),
+# DeepSeek V4.1 Flash ohne Denkmodus (Probelauf 33: keine Abbrüche, ~40 s pro Woche).
+# E26 nur Portal · E27 öffentliche Mitteilungen · E28 Mitteilungen + Compliance + Marktbeobachtung.
+# Je 30 Wochen, 3 Wiederholungen.
+modell: "swissai:RCP-AIaaS/deepseek-ai/DeepSeek-V4.1-Flash"
+zeitlimit_min: 90
+laeufe:
+  - {config: experiments/e26_marktplatz.yaml, runden: 30, wiederholungen: 3}
+  - {config: experiments/e27_marktplatz_mitteilungen.yaml, runden: 30, wiederholungen: 3}
+  - {config: experiments/e28_marktplatz_compliance.yaml, runden: 30, wiederholungen: 3}
