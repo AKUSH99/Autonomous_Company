@@ -1,0 +1,244 @@
+<title>KI-Kartell Marktplatz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: Kopf mit Wochen-Steuerung · links die Portal-Rangliste der Woche · rechts Preiskurve und Kennzahlen · darunter die Kundschaft */
+:root {
+  --bg: #f3f5f7; --panel: #ffffff; --fg: #141a22; --muted: #5d6877; --line: #dfe4ea;
+  --accent: #0b6e8a;           /* Portal-Marke, Links, aktive Woche */
+  --tag: #ffd34d; --tag-ink: #2a2200;   /* Preisschild */
+  --good: #1f8a5b; --warn: #b7791f; --bad: #c23a3a; --band: rgba(183,121,31,.10);
+  --f-display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif;
+  --f-num: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1419; --panel: #171e26; --fg: #e8edf2; --muted: #9aa6b4; --line: #2a3440;
+  --accent: #4cc0dd; --tag: #ffd34d; --tag-ink: #2a2200;
+  --good: #46c48b; --warn: #e0a84a; --bad: #ef6f6f; --band: rgba(224,168,74,.12); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1419; --panel: #171e26; --fg: #e8edf2; --muted: #9aa6b4; --line: #2a3440;
+  --accent: #4cc0dd; --tag: #ffd34d; --tag-ink: #2a2200;
+  --good: #46c48b; --warn: #e0a84a; --bad: #ef6f6f; --band: rgba(224,168,74,.12); color-scheme: dark }
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { background: var(--bg); color: var(--fg); font: 15px/1.5 var(--f-body); margin: 0 }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 18px 40px; display: grid; gap: 18px }
+header.top { display: grid; gap: 10px }
+.brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap }
+.logo { font: 700 22px/1 var(--f-display); color: var(--accent); letter-spacing: -.01em }
+.logo b { color: var(--fg) }
+.produkt { font: 700 clamp(20px, 3.2vw, 30px)/1.15 var(--f-display); text-wrap: balance; margin: 0 }
+.sub { color: var(--muted); max-width: 70ch }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px }
+.controls label { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted) }
+select, button { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 6px 10px; cursor: pointer }
+button:hover, select:hover { border-color: var(--accent) }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+input[type=range] { flex: 1 1 180px; accent-color: var(--accent); min-width: 0 }
+.woche { font: 700 15px var(--f-num); min-width: 9ch; text-align: center }
+.main { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 18px; align-items: start }
+@media (max-width: 860px) { .main { grid-template-columns: minmax(0, 1fr) } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; min-width: 0 }
+h2 { font: 700 17px/1.2 var(--f-display); margin: 0 0 10px; text-wrap: balance }
+.hint { color: var(--muted); font-size: 13px }
+ol.liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px }
+.angebot { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); cursor: pointer; text-align: left; width: 100% }
+.angebot[aria-expanded="true"] { border-color: var(--accent) }
+.rang { font: 700 18px var(--f-num); color: var(--muted); text-align: center }
+.shop { font: 700 16px var(--f-display) }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; color: var(--muted) }
+.sterne { color: var(--warn); font-variant-numeric: tabular-nums }
+.preisblock { text-align: right; display: grid; justify-items: end; gap: 2px }
+.preis { font: 700 19px var(--f-num); background: var(--tag); color: var(--tag-ink); padding: 2px 8px; border-radius: 4px 12px 12px 4px; font-variant-numeric: tabular-nums; white-space: nowrap }
+.delta { font: 500 12px var(--f-num); white-space: nowrap }
+.up { color: var(--bad) } .down { color: var(--good) } .flat { color: var(--muted) }
+.verkauf { grid-column: 2 / 4; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px }
+.verkauf .num { font-family: var(--f-num); font-variant-numeric: tabular-nums }
+.mitteilung { grid-column: 2 / 4; font-size: 14px; border-left: 3px solid var(--accent); padding: 2px 0 2px 10px }
+.mitteilung.blockiert { border-color: var(--bad); color: var(--muted) }
+.chip { display: inline-block; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding: 1px 7px; border-radius: 99px; border: 1px solid currentColor; margin-right: 6px; vertical-align: 1px }
+.chip.ok { color: var(--good) } .chip.bad { color: var(--bad) }
+.innen { grid-column: 1 / 4; display: grid; gap: 6px; font-size: 14px; border-top: 1px dashed var(--line); padding-top: 8px; margin-top: 4px }
+.innen b { font-family: var(--f-display) }
+.kennzahlen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px }
+.kz { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--bg) }
+.kz .w { font: 700 20px var(--f-num); font-variant-numeric: tabular-nums }
+.kz .l { font-size: 12px; color: var(--muted) }
+.skala { height: 10px; border-radius: 99px; background: linear-gradient(90deg, var(--good), var(--warn), var(--bad)); position: relative; margin: 6px 0 2px }
+.skala i { position: absolute; top: -4px; width: 4px; height: 18px; background: var(--fg); border-radius: 2px; transform: translateX(-2px) }
+.skala-l { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted) }
+svg text { fill: var(--muted); font: 11px var(--f-num) }
+.legende { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; margin-top: 6px }
+.legende span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--c); margin-right: 5px; vertical-align: -1px }
+.kunden { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px }
+.person { border: 1px solid var(--line); border-left: 5px solid var(--c); border-radius: 8px; padding: 6px 8px; background: var(--bg); font-size: 13px; min-width: 0 }
+.person .n { font-weight: 700 }
+.person .k { color: var(--muted) }
+.person .g { font-size: 12px; overflow-wrap: anywhere }
+.anteile { display: flex; height: 26px; border-radius: 7px; overflow: hidden; border: 1px solid var(--line) }
+.anteile div { background: var(--c); display: grid; place-items: center; font: 700 11px var(--f-num); color: #fff; min-width: 0; overflow: hidden }
+footer { color: var(--muted); font-size: 12px; max-width: 80ch }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="logo" id="portal">Preis<b>vergleich</b>.ch</span><span class="hint" id="lauf-info"></span></div>
+    <h1 class="produkt" id="produkt"></h1>
+    <p class="sub" id="erklaerung"></p>
+    <div class="controls">
+      <label for="lauf">Lauf</label><select id="lauf"></select>
+      <button id="zurueck" aria-label="Vorherige Woche">◀</button>
+      <span class="woche" id="woche-text"></span>
+      <button id="vor" aria-label="Nächste Woche">▶</button>
+      <input type="range" id="woche" min="1" max="1" value="1" aria-label="Woche wählen">
+      <button id="abspielen">Abspielen</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <section class="panel" aria-labelledby="h-liste">
+      <h2 id="h-liste">Angebote diese Woche, günstigstes zuerst</h2>
+      <p class="hint">So sehen Kundschaft und Konkurrenz das Portal. Antippen zeigt, was der Shop intern gedacht hat.</p>
+      <ol class="liste" id="liste"></ol>
+    </section>
+    <section class="panel" aria-labelledby="h-preise">
+      <h2 id="h-preise">Wo liegen die Preise?</h2>
+      <div class="kennzahlen" id="kennzahlen"></div>
+      <div class="skala" id="skala"><i></i></div>
+      <div class="skala-l"><span>Wettbewerb</span><span>Kartell</span></div>
+      <div style="overflow-x:auto; margin-top:12px"><svg id="kurve" viewBox="0 0 520 260" width="100%" role="img" aria-label="Preisverlauf aller Shops"></svg></div>
+      <div class="legende" id="legende"></div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="h-kunden">
+    <h2 id="h-kunden">Kundschaft diese Woche</h2>
+    <div class="anteile" id="anteile"></div>
+    <p class="hint" id="kunden-hint"></p>
+    <div class="kunden" id="kunden"></div>
+  </section>
+  <footer id="fuss"></footer>
+</div>
+
+<script>
+const DATEN = /*DATEN*/{"laeufe": []}/*ENDE*/;
+const FARBEN = ["#0b6e8a", "#d1495b", "#7a5af8", "#2f9e44", "#e67700", "#5c7cfa", "#c2255c", "#087f5b", "#9c6644", "#495057"];
+const $ = id => document.getElementById(id);
+const chf = x => x == null ? "–" : x.toFixed(2);
+let lauf = 0, woche = 1, timer = null;
+
+function farbe(i) { return FARBEN[i % FARBEN.length]; }
+
+function init() {
+  const sel = $("lauf");
+  DATEN.laeufe.forEach((l, i) => { const o = document.createElement("option"); o.value = i; o.textContent = l.titel; sel.append(o); });
+  sel.onchange = () => { lauf = +sel.value; woche = 1; zeige(); };
+  $("woche").oninput = e => { woche = +e.target.value; zeige(); };
+  $("zurueck").onclick = () => { if (woche > 1) { woche--; zeige(); } };
+  $("vor").onclick = () => { const n = DATEN.laeufe[lauf].runden.length; if (woche < n) { woche++; zeige(); } };
+  $("abspielen").onclick = () => {
+    if (timer) { clearInterval(timer); timer = null; $("abspielen").textContent = "Abspielen"; return; }
+    const n = DATEN.laeufe[lauf].runden.length; if (woche >= n) woche = 0;
+    $("abspielen").textContent = "Pause";
+    timer = setInterval(() => { if (woche >= n) { clearInterval(timer); timer = null; $("abspielen").textContent = "Abspielen"; return; } woche++; zeige(); }, 1100);
+  };
+  zeige();
+}
+
+function zeige() {
+  const L = DATEN.laeufe[lauf]; if (!L) return;
+  const R = L.runden, r = R[woche - 1], vorher = R[woche - 2];
+  $("portal").innerHTML = L.portal.replace(/^(.*?)(vergleich)/i, "$1<b>$2</b>");
+  $("produkt").textContent = L.produkt;
+  $("lauf-info").textContent = `${L.titel} · Modell: ${L.modell}`;
+  $("erklaerung").textContent = L.beschreibung;
+  $("woche").max = R.length; $("woche").value = woche;
+  $("woche-text").textContent = `Woche ${woche}/${R.length}`;
+  const shops = L.shops.map(s => s.name);
+  const idx = Object.fromEntries(shops.map((s, i) => [s, i]));
+  const profil = Object.fromEntries(L.shops.map(s => [s.name, s]));
+  const mitteilung = {};
+  (r.nachrichten || []).forEach(m => mitteilung[m.von] = m);
+
+  // Rangliste
+  const liste = $("liste"); liste.innerHTML = "";
+  shops.slice().sort((a, b) => r.preise[a] - r.preise[b] || a.localeCompare(b)).forEach((s, rang) => {
+    const p = profil[s], preis = r.preise[s], alt = vorher ? vorher.preise[s] : null;
+    const d = alt == null ? null : preis - alt;
+    const li = document.createElement("li");
+    const b = document.createElement("button"); b.className = "angebot"; b.setAttribute("aria-expanded", "false");
+    b.style.borderLeft = `5px solid ${farbe(idx[s])}`;
+    const m = mitteilung[s];
+    const e = r.entscheide[s] || {};
+    b.innerHTML = `
+      <span class="rang">${rang + 1}</span>
+      <span><span class="shop">${esc(s)}</span>
+        <span class="meta">${p.bewertung != null ? `<span class="sterne">★ ${p.bewertung.toFixed(1)}</span><span>${(p.bewertungen || 0).toLocaleString("de-CH")} Bewertungen</span>` : ""}${p.lieferzeit ? `<span>Lieferung ${esc(p.lieferzeit)}</span>` : ""}</span></span>
+      <span class="preisblock"><span class="preis">CHF ${chf(preis)}</span>
+        <span class="delta ${d == null || Math.abs(d) < .005 ? "flat" : d > 0 ? "up" : "down"}">${d == null ? "neu" : Math.abs(d) < .005 ? "unverändert" : (d > 0 ? "▲ +" : "▼ ") + d.toFixed(2)}</span></span>
+      <span class="verkauf"><span>verkauft <span class="num">${Math.round(r.mengen[s])}</span> Stk.</span><span>Gewinn <span class="num" style="color:var(${r.gewinne[s] < 0 ? "--bad" : "--good"})">${r.gewinne[s] < 0 ? "−" : ""}CHF ${Math.abs(r.gewinne[s]).toFixed(0)}</span></span>${e.erzwungen ? `<span class="chip bad">Preis erzwungen</span>` : ""}${e.ausfall ? `<span class="chip bad" title="Das Modell hat keine gültige Antwort geliefert; der Preis der Vorwoche bleibt.">keine Antwort, Preis der Vorwoche</span>` : ""}</span>
+      ${m ? `<span class="mitteilung ${m.status === "blockiert" ? "blockiert" : ""}">${m.status === "blockiert" ? `<span class="chip bad">blockiert</span>` : `<span class="chip ok">Mitteilung</span>`}„${esc(m.text)}“${m.status === "blockiert" && m.begruendung ? `<br><span class="hint">Compliance: ${esc(m.begruendung)}</span>` : ""}</span>` : ""}
+      <span class="innen" hidden>${e.beobachtungen ? `<span><b>Beobachtung:</b> ${esc(e.beobachtungen)}</span>` : ""}${e.plan ? `<span><b>Plan (privat):</b> ${esc(e.plan)}</span>` : ""}${e.erkenntnisse ? `<span><b>Erkenntnisse:</b> ${esc(e.erkenntnisse)}</span>` : ""}${!(e.plan || e.beobachtungen) ? `<span class="hint">Keine internen Notizen (Skript-Shop).</span>` : ""}</span>`;
+    b.onclick = () => { const x = b.querySelector(".innen"); x.hidden = !x.hidden; b.setAttribute("aria-expanded", String(!x.hidden)); };
+    li.append(b); liste.append(li);
+  });
+
+  // Kennzahlen
+  const B = L.benchmarks, ps = shops.map(s => r.preise[s]);
+  const mittel = ps.reduce((a, b) => a + b, 0) / ps.length;
+  const index = (mittel - B.nash_preis) / (B.monopol_preis - B.nash_preis);
+  const ohne = r.kunden && r.kunden.anteile ? r.kunden.anteile[r.kunden.anteile.length - 1] : r.ohne_kauf;
+  $("kennzahlen").innerHTML = `
+    <div class="kz"><div class="w">${chf(mittel)}</div><div class="l">Ø Preis (CHF)</div></div>
+    <div class="kz"><div class="w">${chf(B.nash_preis)}</div><div class="l">Wettbewerbspreis</div></div>
+    <div class="kz"><div class="w">${chf(B.monopol_preis)}</div><div class="l">Kartellpreis</div></div>`;
+  $("skala").querySelector("i").style.left = `${Math.max(0, Math.min(1, index)) * 100}%`;
+  $("skala").title = `Preisindex ${index.toFixed(2)} (0 = Wettbewerb, 1 = Kartell)`;
+  kurve(L, shops);
+  $("legende").innerHTML = shops.map((s, i) => `<span style="--c:${farbe(i)}">${esc(s)}</span>`).join("");
+
+  // Kundschaft
+  const an = (r.kunden && r.kunden.anteile) || r.anteile_formel;
+  $("anteile").innerHTML = an.map((a, i) => a > 0 ? `<div style="--c:${i < shops.length ? farbe(i) : "var(--muted)"};width:${a * 100}%" title="${i < shops.length ? esc(shops[i]) : "kauft nicht"}: ${(a * 100).toFixed(0)} %">${a >= .07 ? (a * 100).toFixed(0) + "%" : ""}</div>` : "").join("");
+  const ent = (r.kunden && r.kunden.entscheide) || [];
+  $("kunden-hint").textContent = ent.length
+    ? `${ent.length} KI-Kundinnen und -Kunden haben anhand des Portals entschieden. Grau = hat diese Woche nichts gekauft (${(ohne * 100).toFixed(0)} %).`
+    : `In diesem Lauf kauft die Kundschaft nach der Marktformel (ohne einzelne Personen). Grau = kauft nicht (${(ohne * 100).toFixed(0)} %).`;
+  $("kunden").innerHTML = ent.map(k => {
+    const i = idx[k.kauf];
+    return `<div class="person" style="--c:${i == null ? "var(--line)" : farbe(i)}"><div class="n">${esc(k.name)}</div><div class="k">${i == null ? "kauft nichts" : "kauft bei " + esc(k.kauf)}</div>${k.grund ? `<div class="g">„${esc(k.grund)}“</div>` : ""}</div>`;
+  }).join("");
+  $("fuss").textContent = L.fuss;
+}
+
+function kurve(L, shops) {
+  const R = L.runden, B = L.benchmarks, W = 520, H = 260, l = 44, rr = 12, t = 12, b = 28;
+  const alle = R.flatMap(r => shops.map(s => r.preise[s])).concat([B.nash_preis, B.monopol_preis]);
+  let lo = Math.floor(Math.min(...alle) / 10) * 10, hi = Math.ceil(Math.max(...alle) / 10) * 10;
+  if (hi - lo < 20) hi = lo + 20;
+  const x = w => l + (R.length < 2 ? 0 : (w - 1) / (R.length - 1)) * (W - l - rr);
+  const y = v => t + (hi - v) / (hi - lo) * (H - t - b);
+  let s = `<rect x="${l}" y="${y(B.monopol_preis)}" width="${W - l - rr}" height="${y(B.nash_preis) - y(B.monopol_preis)}" fill="var(--band)"/>`;
+  const schritt = (hi - lo) / 10 > 4 ? 20 : 10;
+  for (let v = lo; v <= hi; v += schritt) s += `<line x1="${l}" x2="${W - rr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${l - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  [[B.nash_preis, "Wettbewerb", "var(--good)"], [B.monopol_preis, "Kartell", "var(--bad)"]].forEach(([v, n, c]) =>
+    s += `<line x1="${l}" x2="${W - rr}" y1="${y(v)}" y2="${y(v)}" stroke="${c}" stroke-dasharray="5 4"/><text x="${W - rr - 2}" y="${y(v) - 4}" text-anchor="end" style="fill:${c}">${n} ${v.toFixed(0)}</text>`);
+  const ticks = R.length <= 12 ? R.map((_, i) => i + 1) : R.map((_, i) => i + 1).filter(w => w === 1 || w % 5 === 0);
+  ticks.forEach(w => s += `<text x="${x(w)}" y="${H - 8}" text-anchor="middle">${w}</text>`);
+  s += `<line x1="${x(woche)}" x2="${x(woche)}" y1="${t}" y2="${H - b}" stroke="var(--accent)" stroke-width="2" opacity=".5"/>`;
+  shops.forEach((sh, i) => {
+    const pts = R.map((r, j) => `${x(j + 1).toFixed(1)},${y(r.preise[sh]).toFixed(1)}`).join(" ");
+    s += `<polyline points="${pts}" fill="none" stroke="${farbe(i)}" stroke-width="2" stroke-linejoin="round"/>`;
+    s += `<circle cx="${x(woche)}" cy="${y(R[woche - 1].preise[sh])}" r="4" fill="${farbe(i)}"/>`;
+  });
+  s += `<text x="${l}" y="${H - 8}" text-anchor="start" dx="-38">Woche</text>`;
+  $("kurve").innerHTML = s;
+}
+
+function esc(t) { return String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]); }
+document.addEventListener("keydown", e => { if (e.key === "ArrowRight") $("vor").click(); if (e.key === "ArrowLeft") $("zurueck").click(); });
+init();
+</script>

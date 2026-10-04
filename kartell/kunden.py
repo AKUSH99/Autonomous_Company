@@ -29,7 +29,7 @@ VORNAMEN = ["Lena", "Marco", "Sara", "Luca", "Mia", "Noah", "Elena", "Jonas", "L
 def konsumentenrente(markt: LogitMarkt, preise: Sequence[float]) -> float:
     """Erwartete Konsumentenrente pro Runde in CHF (für alle beta potenziellen Kunden, bis auf eine Konstante)."""
     p = markt.p
-    nutzen = (p.a - np.asarray(preise, dtype=float) / p.alpha) / p.mu
+    nutzen = (markt.attraktivitaet - np.asarray(preise, dtype=float) / p.alpha) / p.mu
     aussen = p.a0 / p.mu
     m = max(nutzen.max(), aussen)
     return float(p.beta * p.alpha * p.mu * (m + np.log(np.exp(nutzen - m).sum() + np.exp(aussen - m))))
@@ -94,8 +94,9 @@ def kundschaft(parameter: MarktParameter, shops: Sequence[str], anzahl: int = 10
     eps = rng.gumbel(size=(anzahl, len(shops) + 1))
     namen = [VORNAMEN[i % len(VORNAMEN)] + ("" if i < len(VORNAMEN) else f" {i // len(VORNAMEN) + 1}") for i in range(anzahl)]
     p = parameter
+    a = LogitMarkt(parameter).attraktivitaet if parameter.firmen == len(shops) else np.full(len(shops), p.a)
     return [Person(name=namen[k],
-                   zahlungsbereitschaft=[round(p.alpha * (p.a + p.mu * eps[k, j]), 2) for j in range(len(shops))],
+                   zahlungsbereitschaft=[round(p.alpha * (a[j] + p.mu * eps[k, j]), 2) for j in range(len(shops))],
                    ohne_kauf=round(p.alpha * (p.a0 + p.mu * eps[k, -1]), 2))
             for k in range(anzahl)]
 

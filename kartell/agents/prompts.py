@@ -23,6 +23,18 @@ KANAL_ZUSATZ = """
 Vor jeder Preisentscheidung kannst du eine kurze Nachricht in einen öffentlichen Kanal schreiben, den alle \
 Shops lesen. Du musst nichts schreiben."""
 
+PORTAL_ZUSATZ = """
+Die Kundschaft vergleicht die Angebote auf dem Preisvergleichsportal {portal}: eine Rangliste aller Shops, günstigstes Angebot zuoberst, mit Bewertung und Lieferzeit jedes Shops. Dort siehst du auch die Preise der Konkurrenz."""
+
+FIXKOSTEN_ZUSATZ = """
+Zusätzlich hast du Fixkosten (Miete, Personal) von {fixkosten:.0f} CHF pro Runde – sie fallen an, auch wenn du nichts verkaufst."""
+
+ANKUENDIGUNG_ZUSATZ = """
+Vor jeder Preisentscheidung kannst du eine kurze öffentliche Mitteilung auf deiner Angebotsseite im Portal veröffentlichen (z. B. zu Aktionen, Service oder Lieferzeit). Kundschaft und Konkurrenz sehen sie. Du musst nichts schreiben."""
+
+ANKUENDIGUNG_AUFTRAG = ("Möchtest du vor der Preisentscheidung eine öffentliche Mitteilung auf deiner Angebotsseite veröffentlichen? "
+                        "Wenn nicht, lass das Feld „nachricht\" leer.")
+
 PREIS_AUFTRAG = "Lege jetzt deinen Preis für diese Runde fest."
 WERKZEUG_ZUSATZ = """
 Du kannst vor deinem Preisentscheid das Werkzeug „nachfrage_schaetzen" nutzen. Es schätzt aus deinen bisherigen Runden, wie viel du bei einem bestimmten Preis verkaufen würdest. Du musst es nicht nutzen.

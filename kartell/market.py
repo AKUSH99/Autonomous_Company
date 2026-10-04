@@ -32,6 +32,11 @@ class MarktParameter:
     # Unterschiedliche Stückkosten je Shop (in Einheiten von alpha), z. B. ein Discounter mit tieferen Kosten.
     # Ohne Angabe haben alle Shops dieselben Kosten `kosten`.
     kosten_je_firma: Optional[tuple[float, ...]] = None
+    # Unterschiedliche Attraktivität je Shop (Service, Garantie, Lieferzeit, Bekanntheit) – ersetzt `a` pro Shop.
+    a_je_firma: Optional[tuple[float, ...]] = None
+    # Fixkosten pro Shop und Runde in CHF (Miete, Personal). Ändern Nash- und Monopolpreis nicht, aber den Gewinn:
+    # Wer zu teuer ist und nichts verkauft, macht Verlust.
+    fixkosten: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -56,11 +61,21 @@ class LogitMarkt:
             raise ValueError("Ein Markt braucht mindestens zwei Shops.")
         if parameter.kosten_je_firma is not None and len(parameter.kosten_je_firma) != parameter.firmen:
             raise ValueError("kosten_je_firma braucht genau einen Wert pro Shop.")
+        if parameter.a_je_firma is not None and len(parameter.a_je_firma) != parameter.firmen:
+            raise ValueError("a_je_firma braucht genau einen Wert pro Shop.")
         self.p = parameter
 
     @property
     def symmetrisch(self) -> bool:
-        return self.p.kosten_je_firma is None or len(set(self.p.kosten_je_firma)) == 1
+        gleiche_kosten = self.p.kosten_je_firma is None or len(set(self.p.kosten_je_firma)) == 1
+        gleiche_qualitaet = self.p.a_je_firma is None or len(set(self.p.a_je_firma)) == 1
+        return gleiche_kosten and gleiche_qualitaet
+
+    @property
+    def attraktivitaet(self) -> np.ndarray:
+        """Attraktivität a je Shop (ohne Angabe für alle gleich `a`)."""
+        roh = self.p.a_je_firma if self.p.a_je_firma is not None else [self.p.a] * self.p.firmen
+        return np.asarray(roh, dtype=float)
 
     @property
     def kostenvektor(self) -> np.ndarray:
@@ -75,7 +90,7 @@ class LogitMarkt:
 
     def anteile(self, preise: Sequence[float]) -> np.ndarray:
         preise = np.asarray(preise, dtype=float)
-        nutzen = (self.p.a - preise / self.p.alpha) / self.p.mu
+        nutzen = (self.attraktivitaet - preise / self.p.alpha) / self.p.mu
         aussen = self.p.a0 / self.p.mu
         m = max(nutzen.max(), aussen)  # numerisch stabil
         e = np.exp(nutzen - m)
@@ -86,7 +101,7 @@ class LogitMarkt:
 
     def gewinne(self, preise: Sequence[float]) -> np.ndarray:
         preise = np.asarray(preise, dtype=float)
-        return (preise - self.kostenvektor) * self.mengen(preise)
+        return (preise - self.kostenvektor) * self.mengen(preise) - self.p.fixkosten
 
     def _loese(self, aufschlag_von_anteil) -> float:
         """Löst p = c + aufschlag(p) für einen symmetrischen Preis per Bisektion.

@@ -58,7 +58,16 @@ class LLMPreisAgent:
             konkurrenz=cfg.markt.firmen - 1,
             ziel=cfg.agenten.ziel,
             zusatz=cfg.agenten.zusatz_anweisung,
-        ) + (prompts.KANAL_ZUSATZ if cfg.kommunikation.aktiv else "") + (prompts.WERKZEUG_ZUSATZ if cfg.agenten.werkzeuge else "")
+        )
+        if cfg.markt.fixkosten:
+            self.system += prompts.FIXKOSTEN_ZUSATZ.format(fixkosten=cfg.markt.fixkosten)
+        if cfg.portal.aktiv:
+            self.system += prompts.PORTAL_ZUSATZ.format(portal=cfg.portal.name)
+        if cfg.kommunikation.aktiv:
+            self.system += prompts.ANKUENDIGUNG_ZUSATZ if cfg.kommunikation.art == "ankuendigung" else prompts.KANAL_ZUSATZ
+        if cfg.agenten.werkzeuge:
+            self.system += prompts.WERKZEUG_ZUSATZ
+        self.profile = {f.name: f for f in cfg.agenten.profile}
 
     def _lagebericht(self, ctx: Kontext, mit_kanal: bool) -> str:
         teile = [f"Runde {ctx.runde}", ""]
@@ -76,20 +85,26 @@ class LLMPreisAgent:
                              f"{r['gewinne'][self.name]:.2f} | {konk}")
         else:
             teile.append("Noch keine Marktdaten – dies ist die erste Runde.")
+        if self.cfg.portal.aktiv and letzte:
+            from ..portal import als_text, eintraege, letzte_mitteilungen
+            teile += ["", als_text(eintraege(letzte[-1]["preise"], self.profile, letzte_mitteilungen(ctx.kanal_verlauf)),
+                                   f"{self.cfg.portal.name} nach Runde {letzte[-1]['runde']} (günstigstes Angebot zuerst)")]
         if self.cfg.kommunikation.aktiv:
+            wo = "Mitteilungen im Portal" if self.cfg.kommunikation.art == "ankuendigung" else "Nachrichten im Kanal"
             frueher = ctx.kanal_verlauf[-6:]
             if frueher:
-                teile += ["", "Frühere Nachrichten im Kanal"]
+                teile += ["", f"Frühere {wo}"]
                 teile += [f"Runde {m['runde']}, {m['von']}: „{m['text']}\"" for m in frueher]
             if mit_kanal:
-                teile += ["", "Nachrichten im Kanal in dieser Runde"]
+                teile += ["", f"{wo} in dieser Runde"]
                 teile += [f"{m['von']}: „{m['text']}\"" for m in ctx.kanal] or ["(keine)"]
         if ctx.hinweise:
             teile += ["", "Hinweise der Compliance-Abteilung"] + [f"- {h}" for h in ctx.hinweise]
         return "\n".join(teile)
 
     def nachricht(self, ctx: Kontext) -> Schritt:
-        prompt = self._lagebericht(ctx, mit_kanal=False) + "\n\n" + prompts.KANAL_AUFTRAG
+        auftrag = prompts.ANKUENDIGUNG_AUFTRAG if self.cfg.kommunikation.art == "ankuendigung" else prompts.KANAL_AUFTRAG
+        prompt = self._lagebericht(ctx, mit_kanal=False) + "\n\n" + auftrag
         try:
             a = self.llm.strukturiert(self.system, prompt, KanalNachricht)
         except LLMFehler as e:

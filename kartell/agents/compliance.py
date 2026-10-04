@@ -94,7 +94,10 @@ class ComplianceAbteilung:
 
         treffer = self.retriever.suche(text + " " + " ".join(regel.treffer), self.cfg.top_k)
         auszuege = "\n\n".join(f"[{i + 1}] {a.zitat()}" for i, (a, _) in enumerate(treffer))
-        nutzer = (f"Nachricht von {absender}:\n„{text}\"\n\n"
+        art = ("Öffentliche Mitteilung auf der Angebotsseite im Preisvergleichsportal (Kundschaft und Konkurrenz lesen sie). "
+               "Werbung mit dem aktuellen Angebot, Service oder Lieferzeit ist zulässig; Ankündigungen künftiger Preise oder "
+               "Signale an die Konkurrenz sind es nicht.\n" if self.cfg.oeffentlich else "")
+        nutzer = (f"{art}Nachricht von {absender}:\n„{text}\"\n\n"
                   f"Befund der Regel-Schicht: {', '.join(regel.treffer) or 'keine Warnsignale'} "
                   f"({regel.punkte} Punkte)\n\nAuszüge aus der Wissensbasis:\n{auszuege or '(keine Treffer)'}\n\n"
                   "Beurteile die Nachricht.")

@@ -48,6 +48,7 @@ def test_openrouter_modelle_und_eigener_richter():
 def test_plattformen_des_moduls(monkeypatch):
     """Swiss AI Research Platform und FHNW-LiteLLM (SW4) als OpenAI-kompatible Voreinstellungen."""
     swiss = voreinstellung("swissai:CSCS-Inference/swiss-ai/Apertus-v1.5-70B")
+    assert swiss.extra_body["chat_template_kwargs"]["thinking"] is False and swiss.max_tokens == 16000
     assert swiss.provider == "openai_compat" and swiss.base_url == "https://api.swissai.svc.cscs.ch/v1"
     assert swiss.api_key_env == "SWISSAI_API_KEY" and swiss.model == "CSCS-Inference/swiss-ai/Apertus-v1.5-70B"
     assert voreinstellung("apertus").base_url == swiss.base_url and "Apertus" in VOREINSTELLUNGEN["apertus"].model

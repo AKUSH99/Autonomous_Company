@@ -59,6 +59,9 @@ Hauptgeschichte: E1, E2 (Kapitel 1), E16, E17 (Kapitel 2), E3, E4, E18, E19 (Kap
 | `e23_fuenf_shops` | Mehr Konkurrenz: fünf gleiche Shops | an | aus |
 | `e24_echter_markt` | Echter Markt: fünf Firmen mit eigener Geschichte und eigenen Kosten, 30 KI-Kunden mit Gewohnheiten | an | aus |
 | `e25_echter_markt_ohne_kanal` | Dasselbe ohne Kanal | aus | aus |
+| `e26_marktplatz` | **Marktplatz (Hauptversuch):** sechs Firmen, Vergleichsportal, KI-Kundschaft, Preisniveau JBL Tune 770NC, Fixkosten | aus | aus |
+| `e27_marktplatz_mitteilungen` | Marktplatz mit öffentlichen Mitteilungen im Portal | Mitteilungen | aus |
+| `e28_marktplatz_compliance` | Marktplatz, Mitteilungen werden geprüft, Marktbeobachtung | Mitteilungen | filter |
 
 E5/E6 (Apertus) laufen über die Swiss AI Research Platform (siehe unten, Schlüssel `SWISSAI_API_KEY`).
 
@@ -84,6 +87,8 @@ Laut Schätzung kosten E1–E4 und E7 mit DeepSeek zusammen rund 4 USD statt run
 
 **Andere Modelle über OpenRouter:** `--modell openrouter:<modell-id>` nutzt jedes bei OpenRouter gelistete Modell (Schlüssel in `OPENROUTER_API_KEY`). Mit `--compliance-modell` urteilt ein anderes Modell als die Preisagenten – sonst prüft ein Modell sich selbst. Eine Auftragsdatei kann mit `modellsuche: {begriffe: [...]}` die Modellliste durchsuchen lassen. Mit `nur_gratis: true` prüft der Workflow vor dem ersten Lauf den Preis bei OpenRouter und bricht ab, wenn das Modell etwas kostet. `denken: aus | niedrig | standard | hoch | maximal` stellt den Denkaufwand ein (global oder je Lauf); bei `maximal` testet ein Probeaufruf, ob das Modell die höchste Stufe (xhigh) annimmt, sonst gilt `high`.
 
+**Marktplatz (E26–E28).** Markt: Attraktivität je Shop (`markt.a_je_firma`) und Fixkosten pro Woche (`markt.fixkosten`), kalibriert auf den JBL Tune 770NC (Toppreise.ch: 21 Angebote zwischen 49.95 und 129 CHF, UVP 99.95): `alpha 100`, `mu 0.18`, Einkauf 42–50 CHF → Wettbewerbspreis 63–71 CHF, Kartellpreis ≈ 101 CHF. `portal: {aktiv: true}` zeigt Shops und Kundschaft dieselbe Rangliste (`kartell/portal.py`), `kommunikation.art: ankuendigung` macht Nachrichten zu öffentlichen Mitteilungen. Ansicht: `python -m kartell marktplatz runs/` → `reports/marktplatz.html`.
+
 **Retrieval (RAG): Chunking und Hybrid Retrieval.** Die Wissensbasis (7 Markdown-Dateien) wird in Abschnitte zerlegt: Absätze werden zusammengefasst, bis ein Stück mindestens 250 Zeichen hat; jedes Stück behält den Titel seines Dokuments (17 Abschnitte). Gesucht wird standardmässig mit BM25. Wahlweise Hybrid Retrieval:
 
 ```yaml
@@ -100,7 +105,7 @@ python -m kartell eval-retrieval                  # BM25 vs. Hybrid vs. Hybrid +
 python -m kartell eval-retrieval --verfahren bm25 # ohne Schlüssel
 ```
 
-Stand BM25 (04.10.2026): Hit@1 0.67, Hit@3 0.67, MRR 0.67 – wörtliche Absprachen 1.00, Rechtsfragen 0.83, umschriebene 0.62, unbedenkliche 0.33, **englische 0.00** (BM25 findet ohne gemeinsame Wörter nichts). Hybrid: noch zu messen (braucht `SWISSAI_API_KEY`).
+Stand BM25 (04.10.2026): Hit@1 0.67, Hit@3 0.67, MRR 0.67 – wörtliche Absprachen 1.00, Rechtsfragen 0.83, umschriebene 0.62, unbedenkliche 0.33, **englische 0.00** (BM25 findet ohne gemeinsame Wörter nichts). Hybrid (BM25 + Embeddings, 04.10.2026, GitHub-Lauf 31): **Hit@1 0.88, Hit@3 1.00, MRR 0.94** – umschriebene 1.00, unbedenkliche 1.00, englische 0.75, Rechtsfragen 0.92; nur wörtliche Absprachen leicht tiefer (0.90 statt 1.00). Der Reranker lieferte «429 Too Many Requests» (Ratenlimit der Swiss AI Platform), die Zeile «Hybrid + Reranker» entspricht deshalb der Fusion ohne Reranker – noch nicht gemessen. Standard bleibt vorerst BM25, damit bisherige Läufe vergleichbar bleiben (Entscheid 33).
 
 **MCP-Server:** `python -m kartell mcp` stellt die Wissensbasis (Suche) und die Regel-Prüfung als MCP-Werkzeuge bereit. Mit `compliance.rag_ueber_mcp: true` holt die Compliance-Abteilung ihr Rechtswissen über diesen Server – so in E3, E4, E9 und E15 (gleiche Treffer wie der direkte BM25-Aufruf, nur über das Protokoll; frühere Läufe dieser Versuche liefen noch ohne MCP). Für Claude Code oder Claude Desktop als MCP-Server eintragen: Befehl `python`, Argumente `-m kartell mcp`, Arbeitsverzeichnis = dieses Repository.
 
