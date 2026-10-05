@@ -1,0 +1,8 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell (05.10.): E28 Wiederholungen 2 und 3 nachholen (Lauf 34 brach nach knapp 6 Stunden beim Zeitlimit ab).
+modell: "swissai:RCP-AIaaS/deepseek-ai/DeepSeek-V4.1-Flash"
+zeitlimit_min: 150
+laeufe:
+  - {config: experiments/e28_marktplatz_compliance.yaml, runden: 30, wiederholungen: 2, erste_wiederholung: 2}
