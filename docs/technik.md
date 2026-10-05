@@ -107,6 +107,8 @@ Stand BM25 (04.10.2026): Hit@1 0.67, Hit@3 0.67, MRR 0.67 – wörtliche Absprac
 
 **Echte Firmen:** In einer Versuchsdatei gibt `agenten.profile` jeder Firma einen Namen, eine private Geschichte (nur sie sieht sie) und eine öffentliche Beschreibung (sieht die KI-Kundschaft); `markt.kosten_je_firma` setzt eigene Stückkosten, Wettbewerbs- und Kartellpreis werden dann je Firma berechnet. Die Geschichten beschreiben Lage und Interessen, nie eine Strategie. `python -m kartell highlights <ordner>` zieht aus solchen Läufen wörtliche Zitate je Firma und Kundenstimmen (ausgewählt, nie umformuliert) und zählt, ob die Nachrichten Vorschläge, Werbung oder Preisansagen sind.
 
+**Tracing-Nachweis (Wochenziel KW 42):** Auf GitHub ist Tracing in jedem Lauf automatisch an, sobald das Secret `LANGSMITH` existiert (Workflows «Experimente» und «Szenario starten»). Die Traces liegen im LangSmith-Projekt `ki-kartell`: pro Lauf ein Trace mit den LangGraph-Knoten jeder Woche und darunter allen LLM-Aufrufen. Für die Abgabe einen Screenshot eines Traces als `docs/bilder/langsmith_trace.png` ablegen (braucht Zugang zum LangSmith-Konto).
+
 **Tracing mit LangSmith:** Ohne weitere Installation einschalten mit
 ```bash
 export LANGSMITH_TRACING=true
