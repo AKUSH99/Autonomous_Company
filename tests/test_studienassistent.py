@@ -102,3 +102,10 @@ def test_hybrid_suche_mit_embeddings():
     suche = Suche(einlesen([DATEN]), einbetten)
     assert suche.vektoren.shape[0] == len(suche.abschnitte)
     assert suche.suchen("Wann ist die Abschlusspräsentation?", k=1)[0][0].modul == "Generative KI"
+
+
+def test_taktbremse_wartet_erst_am_limit():
+    from studienassistent.konfig import Taktbremse
+    b = Taktbremse(pro_minute=3)
+    assert [b.warten() for _ in range(3)] == [0.0, 0.0, 0.0]  # die ersten drei sofort
+    assert 59 < b.warten() <= 60.1                             # die vierte erst, wenn die erste aus dem Fenster fällt
