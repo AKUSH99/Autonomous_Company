@@ -7,16 +7,16 @@ Stand: 05.10.2026 · Abschlusspräsentation: 23.11.2026, 13:00 Uhr (10 Min. inkl
 
 ## Team
 
-> **Vom Team auszufüllen.** Laut Moodle-Aufgabe «Abgabe» müssen die Namen aller Beteiligten angegeben werden; Teams aus
-> 3 Studierenden, höchstens 4 (SW4, Folie 4). Wer welche Rolle verantwortet, steht in Abschnitt 10 und in
-> [beitraege.md](beitraege.md).
+> **Teamgrösse:** Vorgesehen sind 3 Studierende, höchstens 4 (SW4, Folie 4; Moodle-Kursseite). Das Team hat fünf
+> Mitglieder – mit Sandro Schwander abklären. Die Rollen (Abschnitt 10) verteilt das Team noch.
 
 | Name | Rolle (Abschnitt 10) |
 |---|---|
-| _Name eintragen_ | _Rolle_ |
-| _Name eintragen_ | _Rolle_ |
-| _Name eintragen_ | _Rolle_ |
-| _(optional) Name eintragen_ | _Rolle_ |
+| Almidin Bangoji | _Rolle eintragen_ |
+| Robin Meier | _Rolle eintragen_ |
+| Jan Steiner | _Rolle eintragen_ |
+| Andrej Mauron | _Rolle eintragen_ |
+| Flavio Sibilia | _Rolle eintragen_ |
 
 ## 1. Problemstellung und Relevanz
 

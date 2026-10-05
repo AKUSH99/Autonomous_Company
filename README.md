@@ -10,7 +10,7 @@ besten passt. Niemand sagt den Shops, dass sie zusammenarbeiten sollen. Wir scha
 Kartellpreis steigen – und ob ein Compliance-Agent das stoppen kann.
 
 Gruppenarbeit im Modul Generative KI & Agentensysteme, FHNW BSc Business Artificial Intelligence · Präsentation 23.11.2026
-Team: _Namen eintragen_ (siehe [Projektskizze](docs/projektskizze.md#team) und [Beiträge](docs/beitraege.md))
+Team: Almidin Bangoji, Robin Meier, Jan Steiner, Andrej Mauron, Flavio Sibilia (Rollen: [Projektskizze](docs/projektskizze.md#team), [Beiträge](docs/beitraege.md))
 
 ## Der Marktplatz
 
