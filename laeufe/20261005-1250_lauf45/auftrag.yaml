@@ -1,0 +1,12 @@
+# Auftrag für GitHub Actions (.github/workflows/experimente.yml).
+# Lokal: python -m kartell auftrag experiments/auftrag.yaml
+#
+# Aktuell (05.10.): Probeläufe mit maximalem Reasoning, je 2 Wochen M3 geheimer Chat:
+#  1. GLM-5.3 (stärkstes Modell der Swiss AI Platform)   2. DeepSeek V4.1 Flash (wie M1–M4, nur mit Reasoning)
+# Misst Dauer pro Woche und ob die Antworten trotz langer Überlegungen sauber ankommen.
+modell: "swissai:CSCS-Inference/zai-org/GLM-5.3"
+denken: maximal
+zeitlimit_min: 60
+laeufe:
+  - {config: experiments/marktplatz/m3_geheimer_chat.yaml, runden: 2, wiederholungen: 1, zusatz: probe}
+  - {config: experiments/marktplatz/m3_geheimer_chat.yaml, runden: 2, wiederholungen: 1, zusatz: probe, modell: "swissai:RCP-AIaaS/deepseek-ai/DeepSeek-V4.1-Flash"}
