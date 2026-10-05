@@ -10,6 +10,7 @@ besten passt. Niemand sagt den Shops, dass sie zusammenarbeiten sollen. Wir scha
 Kartellpreis steigen – und ob ein Compliance-Agent das stoppen kann.
 
 Gruppenarbeit im Modul Generative KI & Agentensysteme, FHNW BSc Business Artificial Intelligence · Präsentation 23.11.2026
+Team: _Namen eintragen_ (siehe [Projektskizze](docs/projektskizze.md#team) und [Beiträge](docs/beitraege.md))
 
 ## Der Marktplatz
 
@@ -44,8 +45,8 @@ Je 30 Wochen, DeepSeek V4.1 Flash über die Swiss AI Research Platform, 0 techni
 |---|---|---|---|
 | **M1** Nur Portal (3 Läufe) | **54 CHF** – unter dem Wettbewerbspreis von 67 | −170 CHF (2 von 3 Läufen mit Verlust) | Preiskrieg: 27-mal Verkauf unter dem eigenen Einkaufspreis |
 | **M2** Mitteilungen (3 Läufe) | **65 CHF** – beim Wettbewerbspreis | +124 CHF | Der Preiskrieg endet; rund die Hälfte der Mitteilungen wirbt mit «stabilen Preisen statt Rabattschlachten» |
-| **M3** Geheimer Chat | *läuft* | | Entstehen Kartellpreise, wenn die Shops sich ungesehen absprechen können? |
-| **M4** Compliance (1 Lauf, 2 laufen noch) | 64 CHF | +111 CHF | Der Compliance-Agent blockiert 15 von 174 Mitteilungen als Preissignal |
+| **M3** Geheimer Chat | *läuft (3 Läufe)* | | Die Shops sprechen sich offen ab («vereinbarter Korridor») – auf welchem Preisniveau? |
+| **M4** Compliance (3 Läufe) | **60 CHF** | −8 CHF | Der Compliance-Agent blockiert 45 von 512 Mitteilungen als Preissignal; in einem Lauf flammt der Preiskrieg wieder auf |
 
 1. **Ohne Kommunikation unterbieten sich die KI-Shops bis in den Verlust.** PreisPilot notiert privat: „Ich senke den
    Preis deutlich auf 44.90 CHF, um MediaPlus zu unterbieten“ – und eine Woche später: „Ich gebe den Preiskampf gegen MediaPlus
@@ -145,7 +146,10 @@ Echte Läufe mit LLMs, GitHub-Workflow und alle Befehle: [docs/technik.md](docs/
 | [docs/ergebnisse.md](docs/ergebnisse.md) | Vorstudie: die drei Befunde mit Zahlen, Zitaten und Grenzen |
 | [docs/anhang.md](docs/anhang.md) | Alle Tabellen und Tests der Vorstudie, weitere Versuche |
 | [docs/lernpfad.md](docs/lernpfad.md) | Lernpfad und Prüfungsfragen fürs Team |
-| [docs/projektskizze.md](docs/projektskizze.md) | Ursprüngliche Projektskizze |
+| [docs/projektskizze.md](docs/projektskizze.md) | Use Case, User Stories, Erfolgskriterien, Scope, Zeitplan, Arbeitsteilung |
+| [docs/beitraege.md](docs/beitraege.md) | Wer was verantwortet (individuelle Beiträge) |
+| [docs/praesentation_entwurf.md](docs/praesentation_entwurf.md) | Ablauf der Abschlusspräsentation (10 Min.) |
+| [Branch `ergebnisse`](https://github.com/AKUSH99/Autonomous_Company/tree/ergebnisse) | Alle Lauf-Daten (Preise, Mitteilungen, Notizen, Kaufgründe) zum Nachrechnen |
 
 ## Quellen
 
