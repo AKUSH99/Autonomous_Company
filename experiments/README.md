@@ -4,7 +4,7 @@ Jede Datei beschreibt einen Versuch: Markt, Shops, Kommunikation, Compliance und
 
 | Ordner | Inhalt |
 |---|---|
-| `marktplatz/` | **Hauptgeschichte:** M1 nur Portal · M2 öffentliche Mitteilungen · M3 Mitteilungen + Compliance |
+| `marktplatz/` | **Hauptgeschichte:** M1 nur Portal · M2 öffentliche Mitteilungen · M3 geheimer Chat · M4 Mitteilungen + Compliance |
 | `vorstudie/` | **Labor mit zwei Shops:** V1 ohne Chat · V2 mit Chat · V3 Abweichungstest · V4 Verbot |
 | `demo/` | Funktionstests mit festen Skript-Agenten (ohne LLM, ohne Kosten) |
 | `archiv/` | Alle weiteren Versuche aus der Entwicklung (E3–E25); Ergebnisse in [docs/anhang.md](../docs/anhang.md) |

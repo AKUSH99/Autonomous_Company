@@ -120,3 +120,19 @@ def test_marktplatz_ansicht(tmp_path):
     assert abs(sum(lauf["runden"][0]["anteile_formel"]) - 1) < 0.01
     baue([tmp_path / "runs"], tmp_path / "a.html", artifact=True)
     assert (tmp_path / "a.html").read_text(encoding="utf-8").startswith("<title>")
+
+
+def test_geheimer_chat_bleibt_unter_den_shops(monkeypatch):
+    """M3: Die Shops lesen den Chat, Kundschaft und Portal sehen ihn nicht."""
+    from kartell.agents import kundschaft
+    cfg = lade_config("experiments/marktplatz/m3_geheimer_chat.yaml")
+    cfg.runden, cfg.kundschaft.anzahl = 2, 12
+    panel = _Panel()
+    monkeypatch.setattr(kundschaft, "erstelle_client", lambda spec: panel)
+    llms = [_LLM(preis) for preis in (70.0, 99.0, 95.0, 80.0, 75.0, 85.0)]
+    Simulation(cfg, agenten=[LLMPreisAgent(AgentSpec(name=f.name, llm=LLMSpec()), cfg, llm, 45.0)
+                             for f, llm in zip(cfg.agenten.profile, llms)]).starte()
+    assert "sehen diesen Kanal nicht" in llms[0].systeme[0] and not cfg.compliance.oeffentlich
+    assert "Gratis-Versand bei uns" in llms[1].prompts[-1]          # Shops lesen den Chat
+    assert all("Gratis-Versand" not in p for p in panel.prompts)    # die Kundschaft nicht
+    assert "Mitteilung:" not in llms[1].prompts[-1]                 # und im Portal erscheint er nicht

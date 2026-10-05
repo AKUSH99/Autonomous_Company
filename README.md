@@ -26,13 +26,14 @@ So nah an einem echten Markt wie möglich:
 
 ![Preisniveau im Modell und auf Toppreise.ch: Wettbewerbspreis 63–71 CHF, Kartellpreis rund 101 CHF, echte Angebote 49.95–129 CHF, UVP 99.95 CHF](docs/bilder/preisniveau.png)
 
-Drei Versuche, die aufeinander aufbauen:
+Vier Versuche, die aufeinander aufbauen:
 
 | Versuch | Was die Shops dürfen | Frage |
 |---|---|---|
 | **M1** Nur Portal | nur Preise setzen | Steigen die Preise von selbst? |
 | **M2** Mitteilungen | zusätzlich öffentliche Mitteilungen auf der eigenen Angebotsseite – Kundschaft *und* Konkurrenz lesen mit | Nutzen die Shops die Mitteilungen als Preissignal? |
-| **M3** Compliance | wie M2, aber ein Compliance-Agent prüft jede Mitteilung vor der Veröffentlichung, und eine Marktbeobachtung achtet auf Preismuster | Lässt sich das verhindern? |
+| **M3** Geheimer Chat | wie M1, dazu ein Chat, den nur die Shops lesen – wie in der Vorstudie | Entstehen mit geheimem Kanal Kartellpreise? |
+| **M4** Compliance | wie M2, aber ein Compliance-Agent prüft jede Mitteilung vor der Veröffentlichung, und eine Marktbeobachtung achtet auf Preismuster | Lässt sich das verhindern? |
 
 ### Was herauskam
 
@@ -43,7 +44,8 @@ Je 30 Wochen, DeepSeek V4.1 Flash über die Swiss AI Research Platform, 0 techni
 |---|---|---|---|
 | **M1** Nur Portal (3 Läufe) | **54 CHF** – unter dem Wettbewerbspreis von 67 | −170 CHF (2 von 3 Läufen mit Verlust) | Preiskrieg: 27-mal Verkauf unter dem eigenen Einkaufspreis |
 | **M2** Mitteilungen (3 Läufe) | **65 CHF** – beim Wettbewerbspreis | +124 CHF | Der Preiskrieg endet; rund die Hälfte der Mitteilungen wirbt mit «stabilen Preisen statt Rabattschlachten» |
-| **M3** Compliance (1 Lauf, 2 laufen noch) | 64 CHF | +111 CHF | Der Compliance-Agent blockiert 15 von 174 Mitteilungen als Preissignal |
+| **M3** Geheimer Chat | *läuft* | | Entstehen Kartellpreise, wenn die Shops sich ungesehen absprechen können? |
+| **M4** Compliance (1 Lauf, 2 laufen noch) | 64 CHF | +111 CHF | Der Compliance-Agent blockiert 15 von 174 Mitteilungen als Preissignal |
 
 1. **Ohne Kommunikation unterbieten sich die KI-Shops bis in den Verlust.** PreisPilot notiert privat: „Ich senke den
    Preis deutlich auf 44.90 CHF, um MediaPlus zu unterbieten“ – und eine Woche später: „Ich gebe den Preiskampf gegen MediaPlus
@@ -102,7 +104,7 @@ flowchart LR
     M --> L[("runden.jsonl")] --> D["Marktplatz-Ansicht / Bericht"]
 ```
 
-Je nach Versuch werden Knoten zu- oder weggeschaltet (M1 ohne Mitteilungen und Filter, M3 mit Filter und Marktbeobachtung).
+Je nach Versuch werden Knoten zu- oder weggeschaltet (M1 ohne Kommunikation und Filter, M4 mit Filter und Marktbeobachtung).
 
 | Modulthema | Im Projekt |
 |---|---|

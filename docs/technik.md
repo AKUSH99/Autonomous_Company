@@ -33,13 +33,14 @@ python -m kartell eval-compliance --config experiments/archiv/e3_compliance_filt
 
 ### Versuchsdateien
 
-Sieben Versuche erzählen die Geschichte; alles andere liegt in `experiments/archiv/`.
+Acht Versuche erzählen die Geschichte; alles andere liegt in `experiments/archiv/`.
 
 | Kurz | Datei | Frage | Kommunikation | Compliance |
 |---|---|---|---|---|
 | **M1** | `marktplatz/m1_nur_portal.yaml` | Steigen die Preise im Marktplatz von selbst? | keine | aus |
 | **M2** | `marktplatz/m2_mitteilungen.yaml` | Nutzen die Shops öffentliche Mitteilungen als Preissignal? | Mitteilungen im Portal | aus |
-| **M3** | `marktplatz/m3_compliance.yaml` | Lässt sich das verhindern? | Mitteilungen im Portal | Filter + Marktbeobachtung |
+| **M3** | `marktplatz/m3_geheimer_chat.yaml` | Entstehen mit einem geheimen Chat Kartellpreise? | Chat nur unter Shops | aus |
+| **M4** | `marktplatz/m4_compliance.yaml` | Lässt sich das verhindern? | Mitteilungen im Portal | Filter + Marktbeobachtung |
 | **V1** | `vorstudie/v1_ohne_chat.yaml` | Zwei Shops: Kartell ohne Kontakt? | keine | aus |
 | **V2** | `vorstudie/v2_mit_chat.yaml` | Zwei Shops: Kartell mit geschlossenem Chat? | Chat | aus |
 | **V3** | `vorstudie/v3_abweichung.yaml` | Ist es ein echtes Kartell (Bestrafung eines Abweichlers)? | Chat | aus |
@@ -74,7 +75,7 @@ Laut Schätzung kosten E1–E4 und E7 mit DeepSeek zusammen rund 4 USD statt run
 
 **Andere Modelle über OpenRouter:** `--modell openrouter:<modell-id>` nutzt jedes bei OpenRouter gelistete Modell (Schlüssel in `OPENROUTER_API_KEY`). Mit `--compliance-modell` urteilt ein anderes Modell als die Preisagenten – sonst prüft ein Modell sich selbst. Eine Auftragsdatei kann mit `modellsuche: {begriffe: [...]}` die Modellliste durchsuchen lassen. Mit `nur_gratis: true` prüft der Workflow vor dem ersten Lauf den Preis bei OpenRouter und bricht ab, wenn das Modell etwas kostet. `denken: aus | niedrig | standard | hoch | maximal` stellt den Denkaufwand ein (global oder je Lauf); bei `maximal` testet ein Probeaufruf, ob das Modell die höchste Stufe (xhigh) annimmt, sonst gilt `high`.
 
-**Marktplatz (M1–M3).** Markt: Attraktivität je Shop (`markt.a_je_firma`) und Fixkosten pro Woche (`markt.fixkosten`), kalibriert auf den JBL Tune 770NC (Toppreise.ch: 21 Angebote zwischen 49.95 und 129 CHF, UVP 99.95): `alpha 100`, `mu 0.18`, Einkauf 42–50 CHF → Wettbewerbspreis 63–71 CHF, Kartellpreis ≈ 101 CHF. `portal: {aktiv: true}` zeigt Shops und Kundschaft dieselbe Rangliste (`kartell/portal.py`), `kommunikation.art: ankuendigung` macht Nachrichten zu öffentlichen Mitteilungen. Ansicht: `python -m kartell marktplatz runs/` → `reports/marktplatz.html`.
+**Marktplatz (M1–M4).** Markt: Attraktivität je Shop (`markt.a_je_firma`) und Fixkosten pro Woche (`markt.fixkosten`), kalibriert auf den JBL Tune 770NC (Toppreise.ch: 21 Angebote zwischen 49.95 und 129 CHF, UVP 99.95): `alpha 100`, `mu 0.18`, Einkauf 42–50 CHF → Wettbewerbspreis 63–71 CHF, Kartellpreis ≈ 101 CHF. `portal: {aktiv: true}` zeigt Shops und Kundschaft dieselbe Rangliste (`kartell/portal.py`), `kommunikation.art: ankuendigung` macht Nachrichten zu öffentlichen Mitteilungen. Ansicht: `python -m kartell marktplatz runs/` → `reports/marktplatz.html`.
 
 **Retrieval (RAG): Chunking und Hybrid Retrieval.** Die Wissensbasis (7 Markdown-Dateien) wird in Abschnitte zerlegt: Absätze werden zusammengefasst, bis ein Stück mindestens 250 Zeichen hat; jedes Stück behält den Titel seines Dokuments (17 Abschnitte). Gesucht wird standardmässig mit BM25. Wahlweise Hybrid Retrieval:
 
