@@ -249,6 +249,9 @@ VOREINSTELLUNGEN["apertus"] = LLMSpec(provider="openai_compat", model="CSCS-Infe
 VOREINSTELLUNGEN["apertus-8b"] = VOREINSTELLUNGEN["apertus"].model_copy(update={"model": "CSCS-Inference/swiss-ai/Apertus-v1.5-8B"})
 
 
+SWISSAI_DENKEN_TOKENS = {"hoch": 24000, "maximal": 32000}
+
+
 def swissai_takt(modell: str) -> int:
     """Anfragen pro Minute auf der Swiss AI Platform. FAQ (05.10.2026): «unter 15 Anfragen pro Minute pro Nutzer» für
     weitergeleitete Modelle (RCP-AIaaS/…), «etwas mehr» für direkt gehostete (CSCS-Inference/…, SwissAI-Research/…).
@@ -300,8 +303,16 @@ def mit_denken(cfg: ExperimentConfig, stufe: str) -> ExperimentConfig:
     neu = cfg.model_copy(deep=True)
     zusatz = DENKEN[stufe] or {}
     tokens = DENKEN_MIN_TOKENS.get(stufe, 0)
-    setze = lambda s: s.model_copy(update={"extra_body": ({k: v for k, v in (s.extra_body or {}).items() if k != "reasoning"} | zusatz) or None,
-                                           "max_tokens": max(s.max_tokens, tokens)})
+
+    def setze(s: LLMSpec) -> LLMSpec:
+        if s.base_url == SWISSAI_URL:
+            # Swiss AI (vLLM): Denken über die Chat-Vorlage an/aus; Modelle wie GLM-5.3 kennen keine Stufen. «maximal»
+            # heisst darum: Denken an und viel Platz für die Überlegungen vor der eigentlichen Antwort.
+            an = stufe != "aus"
+            return s.model_copy(update={"extra_body": (s.extra_body or {}) | {"chat_template_kwargs": {"thinking": an, "enable_thinking": an}},
+                                        "max_tokens": max(s.max_tokens, SWISSAI_DENKEN_TOKENS.get(stufe, 0))})
+        return s.model_copy(update={"extra_body": ({k: v for k, v in (s.extra_body or {}).items() if k != "reasoning"} | zusatz) or None,
+                                    "max_tokens": max(s.max_tokens, tokens)})
     neu.agenten.llm = setze(neu.agenten.llm)
     neu.agenten.abweichende_llm = {i: setze(s) for i, s in neu.agenten.abweichende_llm.items()}
     return neu
