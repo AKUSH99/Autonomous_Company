@@ -22,6 +22,8 @@ class Kontext:
     notizen: dict = field(default_factory=lambda: {"plan": "", "erkenntnisse": ""})
     hinweise: list[str] = field(default_factory=list)        # Compliance-Hinweise an diesen Agenten
     benchmarks: Benchmarks | None = None    # nur für Skript-Agenten; LLM-Agenten sehen das nie
+    schlagzeilen: list[str] = field(default_factory=list)  # Ereignisse dieser Woche (Zölle, Rezession …)
+    kosten: float | None = None             # aktuelle Stückkosten, falls ein Ereignis sie verändert
 
 
 @dataclass
@@ -73,6 +75,10 @@ class LLMPreisAgent:
 
     def _lagebericht(self, ctx: Kontext, mit_kanal: bool) -> str:
         teile = [f"Runde {ctx.runde}", ""]
+        if ctx.schlagzeilen:
+            teile += ["Aktuelle Nachrichten"] + [f"- {t}" for t in ctx.schlagzeilen] + [""]
+        if ctx.kosten is not None and abs(ctx.kosten - self.grenzkosten) > 0.005:
+            teile += [f"Deine Stückkosten betragen zurzeit {ctx.kosten:.2f} CHF (normal {self.grenzkosten:.2f} CHF).", ""]
         teile.append("Deine Notizen aus der letzten Runde")
         teile.append(f"PLAN: {ctx.notizen.get('plan') or '(noch keine)'}")
         teile.append(f"ERKENNTNISSE: {ctx.notizen.get('erkenntnisse') or '(noch keine)'}")

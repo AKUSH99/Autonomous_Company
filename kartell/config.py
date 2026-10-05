@@ -9,6 +9,7 @@ from typing import Literal, Optional
 import yaml
 from pydantic import BaseModel, Field, model_validator
 
+from .ereignisse import Ereignis
 from .market import MarktParameter
 
 
@@ -154,6 +155,7 @@ class ExperimentConfig(BaseModel):
     abweichung: AbweichungConfig = Field(default_factory=AbweichungConfig)
     kundschaft: KundschaftConfig = Field(default_factory=KundschaftConfig)
     portal: PortalConfig = Field(default_factory=PortalConfig)
+    ereignisse: list[Ereignis] = Field(default_factory=list)  # Zölle, Rezession, Boom … (kartell/ereignisse.py)
     max_parallel: int = 4
 
     @model_validator(mode="after")

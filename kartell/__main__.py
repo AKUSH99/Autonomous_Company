@@ -406,6 +406,21 @@ def _eval_retrieval(args) -> None:
             print(f"  verfehlt ({name}): {z['anfrage']} → {', '.join(z['treffer'])}")
 
 
+def _szenario(args) -> None:
+    """Eigenes Szenario aus dem Szenario-Labor (JSON) rechnen."""
+    from .runner import fuehre_experiment_aus
+    from .szenario import lade_szenario
+    s = lade_szenario(args.szenario)
+    cfg = s.als_config()
+    if args.modell:
+        cfg = mit_modell(cfg, args.modell)
+        _pruefe_modell(voreinstellung(args.modell), Path(args.berichte))
+    if args.denken:
+        cfg = mit_denken(cfg, args.denken)
+    print(f"Szenario «{s.name}»: {cfg.beschreibung}")
+    fuehre_experiment_aus(cfg, ausgabe=args.ausgabe)
+
+
 def _marktplatz(args) -> None:
     from .marktplatz_ansicht import baue
     r = baue([Path(o) for o in args.laeufe], Path(args.ausgabe), artifact=args.artifact)
@@ -527,6 +542,14 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--ohne-reranker", action="store_true", help="nur BM25 und Fusion, ohne Reranker")
     s.add_argument("-k", type=int, default=3)
     s.set_defaults(fn=_eval_retrieval)
+
+    s = sub.add_parser("szenario", help="Eigenes Szenario (JSON aus dem Szenario-Labor) rechnen")
+    s.add_argument("szenario", help="JSON-Text oder Datei")
+    s.add_argument("--modell", help="z. B. swissai:RCP-AIaaS/deepseek-ai/DeepSeek-V4.1-Flash")
+    s.add_argument("--denken", choices=["aus", "niedrig", "standard", "hoch", "maximal"])
+    s.add_argument("--ausgabe", default="runs")
+    s.add_argument("--berichte", default="reports")
+    s.set_defaults(fn=_szenario)
 
     s = sub.add_parser("marktplatz", help="Läufe als Preisvergleichsportal zum Durchblättern (HTML)")
     s.add_argument("laeufe", nargs="+", help="Lauf-Ordner oder Ordner mit Läufen (rekursiv)")

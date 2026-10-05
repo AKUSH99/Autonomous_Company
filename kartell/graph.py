@@ -20,7 +20,8 @@ from langgraph.graph import END, START, StateGraph
 
 from .agents import ComplianceAbteilung, Kontext, erstelle_preisagent
 from .config import ExperimentConfig
-from .market import LogitMarkt
+from .ereignisse import Lage
+from .market import LogitMarkt, MarktParameter
 from .tracing import lauf_config
 
 
@@ -90,11 +91,18 @@ class Simulation:
 
     # ---------- Hilfsfunktionen ----------
 
+    def _lage(self, runde: int) -> Lage:
+        return Lage(self.cfg.ereignisse, runde, [a.name for a in self.agenten])
+
     def _kontext(self, s: Zustand, name: str) -> Kontext:
+        lage = self._lage(s["runde"])
+        i = [a.name for a in self.agenten].index(name)
         return Kontext(
             runde=s["runde"], name=name, verlauf=s["verlauf"], kanal=s["kanal"],
             kanal_verlauf=s["kanal_verlauf"], notizen=s["notizen"].get(name, {}),
             hinweise=s["hinweise"].get(name, []), benchmarks=self.benchmarks,
+            schlagzeilen=lage.schlagzeilen(),
+            kosten=float(self.markt.kostenvektor[i] * lage.kostenfaktor[i]) if lage.kosten_veraendert else None,
         )
 
     @staticmethod
@@ -181,16 +189,19 @@ class Simulation:
     def markt_runde(self, s: Zustand) -> dict:
         namen = [a.name for a in self.agenten]
         preise = [s["entscheide"][n]["preis"] for n in namen]
-        mengen = self.markt.mengen(preise)
+        lage = self._lage(s["runde"])
+        mengen = self.markt.mengen(preise) * lage.nachfragefaktor
         tokens = s["tokens"]
         kunden = None
         if self.kundschaft:  # KI-Kundschaft statt Formel; bei einem Modellfehler bleibt es für diese Runde bei der Formel
             vorher = [self.verlauf_bisher[-1]["preise"][n] for n in namen] if self.verlauf_bisher else None
-            kunden = self.kundschaft.entscheide(s["runde"], preise, vorher, s["kanal_verlauf"] + s["kanal"])
+            kunden = self.kundschaft.entscheide(s["runde"], preise, vorher, s["kanal_verlauf"] + s["kanal"], lage.schlagzeilen())
             tokens = self._plus_tokens(tokens, kunden.pop("input_tokens"), kunden.pop("output_tokens"))
             if kunden["anteile"]:
-                mengen = self.cfg.markt.beta * np.asarray(kunden["anteile"][:-1])
-        gewinne = (np.asarray(preise) - self.markt.kostenvektor) * mengen - self.cfg.markt.fixkosten
+                mengen = self.cfg.markt.beta * lage.nachfragefaktor * np.asarray(kunden["anteile"][:-1])
+        mengen = np.minimum(mengen, lage.kapazitaet)  # Lieferengpass: mehr als die Kapazität wird nicht verkauft
+        kosten = self.markt.kostenvektor * lage.kostenfaktor
+        gewinne = (np.asarray(preise) - kosten) * mengen - self.cfg.markt.fixkosten
         eintrag = {
             "runde": s["runde"],
             "preise": {n: round(float(p), 2) for n, p in zip(namen, preise)},
@@ -207,6 +218,15 @@ class Simulation:
         }
         if kunden is not None:
             eintrag["kunden"] = {"art": "ki"} | kunden
+        if not lage.leer:
+            eintrag["ereignisse"] = lage.schlagzeilen()
+            if lage.kosten_veraendert:
+                # Wettbewerbs- und Kartellpreis unter den veränderten Kosten: nutzen die Shops den Schock aus?
+                p = self.cfg.markt
+                basis = p.kosten_je_firma or (p.kosten,) * p.firmen
+                b = LogitMarkt(MarktParameter(**{**p.__dict__, "kosten_je_firma": tuple(float(k * f) for k, f in zip(basis, lage.kostenfaktor))})).benchmarks()
+                eintrag["vergleich"] = {"nash_preis": round(b.nash_preis, 2), "monopol_preis": round(b.monopol_preis, 2)}
+                eintrag["kosten"] = {n: round(float(k), 2) for n, k in zip(namen, kosten)}
         hinweise = {k: list(v) for k, v in s["hinweise_naechste"].items()}
         if self.marktbeobachtung:
             befund = self.marktbeobachtung.pruefe(self.verlauf_bisher + [eintrag])

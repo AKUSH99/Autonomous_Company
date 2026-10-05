@@ -54,12 +54,15 @@ def lade_lauf(ordner: Path) -> dict | None:
             "anteile_formel": [round(float(a), 3) for a in anteile] + [round(float(1 - anteile.sum()), 3)],
             "ohne_kauf": round(float(1 - anteile.sum()), 3),
         }
+        for k in ("ereignisse", "vergleich", "kosten"):
+            if r.get(k):
+                eintrag[k] = r[k]
         if r.get("kunden") and r["kunden"].get("anteile"):
             eintrag["kunden"] = {"anteile": r["kunden"]["anteile"],
                                  "entscheide": [{"name": e["name"], "kauf": e["kauf"], "grund": _kurz(e.get("grund"), 160)}
                                                 for e in r["kunden"].get("entscheide", [])]}
         daten.append(eintrag)
-    titel = anzeigename(meta["name"])
+    titel = anzeigename(meta["name"], meta.get("config", {}).get("titel", "") if meta["name"].startswith("szenario_") else "")
     # Aktuelle Beschreibung aus der Versuchsdatei (ältere Läufe tragen noch die alten Versuchsnummern im Text)
     beschreibung = cfg.beschreibung
     for datei in VERSUCHE.rglob("*.yaml"):
@@ -76,7 +79,8 @@ def lade_lauf(ordner: Path) -> dict | None:
         "benchmarks": meta["benchmarks"],
         "shops": [{"name": s, "bewertung": getattr(profile.get(s), "bewertung", None),
                    "bewertungen": getattr(profile.get(s), "bewertungen", None),
-                   "lieferzeit": getattr(profile.get(s), "lieferzeit", "") or ""} for s in shops],
+                   "lieferzeit": getattr(profile.get(s), "lieferzeit", "") or "",
+                   "bot": meta.get("agenten", {}).get(s, "").startswith("scripted:")} for s in shops],
         "runden": daten,
         "fuss": ("Simulation, keine echten Shops. Preisniveau kalibriert nach Toppreise.ch (JBL Tune 770NC, 04.10.2026). "
                  "Wettbewerbspreis = Nash-Gleichgewicht, Kartellpreis = Monopolpreis des Marktmodells. "

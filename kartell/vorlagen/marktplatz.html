@@ -72,6 +72,8 @@ ol.liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px }
 svg text { fill: var(--muted); font: 11px var(--f-num) }
 .legende { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; margin-top: 6px }
 .legende span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--c); margin-right: 5px; vertical-align: -1px }
+.news { display: grid; gap: 4px; margin: 0 0 10px; padding: 8px 12px; border: 1px solid var(--warn); border-radius: 10px; background: var(--bg); font-size: 14px }
+.news b { color: var(--warn); font-family: var(--f-display) }
 .kunden { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px }
 .person { border: 1px solid var(--line); border-left: 5px solid var(--c); border-radius: 8px; padding: 6px 8px; background: var(--bg); font-size: 13px; min-width: 0 }
 .person .n { font-weight: 700 }
@@ -102,6 +104,7 @@ footer { color: var(--muted); font-size: 12px; max-width: 80ch }
     <section class="panel" aria-labelledby="h-liste">
       <h2 id="h-liste">Angebote diese Woche, günstigstes zuerst</h2>
       <p class="hint">So sehen Kundschaft und Konkurrenz das Portal. Antippen zeigt, was der Shop intern gedacht hat.</p>
+      <div class="news" id="news" hidden></div>
       <ol class="liste" id="liste"></ol>
     </section>
     <section class="panel" aria-labelledby="h-preise">
@@ -164,6 +167,10 @@ function zeige() {
   const mitteilung = {};
   (r.nachrichten || []).forEach(m => mitteilung[m.von] = m);
 
+  // Schlagzeilen der Woche (Ereignisse wie Zölle, Rezession …)
+  $("news").hidden = !(r.ereignisse && r.ereignisse.length);
+  $("news").innerHTML = (r.ereignisse || []).map(t => `<span>${t.startsWith("NEU: ") ? "<b>NEU</b> " + esc(t.slice(5)) : esc(t)}</span>`).join("");
+
   // Rangliste
   const liste = $("liste"); liste.innerHTML = "";
   shops.slice().sort((a, b) => r.preise[a] - r.preise[b] || a.localeCompare(b)).forEach((s, rang) => {
@@ -176,11 +183,11 @@ function zeige() {
     const e = r.entscheide[s] || {};
     b.innerHTML = `
       <span class="rang">${rang + 1}</span>
-      <span><span class="shop">${esc(s)}</span>
+      <span><span class="shop">${esc(s)}</span>${p.bot ? ` <span class="chip" style="color:var(--muted)" title="Setzt Preise per Regel: 1 CHF unter dem günstigsten Angebot, nie unter Kosten + 8 %">Preis-Bot</span>` : ""}
         <span class="meta">${p.bewertung != null ? `<span class="sterne">★ ${p.bewertung.toFixed(1)}</span><span>${(p.bewertungen || 0).toLocaleString("de-CH")} Bewertungen</span>` : ""}${p.lieferzeit ? `<span>Lieferung ${esc(p.lieferzeit)}</span>` : ""}</span></span>
       <span class="preisblock"><span class="preis">CHF ${chf(preis)}</span>
         <span class="delta ${d == null || Math.abs(d) < .005 ? "flat" : d > 0 ? "up" : "down"}">${d == null ? "neu" : Math.abs(d) < .005 ? "unverändert" : (d > 0 ? "▲ +" : "▼ ") + d.toFixed(2)}</span></span>
-      <span class="verkauf"><span>verkauft <span class="num">${Math.round(r.mengen[s])}</span> Stk.</span><span>Gewinn <span class="num" style="color:var(${r.gewinne[s] < 0 ? "--bad" : "--good"})">${r.gewinne[s] < 0 ? "−" : ""}CHF ${Math.abs(r.gewinne[s]).toFixed(0)}</span></span>${e.erzwungen ? `<span class="chip bad">Preis erzwungen</span>` : ""}${e.ausfall ? `<span class="chip bad" title="Das Modell hat keine gültige Antwort geliefert; der Preis der Vorwoche bleibt.">keine Antwort, Preis der Vorwoche</span>` : ""}</span>
+      <span class="verkauf"><span>verkauft <span class="num">${Math.round(r.mengen[s])}</span> Stk.</span>${r.kosten ? `<span>Einkauf <span class="num">CHF ${chf(r.kosten[s])}</span></span>` : ""}<span>Gewinn <span class="num" style="color:var(${r.gewinne[s] < 0 ? "--bad" : "--good"})">${r.gewinne[s] < 0 ? "−" : ""}CHF ${Math.abs(r.gewinne[s]).toFixed(0)}</span></span>${e.erzwungen ? `<span class="chip bad">Preis erzwungen</span>` : ""}${e.ausfall ? `<span class="chip bad" title="Das Modell hat keine gültige Antwort geliefert; der Preis der Vorwoche bleibt.">keine Antwort, Preis der Vorwoche</span>` : ""}</span>
       ${m ? `<span class="mitteilung ${m.status === "blockiert" ? "blockiert" : ""}">${m.status === "blockiert" ? `<span class="chip bad">blockiert</span>` : `<span class="chip ok">Mitteilung</span>`}„${esc(m.text)}“${m.status === "blockiert" && m.begruendung ? `<br><span class="hint">Compliance: ${esc(m.begruendung)}</span>` : ""}</span>` : ""}
       <span class="innen" hidden>${e.beobachtungen ? `<span><b>Beobachtung:</b> ${esc(e.beobachtungen)}</span>` : ""}${e.plan ? `<span><b>Plan (privat):</b> ${esc(e.plan)}</span>` : ""}${e.erkenntnisse ? `<span><b>Erkenntnisse:</b> ${esc(e.erkenntnisse)}</span>` : ""}${!(e.plan || e.beobachtungen) ? `<span class="hint">Keine internen Notizen (Skript-Shop).</span>` : ""}</span>`;
     b.onclick = () => { const x = b.querySelector(".innen"); x.hidden = !x.hidden; b.setAttribute("aria-expanded", String(!x.hidden)); };
@@ -188,7 +195,7 @@ function zeige() {
   });
 
   // Kennzahlen
-  const B = L.benchmarks, ps = shops.map(s => r.preise[s]);
+  const B = Object.assign({}, L.benchmarks, r.vergleich || {}), ps = shops.map(s => r.preise[s]);
   const mittel = ps.reduce((a, b) => a + b, 0) / ps.length;
   const index = (mittel - B.nash_preis) / (B.monopol_preis - B.nash_preis);
   const ohne = r.kunden && r.kunden.anteile ? r.kunden.anteile[r.kunden.anteile.length - 1] : r.ohne_kauf;
@@ -217,16 +224,33 @@ function zeige() {
 
 function kurve(L, shops) {
   const R = L.runden, B = L.benchmarks, W = 520, H = 260, l = 44, rr = 12, t = 12, b = 28;
-  const alle = R.flatMap(r => shops.map(s => r.preise[s])).concat([B.nash_preis, B.monopol_preis]);
+  const alle = R.flatMap(r => shops.map(s => r.preise[s]).concat(r.vergleich ? [r.vergleich.nash_preis, r.vergleich.monopol_preis] : [])).concat([B.nash_preis, B.monopol_preis]);
   let lo = Math.floor(Math.min(...alle) / 10) * 10, hi = Math.ceil(Math.max(...alle) / 10) * 10;
   if (hi - lo < 20) hi = lo + 20;
   const x = w => l + (R.length < 2 ? 0 : (w - 1) / (R.length - 1)) * (W - l - rr);
   const y = v => t + (hi - v) / (hi - lo) * (H - t - b);
-  let s = `<rect x="${l}" y="${y(B.monopol_preis)}" width="${W - l - rr}" height="${y(B.nash_preis) - y(B.monopol_preis)}" fill="var(--band)"/>`;
+  const wechselnd = R.some(r => r.vergleich);
+  let s = "";
+  if (wechselnd) {  // Band zwischen Wettbewerbs- und Kartellpreis Woche für Woche (Ereignisse verändern die Kosten)
+    const oben = R.map((r, j) => `${x(j + 1).toFixed(1)},${y((r.vergleich || B).monopol_preis).toFixed(1)}`);
+    const unten = R.map((r, j) => `${x(j + 1).toFixed(1)},${y((r.vergleich || B).nash_preis).toFixed(1)}`).reverse();
+    s += `<polygon points="${oben.concat(unten).join(" ")}" fill="var(--band)"/>`;
+  } else {
+    s += `<rect x="${l}" y="${y(B.monopol_preis)}" width="${W - l - rr}" height="${y(B.nash_preis) - y(B.monopol_preis)}" fill="var(--band)"/>`;
+  }
   const schritt = (hi - lo) / 10 > 4 ? 20 : 10;
   for (let v = lo; v <= hi; v += schritt) s += `<line x1="${l}" x2="${W - rr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${l - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
-  [[B.nash_preis, "Wettbewerb", "var(--good)"], [B.monopol_preis, "Kartell", "var(--bad)"]].forEach(([v, n, c]) =>
-    s += `<line x1="${l}" x2="${W - rr}" y1="${y(v)}" y2="${y(v)}" stroke="${c}" stroke-dasharray="5 4"/><text x="${W - rr - 2}" y="${y(v) - 4}" text-anchor="end" style="fill:${c}">${n} ${v.toFixed(0)}</text>`);
+  [["nash_preis", "Wettbewerb", "var(--good)"], ["monopol_preis", "Kartell", "var(--bad)"]].forEach(([k, n, c]) => {
+    if (wechselnd) {
+      const pts = R.map((r, j) => `${x(j + 1).toFixed(1)},${y((r.vergleich || B)[k]).toFixed(1)}`).join(" ");
+      s += `<polyline points="${pts}" fill="none" stroke="${c}" stroke-dasharray="5 4"/>`;
+    } else {
+      s += `<line x1="${l}" x2="${W - rr}" y1="${y(B[k])}" y2="${y(B[k])}" stroke="${c}" stroke-dasharray="5 4"/>`;
+    }
+    const v = (R[R.length - 1].vergleich || B)[k];
+    s += `<text x="${W - rr - 2}" y="${y(v) - 4}" text-anchor="end" style="fill:${c}">${n} ${v.toFixed(0)}</text>`;
+  });
+  R.forEach((r, j) => { if ((r.ereignisse || []).some(t => t.startsWith("NEU: "))) s += `<line x1="${x(j + 1)}" x2="${x(j + 1)}" y1="${t}" y2="${H - b}" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="2 3"/><text x="${x(j + 1) + 3}" y="${t + 10}" style="fill:var(--warn)">Ereignis</text>`; });
   const ticks = R.length <= 12 ? R.map((_, i) => i + 1) : R.map((_, i) => i + 1).filter(w => w === 1 || w % 5 === 0);
   ticks.forEach(w => s += `<text x="${x(w)}" y="${H - 8}" text-anchor="middle">${w}</text>`);
   s += `<line x1="${x(woche)}" x2="${x(woche)}" y1="${t}" y2="${H - b}" stroke="var(--accent)" stroke-width="2" opacity=".5"/>`;

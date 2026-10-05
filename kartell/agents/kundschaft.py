@@ -112,10 +112,13 @@ class KIKundschaft:
         return "\n".join(teile)
 
     def entscheide(self, runde: int, preise: list[float], vorher: list[float] | None = None,
-                   nachrichten: list[dict] | None = None) -> dict:
+                   nachrichten: list[dict] | None = None, schlagzeilen: list[str] | None = None) -> dict:
         """Anteile je Shop und Nicht-Kauf aus den Entscheiden des Panels. Bei einem Modellfehler: None (Formel übernimmt)."""
         try:
-            antwort = self.llm.strukturiert(self.system, self._prompt(runde, preise, vorher, nachrichten or []), KundenRunde)
+            prompt = self._prompt(runde, preise, vorher, nachrichten or [])
+            if schlagzeilen:
+                prompt = "Aktuelle Nachrichten:\n" + "\n".join(f"- {t}" for t in schlagzeilen) + "\n\n" + prompt
+            antwort = self.llm.strukturiert(self.system, prompt, KundenRunde)
         except LLMFehler as e:
             return {"anteile": None, "entscheide": [], "fehler": str(e)[:300], "input_tokens": e.input_tokens,
                     "output_tokens": e.output_tokens}
