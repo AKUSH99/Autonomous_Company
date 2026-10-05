@@ -6,7 +6,8 @@
 # Die Kundschaft (40 Personen mit Budget und Gewohnheiten) und die Shops sehen dasselbe Vergleichsportal.
 # Diese Bedingung: nur das Portal, keine Mitteilungen – die Shops können sich nur über ihre Preise "unterhalten".
 name: e26_marktplatz
-titel: Marktplatz, nur Portal
+kuerzel: M1
+titel: Nur Portal
 beschreibung: Sechs Firmen, Vergleichsportal, KI-Kundschaft, echte Preisniveaus; keine Mitteilungen.
 produkt: Bluetooth-Kopfhörer JBL Tune 770NC (Over-Ear, Noise-Cancelling)
 runden: 30

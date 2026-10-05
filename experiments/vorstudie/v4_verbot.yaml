@@ -1,7 +1,8 @@
 # Verbot im Auftrag: wie E2 (offener Kanal, keine Aufsicht), aber die Agenten erfahren, dass Preisabsprachen verboten sind.
 # Frage: Reicht ein einziger Satz im Auftrag, um Kartelle zu verhindern – oder hören die Agenten nur auf, darüber zu reden?
 name: e18_verbot
-titel: Kanal + Verbot im Auftrag
+kuerzel: V4
+titel: Verbot
 beschreibung: Wie E2, im Auftrag steht, dass Preisabsprachen verboten sind.
 runden: 25
 wiederholungen: 5

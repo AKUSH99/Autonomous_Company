@@ -10,8 +10,8 @@ def test_auftrag_fuehrt_laeufe_aus_und_schreibt_bericht(tmp_path):
     auftrag = tmp_path / "auftrag.yaml"
     auftrag.write_text(
         "laeufe:\n"
-        "  - {config: experiments/demo_absprache_ohne_aufsicht.yaml, runden: 4, wiederholungen: 2}\n"
-        "  - {config: experiments/demo_absprache_mit_filter.yaml, runden: 4, wiederholungen: 1}\n",
+        "  - {config: experiments/demo/demo_absprache_ohne_aufsicht.yaml, runden: 4, wiederholungen: 2}\n"
+        "  - {config: experiments/demo/demo_absprache_mit_filter.yaml, runden: 4, wiederholungen: 1}\n",
         encoding="utf-8")
     main(["auftrag", str(auftrag), "--ausgabe", str(tmp_path / "runs"), "--berichte", str(tmp_path / "reports")])
     ergebnisse = [json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*/ergebnis.json")]
@@ -57,9 +57,9 @@ def test_auftrag_wie_auf_github_mit_simuliertem_modell(tmp_path, monkeypatch):
         "modell: deepseek\nzeitlimit_min: 10\nmodellsuche: {begriffe: [jeff]}\n"
         f"urteile_sammeln: {{stichprobe: {stichprobe}, modelle: [deepseek]}}\n"
         "laeufe:\n"
-        "  - {config: experiments/e14_werkzeug.yaml, runden: 4, wiederholungen: 1}\n"
-        "  - {config: experiments/e15_marktbeobachtung.yaml, runden: 7, wiederholungen: 1}\n"
-        "  - {config: experiments/e3_compliance_filter.yaml, runden: 2, wiederholungen: 1, erste_wiederholung: 4}\n",
+        "  - {config: experiments/archiv/e14_werkzeug.yaml, runden: 4, wiederholungen: 1}\n"
+        "  - {config: experiments/archiv/e15_marktbeobachtung.yaml, runden: 7, wiederholungen: 1}\n"
+        "  - {config: experiments/archiv/e3_compliance_filter.yaml, runden: 2, wiederholungen: 1, erste_wiederholung: 4}\n",
         encoding="utf-8")
     main(["auftrag", str(auftrag), "--ausgabe", str(tmp_path / "runs"), "--berichte", str(tmp_path / "reports")])
     urteile = [json.loads(z) for z in (tmp_path / "reports" / "urteile_deepseek.jsonl").read_text().splitlines()]
@@ -99,10 +99,10 @@ def test_auftrag_mit_modell_je_lauf_und_stopp_nach_ausfall(tmp_path, monkeypatch
     auftrag = tmp_path / "auftrag.yaml"
     auftrag.write_text(
         "laeufe:\n"
-        "  - {config: experiments/e2_mit_kommunikation.yaml, modell: 'openrouter:google/gemma-4-31b-it:free', runden: 3, wiederholungen: 1}\n"
-        "  - {config: experiments/e2_mit_kommunikation.yaml, modell: 'openrouter:test/kaputt:free', runden: 5, wiederholungen: 2}\n"
-        "  - {config: experiments/e2_mit_kommunikation.yaml, modell: 'openrouter:test/kaputt:free', runden: 5, wiederholungen: 1}\n"
-        "  - {config: experiments/e2_mit_kommunikation.yaml, modell: 'openrouter:qwen/qwen3.8-27b:free', runden: 3, wiederholungen: 1}\n",
+        "  - {config: experiments/vorstudie/v2_mit_chat.yaml, modell: 'openrouter:google/gemma-4-31b-it:free', runden: 3, wiederholungen: 1}\n"
+        "  - {config: experiments/vorstudie/v2_mit_chat.yaml, modell: 'openrouter:test/kaputt:free', runden: 5, wiederholungen: 2}\n"
+        "  - {config: experiments/vorstudie/v2_mit_chat.yaml, modell: 'openrouter:test/kaputt:free', runden: 5, wiederholungen: 1}\n"
+        "  - {config: experiments/vorstudie/v2_mit_chat.yaml, modell: 'openrouter:qwen/qwen3.8-27b:free', runden: 3, wiederholungen: 1}\n",
         encoding="utf-8")
     with pytest.raises(SystemExit):
         cli.main(["auftrag", str(auftrag), "--ausgabe", str(tmp_path / "runs"), "--berichte", str(tmp_path / "reports")])
@@ -135,7 +135,7 @@ def test_auftrag_mit_zusatz_bekommt_eigenen_versuchsnamen(tmp_path, monkeypatch)
     monkeypatch.setattr(pricing, "erstelle_client", Simuliert)
     auftrag = tmp_path / "auftrag.yaml"
     auftrag.write_text("modell: deepseek\nzusatz: replikation\nlaeufe:\n"
-                       "  - {config: experiments/e18_verbot.yaml, runden: 2, wiederholungen: 1}\n", encoding="utf-8")
+                       "  - {config: experiments/vorstudie/v4_verbot.yaml, runden: 2, wiederholungen: 1}\n", encoding="utf-8")
     cli.main(["auftrag", str(auftrag), "--ausgabe", str(tmp_path / "runs"), "--berichte", str(tmp_path / "reports")])
     ordner = next((tmp_path / "runs").iterdir())
     assert ordner.name.split("_", 1)[1] == "e18_verbot_deepseek_replikation_w1"
@@ -185,7 +185,7 @@ def test_nur_gratis_erkennt_kostenpflichtige_modelle():
 
 def test_maximales_denken_gibt_platz_fuer_die_antwort():
     from kartell.config import ist_gedrosselt, lade_config, mit_denken, mit_modell
-    cfg = mit_denken(mit_modell(lade_config("experiments/e23_fuenf_shops.yaml"), "openrouter:stealth/space-bunny-alpha"), "maximal")
+    cfg = mit_denken(mit_modell(lade_config("experiments/archiv/e23_fuenf_shops.yaml"), "openrouter:stealth/space-bunny-alpha"), "maximal")
     assert cfg.agenten.llm.extra_body["reasoning"]["effort"] == "xhigh" and cfg.agenten.llm.max_tokens >= 24000
     assert cfg.name == "e23_fuenf_shops_space-bunny-alpha" and cfg.markt.firmen == 5
     assert ist_gedrosselt("stealth/space-bunny-alpha") and ist_gedrosselt("x/y:free") and not ist_gedrosselt("deepseek-flash")

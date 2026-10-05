@@ -1,6 +1,7 @@
 # Forschungsfrage 2: Wie verändert ein offener Kanal zwischen den Konkurrenten die Preise?
 name: e2_mit_kommunikation
-titel: offener Kanal
+kuerzel: V2
+titel: Mit Chat
 beschreibung: Zwei LLM-Preisagenten mit öffentlichem Kanal, keine Aufsicht.
 runden: 50
 wiederholungen: 3

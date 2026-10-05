@@ -34,7 +34,7 @@ def test_ohne_guthaben_abfrage_zaehlen_die_tokens_ueber_alle_laeufe():
 
 
 def test_limit_stoppt_lauf_und_speichert_teilergebnis(tmp_path):
-    cfg = lade_config("experiments/demo_absprache_ohne_aufsicht.yaml")
+    cfg = lade_config("experiments/demo/demo_absprache_ohne_aufsicht.yaml")
     cfg.runden, cfg.wiederholungen = 10, 3
 
     class NachDreiRunden:
@@ -60,7 +60,7 @@ def test_limit_stoppt_lauf_und_speichert_teilergebnis(tmp_path):
 
 def test_zeitlimit():
     import pytest
-    cfg = lade_config("experiments/demo_absprache_ohne_aufsicht.yaml")
+    cfg = lade_config("experiments/demo/demo_absprache_ohne_aufsicht.yaml")
     cfg.runden = 5
     sim = Simulation(cfg, zeitlimit_s=1e-9)
     with pytest.raises(LimitErreicht, match="Zeitlimit"):
@@ -78,7 +78,7 @@ def test_permutationstest_und_bootstrap():
 
 
 def test_wiederholungen_fortsetzen(tmp_path):
-    cfg = lade_config("experiments/demo_absprache_ohne_aufsicht.yaml")
+    cfg = lade_config("experiments/demo/demo_absprache_ohne_aufsicht.yaml")
     cfg.runden, cfg.wiederholungen = 2, 2
     fuehre_experiment_aus(cfg, tmp_path, erste_wiederholung=4)
     assert sorted(p.name[-2:] for p in tmp_path.iterdir()) == ["w4", "w5"]

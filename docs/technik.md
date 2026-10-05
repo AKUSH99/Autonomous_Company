@@ -23,49 +23,36 @@ Die Demo zeigt den Ablauf mit zwei Skript-Agenten, die ein Kartell vorschlagen: 
 
 ```bash
 export ANTHROPIC_API_KEY=...                                   # oder `ant auth login`
-python -m kartell benchmark experiments/e2_mit_kommunikation.yaml   # Nash- und Monopolpreis
-python -m kartell schaetzung experiments/e2_mit_kommunikation.yaml  # Kostenschätzung vor dem Start
-python -m kartell lauf experiments/e2_mit_kommunikation.yaml --runden 10 --wiederholungen 1   # Pilotlauf
-python -m kartell lauf experiments/e2_mit_kommunikation.yaml   # voller Lauf (50 Runden × 3)
+python -m kartell benchmark experiments/vorstudie/v2_mit_chat.yaml   # Nash- und Monopolpreis
+python -m kartell schaetzung experiments/vorstudie/v2_mit_chat.yaml  # Kostenschätzung vor dem Start
+python -m kartell lauf experiments/vorstudie/v2_mit_chat.yaml --runden 10 --wiederholungen 1   # Pilotlauf
+python -m kartell lauf experiments/vorstudie/v2_mit_chat.yaml   # voller Lauf (50 Runden × 3)
 python -m kartell bericht runs/                                # Tabelle + Grafiken in reports/
-python -m kartell eval-compliance --config experiments/e3_compliance_filter.yaml   # Guardrail-Evaluation
+python -m kartell eval-compliance --config experiments/archiv/e3_compliance_filter.yaml   # Guardrail-Evaluation
 ```
 
-### Alle Versuchsdateien
+### Versuchsdateien
 
-Hauptgeschichte: E1, E2 (Kapitel 1), E16, E17 (Kapitel 2), E3, E4, E18, E19 (Kapitel 3). Alle anderen gehören zum Anhang.
+Sieben Versuche erzählen die Geschichte; alles andere liegt in `experiments/archiv/`.
 
-| Versuch | Forschungsfrage | Kanal | Compliance |
-|---|---|---|---|
-| `e1_ohne_kommunikation` | FF1: Kollusion ohne Kontakt? | aus | aus |
-| `e2_mit_kommunikation` | FF2: Effekt eines offenen Kanals | an | aus |
-| `e3_compliance_filter` | FF3: Wirkt ein Nachrichtenfilter? | an | Filter |
-| `e4_compliance_aufsicht` | FF3: Wirkt zusätzlich Aufsicht über Strategienotizen? | an | Filter + Aufsicht |
-| `e5_apertus` | FF4: Verhält sich Apertus anders? | an | aus |
-| `e6_gemischter_markt` | Erweiterung: Claude gegen Apertus | an | aus |
-| `e7_drei_shops` | Erweiterung: mehr Konkurrenz | an | aus |
-| `e8_zehn_shops_kanal` | Erweiterung: zehn Shops, 100 Runden | an | aus |
-| `e9_zehn_shops_filter` | Erweiterung: zehn Shops mit Filter, 100 Runden | an | Filter |
-| `e10`–`e13` `_anker_*` | Validität: Ankereffekt – gleiches Spiel mit Kosten 3 bzw. 20 CHF, ohne und mit Kanal | aus/an | aus |
-| `e14_werkzeug` | Tool-Use: Preisagenten mit Nachfrage-Schätzer | an | aus |
-| `e15_marktbeobachtung` | Verhaltens-Guardrail: Filter plus Beobachtung der Preismuster | an | Filter + Marktbeobachtung |
-| `e16_abweichung_kanal` | Mechanismus: Bestraft ein Kartell einen Abweichler? (erzwungene Abweichung nach Calvano et al.) | an | aus |
-| `e17_abweichung_ohne_kanal` | Mechanismus: dasselbe ohne Kanal – Strafe allein über Preise? | aus | aus |
-| `e18_verbot` | Verbot: Absprachen sind im Auftrag ausdrücklich verboten (vorregistriert) | an | aus |
-| `e19_verbot_ueberwachung` | Verbot + „die WEKO liest den Kanal mit“, Notizen privat (vorregistriert) | an | aus |
-| `e20_ki_kunden` | KI-Kundschaft: ein LLM entscheidet für 20 Personen, wo sie kaufen | an | aus |
-| `e21_ki_kunden_sehen_kanal` | KI-Kundschaft liest die Nachrichten der Shops mit | an | aus |
-| `e22_ki_kunden_budget_in_chf` | KI-Kundschaft mit Budget als Betrag (prüft eigenes Preiswissen des Modells) | an | aus |
-| `e23_fuenf_shops` | Mehr Konkurrenz: fünf gleiche Shops | an | aus |
-| `e24_echter_markt` | Echter Markt: fünf Firmen mit eigener Geschichte und eigenen Kosten, 30 KI-Kunden mit Gewohnheiten | an | aus |
-| `e25_echter_markt_ohne_kanal` | Dasselbe ohne Kanal | aus | aus |
-| `e26_marktplatz` | **Marktplatz (Hauptversuch):** sechs Firmen, Vergleichsportal, KI-Kundschaft, Preisniveau JBL Tune 770NC, Fixkosten | aus | aus |
-| `e27_marktplatz_mitteilungen` | Marktplatz mit öffentlichen Mitteilungen im Portal | Mitteilungen | aus |
-| `e28_marktplatz_compliance` | Marktplatz, Mitteilungen werden geprüft, Marktbeobachtung | Mitteilungen | filter |
+| Kurz | Datei | Frage | Kommunikation | Compliance |
+|---|---|---|---|---|
+| **M1** | `marktplatz/m1_nur_portal.yaml` | Steigen die Preise im Marktplatz von selbst? | keine | aus |
+| **M2** | `marktplatz/m2_mitteilungen.yaml` | Nutzen die Shops öffentliche Mitteilungen als Preissignal? | Mitteilungen im Portal | aus |
+| **M3** | `marktplatz/m3_compliance.yaml` | Lässt sich das verhindern? | Mitteilungen im Portal | Filter + Marktbeobachtung |
+| **V1** | `vorstudie/v1_ohne_chat.yaml` | Zwei Shops: Kartell ohne Kontakt? | keine | aus |
+| **V2** | `vorstudie/v2_mit_chat.yaml` | Zwei Shops: Kartell mit geschlossenem Chat? | Chat | aus |
+| **V3** | `vorstudie/v3_abweichung.yaml` | Ist es ein echtes Kartell (Bestrafung eines Abweichlers)? | Chat | aus |
+| **V4** | `vorstudie/v4_verbot.yaml` | Was bewirkt ein Verbot im Auftrag? | Chat | aus |
 
-E5/E6 (Apertus) laufen über die Swiss AI Research Platform (siehe unten, Schlüssel `SWISSAI_API_KEY`).
+`experiments/demo/` enthält Funktionstests mit Skript-Agenten (ohne LLM), `experiments/archiv/` alle weiteren Versuche
+aus der Entwicklung (mehr Shops, Ankereffekt, Werkzeug, KI-Kundschaft, erste «echte Märkte», Compliance im Labor,
+Apertus). Ihre Ergebnisse stehen in [anhang.md](anhang.md). Die Dateinamen im Archiv entsprechen den Versuchsnummern
+dort (E3 = `archiv/e3_compliance_filter.yaml`).
 
-Jede YAML-Datei hat einen lesbaren `titel`; Bericht, Monitor und Dashboard zeigen „E3 · Compliance-Filter“ statt `e3_compliance_filter_deepseek`.
+Jede Datei hat `kuerzel` und `titel`; Bericht, Monitor, Dashboard und Marktplatz-Ansicht zeigen „M2 · Öffentliche
+Mitteilungen“ statt `e27_marktplatz_mitteilungen_deepseek-v4-1-flash`. Die internen Namen (`name:`) sind unverändert,
+damit frühere Läufe zugeordnet bleiben.
 
 ### Kosten, Modelle, GitHub-Workflow, Auswertungsbefehle
 
@@ -75,7 +62,7 @@ Jede YAML-Datei hat einen lesbaren `titel`; Bericht, Monitor und Dashboard zeige
 
 ```bash
 export DEEPSEEK_API_KEY=...
-python -m kartell lauf experiments/e2_mit_kommunikation.yaml --modell deepseek --runden 10 --wiederholungen 1   # Pilot ≈ 0.05 USD
+python -m kartell lauf experiments/vorstudie/v2_mit_chat.yaml --modell deepseek --runden 10 --wiederholungen 1   # Pilot ≈ 0.05 USD
 python -m kartell eval-compliance --modell deepseek                                                              # Guardrail mit DeepSeek
 ```
 
@@ -87,7 +74,7 @@ Laut Schätzung kosten E1–E4 und E7 mit DeepSeek zusammen rund 4 USD statt run
 
 **Andere Modelle über OpenRouter:** `--modell openrouter:<modell-id>` nutzt jedes bei OpenRouter gelistete Modell (Schlüssel in `OPENROUTER_API_KEY`). Mit `--compliance-modell` urteilt ein anderes Modell als die Preisagenten – sonst prüft ein Modell sich selbst. Eine Auftragsdatei kann mit `modellsuche: {begriffe: [...]}` die Modellliste durchsuchen lassen. Mit `nur_gratis: true` prüft der Workflow vor dem ersten Lauf den Preis bei OpenRouter und bricht ab, wenn das Modell etwas kostet. `denken: aus | niedrig | standard | hoch | maximal` stellt den Denkaufwand ein (global oder je Lauf); bei `maximal` testet ein Probeaufruf, ob das Modell die höchste Stufe (xhigh) annimmt, sonst gilt `high`.
 
-**Marktplatz (E26–E28).** Markt: Attraktivität je Shop (`markt.a_je_firma`) und Fixkosten pro Woche (`markt.fixkosten`), kalibriert auf den JBL Tune 770NC (Toppreise.ch: 21 Angebote zwischen 49.95 und 129 CHF, UVP 99.95): `alpha 100`, `mu 0.18`, Einkauf 42–50 CHF → Wettbewerbspreis 63–71 CHF, Kartellpreis ≈ 101 CHF. `portal: {aktiv: true}` zeigt Shops und Kundschaft dieselbe Rangliste (`kartell/portal.py`), `kommunikation.art: ankuendigung` macht Nachrichten zu öffentlichen Mitteilungen. Ansicht: `python -m kartell marktplatz runs/` → `reports/marktplatz.html`.
+**Marktplatz (M1–M3).** Markt: Attraktivität je Shop (`markt.a_je_firma`) und Fixkosten pro Woche (`markt.fixkosten`), kalibriert auf den JBL Tune 770NC (Toppreise.ch: 21 Angebote zwischen 49.95 und 129 CHF, UVP 99.95): `alpha 100`, `mu 0.18`, Einkauf 42–50 CHF → Wettbewerbspreis 63–71 CHF, Kartellpreis ≈ 101 CHF. `portal: {aktiv: true}` zeigt Shops und Kundschaft dieselbe Rangliste (`kartell/portal.py`), `kommunikation.art: ankuendigung` macht Nachrichten zu öffentlichen Mitteilungen. Ansicht: `python -m kartell marktplatz runs/` → `reports/marktplatz.html`.
 
 **Retrieval (RAG): Chunking und Hybrid Retrieval.** Die Wissensbasis (7 Markdown-Dateien) wird in Abschnitte zerlegt: Absätze werden zusammengefasst, bis ein Stück mindestens 250 Zeichen hat; jedes Stück behält den Titel seines Dokuments (17 Abschnitte). Gesucht wird standardmässig mit BM25. Wahlweise Hybrid Retrieval:
 
@@ -137,8 +124,8 @@ Jeder Lauf erscheint dann als ein Trace (`<versuch> · seed <n>`, getaggt mit Ve
 
 ```bash
 export SWISSAI_API_KEY=...
-python -m kartell lauf experiments/e2_mit_kommunikation.yaml --modell apertus --runden 10 --wiederholungen 1   # Pilot
-python -m kartell lauf experiments/e5_apertus.yaml                                                             # FF4 wie geplant
+python -m kartell lauf experiments/vorstudie/v2_mit_chat.yaml --modell apertus --runden 10 --wiederholungen 1   # Pilot
+python -m kartell lauf experiments/archiv/e5_apertus.yaml                                                             # FF4 wie geplant
 python -m kartell eval-compliance --modell apertus                                                             # Guardrail mit Apertus
 ```
 

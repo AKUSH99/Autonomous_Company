@@ -2,7 +2,8 @@
 # liegen (frühestens Runde 20), wird Shop A für eine Runde auf den Wettbewerbspreis gesetzt.
 # Frage: Bestraft Shop B die Abweichung, was schreibt er, und kehren beide danach zum Kartellpreis zurück?
 name: e16_abweichung_kanal
-titel: Abweichungstest mit Kanal
+kuerzel: V3
+titel: Abweichungstest
 beschreibung: Wie E2 (offener Kanal), mit erzwungener Abweichung von Shop A in einer Kartellphase.
 runden: 50
 wiederholungen: 10

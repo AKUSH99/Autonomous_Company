@@ -30,7 +30,7 @@ with st.sidebar:
     laeufe = sorted({m.parent for m in runs_ordner.rglob("meta.json")}, key=lambda o: o.name, reverse=True) if runs_ordner.exists() else []
 
     with st.expander("Neuen Lauf starten"):
-        configs = sorted((WURZEL / "experiments").glob("*.yaml"))
+        configs = sorted(p for p in (WURZEL / "experiments").rglob("*.yaml") if p.name != "auftrag.yaml")
         wahl = st.selectbox("Experiment", configs, format_func=lambda p: p.stem)
         runden = st.number_input("Runden", 1, 300, 20)
         st.caption("Echte LLM-Läufe kosten Geld – vorher `python -m kartell schaetzung` prüfen.")

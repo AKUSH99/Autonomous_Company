@@ -55,7 +55,7 @@ def _lauf(args) -> None:
 def _demo(args) -> None:
     from .runner import fuehre_lauf_aus
     print("Offline-Demo mit festen Skript-Strategien (kein LLM, kein API-Schlüssel nötig).\n")
-    for datei in ("experiments/demo_absprache_ohne_aufsicht.yaml", "experiments/demo_absprache_mit_filter.yaml"):
+    for datei in ("experiments/demo/demo_absprache_ohne_aufsicht.yaml", "experiments/demo/demo_absprache_mit_filter.yaml"):
         fuehre_lauf_aus(lade_config(datei), 1, args.ausgabe)
 
 

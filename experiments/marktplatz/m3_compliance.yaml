@@ -7,8 +7,9 @@
 # Diese Bedingung: Mitteilungen wie E27, aber jede wird vor der Veröffentlichung vom Compliance-Agenten geprüft
 # (Regeln + RAG + LLM), dazu die Marktbeobachtung auf Preismuster.
 name: e28_marktplatz_compliance
-titel: Marktplatz, Compliance
-beschreibung: Wie E27, aber Mitteilungen werden vor der Veröffentlichung geprüft; Marktbeobachtung aktiv.
+kuerzel: M3
+titel: Mitteilungen + Compliance
+beschreibung: Wie M2, aber Mitteilungen werden vor der Veröffentlichung geprüft; Marktbeobachtung aktiv.
 produkt: Bluetooth-Kopfhörer JBL Tune 770NC (Over-Ear, Noise-Cancelling)
 runden: 30
 wiederholungen: 2

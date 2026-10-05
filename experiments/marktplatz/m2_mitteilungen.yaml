@@ -6,8 +6,9 @@
 # Die Kundschaft (40 Personen mit Budget und Gewohnheiten) und die Shops sehen dasselbe Vergleichsportal.
 # Diese Bedingung: zusätzlich öffentliche Mitteilungen auf der Angebotsseite (Kundschaft und Konkurrenz lesen mit).
 name: e27_marktplatz_mitteilungen
-titel: Marktplatz, Mitteilungen
-beschreibung: Wie E26, dazu öffentliche Mitteilungen der Shops im Portal.
+kuerzel: M2
+titel: Öffentliche Mitteilungen
+beschreibung: Wie M1, dazu öffentliche Mitteilungen der Shops im Portal.
 produkt: Bluetooth-Kopfhörer JBL Tune 770NC (Over-Ear, Noise-Cancelling)
 runden: 30
 wiederholungen: 2

@@ -5,7 +5,7 @@ from kartell.graph import Simulation
 
 
 def test_abweichung_erst_nach_stabiler_kartellphase_und_nur_einmal():
-    cfg = lade_config("experiments/demo_absprache_ohne_aufsicht.yaml")  # Skript-Agenten gehen gemeinsam auf den Kartellpreis
+    cfg = lade_config("experiments/demo/demo_absprache_ohne_aufsicht.yaml")  # Skript-Agenten gehen gemeinsam auf den Kartellpreis
     cfg.runden = 16
     cfg.abweichung.aktiv, cfg.abweichung.ab_runde, cfg.abweichung.bis_runde = True, 8, 12
     sim = Simulation(cfg)
@@ -19,7 +19,7 @@ def test_abweichung_erst_nach_stabiler_kartellphase_und_nur_einmal():
 
 
 def test_ohne_kartellphase_keine_abweichung():
-    cfg = lade_config("experiments/demo_absprache_mit_filter.yaml")  # Filter blockiert Absprachen, Preise bleiben bei Nash
+    cfg = lade_config("experiments/demo/demo_absprache_mit_filter.yaml")  # Filter blockiert Absprachen, Preise bleiben bei Nash
     cfg.runden = 12
     cfg.abweichung.aktiv, cfg.abweichung.ab_runde = True, 4
     verlauf = Simulation(cfg).starte()
