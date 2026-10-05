@@ -13,7 +13,7 @@ from kartell.runner import fuehre_lauf_aus  # noqa: E402
 
 
 def test_dashboard_zeigt_lauf_mit_abweichung(tmp_path):
-    cfg = lade_config("experiments/demo_absprache_ohne_aufsicht.yaml")
+    cfg = lade_config("experiments/demo/demo_absprache_ohne_aufsicht.yaml")
     cfg.runden = 16
     cfg.abweichung.aktiv, cfg.abweichung.ab_runde, cfg.abweichung.bis_runde = True, 8, 12
     fuehre_lauf_aus(cfg, 1, tmp_path / "laeufe" / "runs", ausgabe_konsole=False)

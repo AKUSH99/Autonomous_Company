@@ -11,7 +11,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .config import ExperimentConfig, anzeigename
+import yaml
+
+from .config import VERSUCHE, ExperimentConfig, anzeigename
 from .market import LogitMarkt
 
 VORLAGE = Path(__file__).resolve().parent / "vorlagen" / "marktplatz.html"
@@ -58,9 +60,16 @@ def lade_lauf(ordner: Path) -> dict | None:
                                                 for e in r["kunden"].get("entscheide", [])]}
         daten.append(eintrag)
     titel = anzeigename(meta["name"])
+    # Aktuelle Beschreibung aus der Versuchsdatei (ältere Läufe tragen noch die alten Versuchsnummern im Text)
+    beschreibung = cfg.beschreibung
+    for datei in VERSUCHE.rglob("*.yaml"):
+        versuch = yaml.safe_load(datei.read_text(encoding="utf-8"))
+        if isinstance(versuch, dict) and versuch.get("name") and meta["name"].startswith(versuch["name"]) and versuch.get("beschreibung"):
+            beschreibung = versuch["beschreibung"]
+            break
     return {
         "titel": f"{titel} · Wiederholung {meta.get('wiederholung', 1)}",
-        "beschreibung": cfg.beschreibung,
+        "beschreibung": beschreibung,
         "produkt": cfg.produkt,
         "portal": cfg.portal.name if cfg.portal.aktiv else "Preisvergleich.ch",
         "modell": ", ".join(m.split(":", 1)[-1].split("/")[-1] for m in modelle) or "?",

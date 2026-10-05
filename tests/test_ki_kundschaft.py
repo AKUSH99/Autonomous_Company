@@ -26,7 +26,7 @@ class Panel:
 
 
 def _cfg(sieht_kanal=False):
-    cfg = lade_config("experiments/demo_absprache_ohne_aufsicht.yaml")
+    cfg = lade_config("experiments/demo/demo_absprache_ohne_aufsicht.yaml")
     cfg.runden = 3
     cfg.kundschaft.art, cfg.kundschaft.anzahl, cfg.kundschaft.sieht_kanal = "ki", 10, sieht_kanal
     return cfg
@@ -104,9 +104,9 @@ def test_kurzformen_der_shopnamen_werden_erkannt():
 def test_echter_markt_profile_und_kosten():
     from kartell.config import lade_config
     from kartell.market import LogitMarkt
-    cfg = lade_config("experiments/e24_echter_markt.yaml")
+    cfg = lade_config("experiments/archiv/e24_echter_markt.yaml")
     assert cfg.agenten.namen[:5] == [p.name for p in cfg.agenten.profile] and cfg.kundschaft.anzahl == 30
     assert not cfg.kundschaft.sieht_kanal  # den Kanal lesen nur die Shops – Werbung darin erreicht nur die Konkurrenz
     kosten = LogitMarkt(cfg.markt).kostenvektor
     assert kosten.min() == 8.5 and kosten.max() == 11.0
-    assert not lade_config("experiments/e25_echter_markt_ohne_kanal.yaml").kommunikation.aktiv
+    assert not lade_config("experiments/archiv/e25_echter_markt_ohne_kanal.yaml").kommunikation.aktiv

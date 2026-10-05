@@ -142,6 +142,7 @@ class KundschaftConfig(BaseModel):
 class ExperimentConfig(BaseModel):
     name: str
     titel: str = ""  # verständlicher Name für Bericht und Präsentation, z. B. "Kanal + Filter"
+    kuerzel: str = ""  # Kurzname in der Geschichte, z. B. "M1" (Marktplatz) oder "V2" (Vorstudie); sonst aus dem Namen (E3)
     beschreibung: str = ""
     runden: int = 50
     wiederholungen: int = 3
@@ -186,12 +187,13 @@ VERSUCHE = Path(__file__).resolve().parent.parent / "experiments"
 
 
 @lru_cache(maxsize=1)
-def _titel_der_versuche() -> dict[str, str]:
+def _titel_der_versuche() -> dict[str, tuple[str, str]]:
+    """name -> (titel, kuerzel) aus allen Versuchsdateien (auch in marktplatz/, vorstudie/, archiv/)."""
     titel = {}
-    for datei in VERSUCHE.glob("*.yaml"):
+    for datei in VERSUCHE.rglob("*.yaml"):
         daten = yaml.safe_load(datei.read_text(encoding="utf-8"))
         if isinstance(daten, dict) and daten.get("name") and daten.get("titel"):
-            titel[daten["name"]] = daten["titel"]
+            titel[daten["name"]] = (daten["titel"], daten.get("kuerzel", ""))
     return titel
 
 
@@ -200,13 +202,13 @@ def anzeigename(name: str, titel: str = "") -> str:
 
     Ohne `titel` (ältere Läufe) wird er aus experiments/*.yaml nachgeschlagen; ein eigener Richter bleibt sichtbar.
     """
-    if not titel:
-        passend = [n for n in _titel_der_versuche() if name == n or name.startswith(n + "_")]
-        titel = _titel_der_versuche()[max(passend, key=len)] if passend else ""
+    passend = [n for n in _titel_der_versuche() if name == n or name.startswith(n + "_")]
+    gefunden_titel, kurz_name = _titel_der_versuche()[max(passend, key=len)] if passend else ("", "")
+    titel = titel or gefunden_titel
     if not titel:
         return name
-    kuerzel = name.split("_")[0]
-    text = f"{kuerzel.upper()} · {titel}" if re.fullmatch(r"e\d+", kuerzel) else titel
+    kuerzel = kurz_name or name.split("_")[0]
+    text = f"{kuerzel.upper()} · {titel}" if kurz_name or re.fullmatch(r"e\d+", kuerzel) else titel
     return text + (f" · Richter {name.split('_richter-', 1)[1]}" if "_richter-" in name else "")
 
 

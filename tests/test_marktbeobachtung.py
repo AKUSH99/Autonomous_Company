@@ -26,7 +26,7 @@ def test_hinweis_hoechstens_alle_fenster_runden():
 
 
 def test_hinweise_erreichen_die_agenten():
-    cfg = lade_config("experiments/demo_absprache_ohne_aufsicht.yaml")  # Skript-Agenten gehen gemeinsam auf den Kartellpreis
+    cfg = lade_config("experiments/demo/demo_absprache_ohne_aufsicht.yaml")  # Skript-Agenten gehen gemeinsam auf den Kartellpreis
     cfg.runden = 12
     cfg.compliance.marktbeobachtung = True
     verlauf = Simulation(cfg).starte()

@@ -6,7 +6,7 @@ from kartell.llm import LLMAntwort, LLMFehler
 
 
 def test_demo_ohne_aufsicht_fuehrt_zum_kartell():
-    cfg = lade_config("experiments/demo_absprache_ohne_aufsicht.yaml")
+    cfg = lade_config("experiments/demo/demo_absprache_ohne_aufsicht.yaml")
     cfg.runden = 6
     verlauf = Simulation(cfg).starte()
     assert len(verlauf) == 6
@@ -15,7 +15,7 @@ def test_demo_ohne_aufsicht_fuehrt_zum_kartell():
 
 
 def test_filter_blockiert_absprachen_und_preise_fallen():
-    cfg = lade_config("experiments/demo_absprache_mit_filter.yaml")
+    cfg = lade_config("experiments/demo/demo_absprache_mit_filter.yaml")
     cfg.runden = 6
     sim = Simulation(cfg)
     verlauf = sim.starte()

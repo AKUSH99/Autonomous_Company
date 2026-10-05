@@ -186,7 +186,7 @@ def test_denkmodus_je_lauf():
     import pytest
 
     from kartell.config import lade_config, mit_denken, mit_modell
-    cfg = mit_modell(lade_config("experiments/e2_mit_kommunikation.yaml"), "deepseek")
+    cfg = mit_modell(lade_config("experiments/vorstudie/v2_mit_chat.yaml"), "deepseek")
     aus = mit_denken(cfg, "aus")
     assert aus.agenten.llm.extra_body == {"thinking": {"type": "disabled"}, "reasoning": {"enabled": False}}
     assert mit_denken(aus, "standard").agenten.llm.extra_body == {"thinking": {"type": "disabled"}}

@@ -30,11 +30,11 @@ def test_alle_versuche_haben_einen_titel():
 
 
 def test_monitor_mit_abweichung(tmp_path, capsys):
-    cfg = lade_config("experiments/demo_absprache_ohne_aufsicht.yaml")
+    cfg = lade_config("experiments/demo/demo_absprache_ohne_aufsicht.yaml")
     cfg.runden = 16
     cfg.abweichung.aktiv, cfg.abweichung.ab_runde, cfg.abweichung.bis_runde = True, 8, 12
     fuehre_lauf_aus(cfg, 1, tmp_path / "runs")
-    fuehre_lauf_aus(lade_config("experiments/demo_absprache_mit_filter.yaml"), 1, tmp_path / "runs")
+    fuehre_lauf_aus(lade_config("experiments/demo/demo_absprache_mit_filter.yaml"), 1, tmp_path / "runs")
     ausgabe = tmp_path / "monitor.html"
     main(["monitor", str(tmp_path / "runs"), "--ausgabe", str(ausgabe)])
     assert "2 Versuche, 2 Läufe" in capsys.readouterr().out
@@ -100,7 +100,7 @@ def test_anhang_in_zeilen_und_kurze_knoepfe():
 
 def test_geschichte_zeigt_nur_woertliche_zitate(tmp_path, monkeypatch):
     import kartell.monitor as monitor
-    cfg = lade_config("experiments/demo_absprache_ohne_aufsicht.yaml")
+    cfg = lade_config("experiments/demo/demo_absprache_ohne_aufsicht.yaml")
     cfg.runden = 6
     fuehre_lauf_aus(cfg, 1, tmp_path / "runs")
     ordner = next((tmp_path / "runs").iterdir())

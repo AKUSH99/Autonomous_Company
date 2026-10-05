@@ -53,7 +53,7 @@ def test_auswertung_gegen_konsens():
 def test_sammeln_liest_filterurteile_aus_laeufen(tmp_path):
     from kartell.config import lade_config
     from kartell.runner import fuehre_lauf_aus
-    for datei in ("experiments/demo_absprache_mit_filter.yaml", "experiments/demo_absprache_ohne_aufsicht.yaml"):
+    for datei in ("experiments/demo/demo_absprache_mit_filter.yaml", "experiments/demo/demo_absprache_ohne_aufsicht.yaml"):
         cfg = lade_config(datei)
         cfg.runden = 2
         fuehre_lauf_aus(cfg, 1, tmp_path, ausgabe_konsole=False)

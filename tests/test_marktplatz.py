@@ -14,7 +14,7 @@ from kartell.portal import als_text, eintraege, letzte_mitteilungen
 
 def test_kalibrierung_auf_echte_preise():
     """Wettbewerbspreis wie heutige günstige Angebote (60–90 CHF), Kartellpreis rund um die UVP von 99.95 CHF."""
-    b = LogitMarkt(lade_config("experiments/e26_marktplatz.yaml").markt).benchmarks()
+    b = LogitMarkt(lade_config("experiments/marktplatz/m1_nur_portal.yaml").markt).benchmarks()
     assert 60 < min(b.nash_preise) and max(b.nash_preise) < 75
     assert 95 < b.monopol_preis < 105
 
@@ -39,7 +39,7 @@ def test_fixkosten_senken_nur_den_gewinn():
 
 
 def test_portal_rangliste():
-    cfg = lade_config("experiments/e27_marktplatz_mitteilungen.yaml")
+    cfg = lade_config("experiments/marktplatz/m2_mitteilungen.yaml")
     profile = {f.name: f for f in cfg.agenten.profile}
     liste = eintraege({"Audiophil AG": 99.0, "PreisPilot.ch": 69.9, "MediaPlus": 79.0}, profile,
                       letzte_mitteilungen([{"von": "MediaPlus", "text": "alt"}, {"von": "MediaPlus", "text": "Gratis-Versand"}]))
@@ -76,7 +76,7 @@ class _Panel:
 
 def test_marktplatz_runde_mit_portal_und_mitteilungen(monkeypatch):
     from kartell.agents import kundschaft
-    cfg = lade_config("experiments/e27_marktplatz_mitteilungen.yaml")
+    cfg = lade_config("experiments/marktplatz/m2_mitteilungen.yaml")
     cfg.runden, cfg.kundschaft.anzahl = 2, 12
     panel = _Panel()
     monkeypatch.setattr(kundschaft, "erstelle_client", lambda spec: panel)
@@ -106,7 +106,7 @@ def test_marktplatz_ansicht(tmp_path):
 
     from kartell.marktplatz_ansicht import baue
     from kartell.runner import fuehre_experiment_aus
-    cfg = lade_config("experiments/e27_marktplatz_mitteilungen.yaml")
+    cfg = lade_config("experiments/marktplatz/m2_mitteilungen.yaml")
     cfg.runden, cfg.wiederholungen = 3, 1
     cfg.agenten.llm = LLMSpec(provider="scripted", model="unterbieten")
     cfg.kundschaft.art = "formel"
