@@ -1,7 +1,7 @@
 """Suche in den Kursunterlagen: BM25 (exakte Begriffe wie «Pitch Deck», «KW 48») und, wenn verfügbar, Embeddings
 (Umschreibungen wie «Wann muss ich präsentieren?»), verbunden mit Reciprocal Rank Fusion. Optional nur in einem Modul.
 
-Embeddings kommen von der Swiss AI Platform (Qwen3-Embedding-8B) und werden in <daten>/embeddings.json gespeichert,
+Embeddings kommen von der Swiss AI Platform (Qwen3-Embedding-8B) und werden in <daten>/embeddings.npz gespeichert,
 damit die Unterlagen nur einmal eingebettet werden. Ohne Schlüssel oder Netz bleibt es bei BM25.
 """
 from __future__ import annotations
@@ -52,14 +52,21 @@ class BM25:
 
 
 def swissai_einbetter(cache: Path, stapel: int = 32) -> Callable[[list[str]], list[list[float]]] | None:
-    """Embeddings über die Swiss AI Platform mit Cache; None ohne Schlüssel."""
+    """Embeddings über die Swiss AI Platform mit Cache (NumPy, float16 – klein und schnell geladen); None ohne Schlüssel."""
     if not os.environ.get("SWISSAI_API_KEY"):
         return None
+    import numpy as np
     import openai
 
     from .konfig import EMBEDDING_MODELL, SWISSAI_URL
     client = openai.OpenAI(base_url=SWISSAI_URL, api_key=os.environ["SWISSAI_API_KEY"], max_retries=6)
-    gespeichert: dict[str, list[float]] = json.loads(cache.read_text(encoding="utf-8")) if cache.exists() else {}
+    cache = cache.with_suffix(".npz")
+    gespeichert: dict[str, list[float]] = {}
+    if cache.exists():
+        with np.load(cache) as d:
+            gespeichert = dict(zip(d["schluessel"].tolist(), d["vektoren"].astype(np.float32).tolist()))
+    elif cache.with_suffix(".json").exists():  # alter Cache
+        gespeichert = json.loads(cache.with_suffix(".json").read_text(encoding="utf-8"))
     schluessel = lambda t: hashlib.sha1(f"{EMBEDDING_MODELL}\n{t}".encode()).hexdigest()
 
     def einbetten(texte: list[str]) -> list[list[float]]:
@@ -69,9 +76,9 @@ def swissai_einbetter(cache: Path, stapel: int = 32) -> Callable[[list[str]], li
             antwort = client.embeddings.create(model=EMBEDDING_MODELL, input=teil)
             for t, d in zip(teil, sorted(antwort.data, key=lambda d: d.index)):
                 gespeichert[schluessel(t)] = d.embedding
-        if fehlend:
+        if fehlend or not cache.exists():
             cache.parent.mkdir(parents=True, exist_ok=True)
-            cache.write_text(json.dumps(gespeichert), encoding="utf-8")
+            np.savez(cache, schluessel=np.array(list(gespeichert)), vektoren=np.array(list(gespeichert.values()), dtype=np.float16))
         return [gespeichert[schluessel(t)] for t in texte]
 
     return einbetten
