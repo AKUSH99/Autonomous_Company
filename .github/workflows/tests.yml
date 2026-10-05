@@ -28,8 +28,9 @@ jobs:
           cache: pip
       - run: pip install -e ".[dev]"
       - run: python -m pytest -q
-      - name: Offline-Demo und Monitor
+      - name: Befehlszeile ohne Netz (Einlesen der Beispieldokumente, Suche ohne Sprachmodell)
+        env:
+          STUDIENASSISTENT_DATEN: ${{ runner.temp }}/daten
         run: |
-          python -m kartell demo --ausgabe runs
-          python -m kartell bericht runs --ausgabe reports
-          python -m kartell monitor runs --ausgabe reports/monitor.html
+          python -m studienassistent einlesen tests/daten
+          python -m studienassistent bewerten --nur-suche --testset evaluation/fragen.jsonl
