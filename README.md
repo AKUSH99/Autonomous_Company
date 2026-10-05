@@ -32,11 +32,26 @@ flowchart LR
 | Use Case & Nutzer | Studierende im BAI; Fragen zu Modulen, Prüfungen, Abgaben, Fristen und Regeln |
 | System-Prompt | Rolle, heutiges Datum, Regeln: erst suchen, Quelle nennen, nichts erfinden, keine Abgaben schreiben |
 | Modell | Swiss AI Research Platform: DeepSeek V4.1 Flash, wahlweise Apertus oder GLM-5.3, optional Reasoning |
-| Tools | `unterlagen_durchsuchen`, `fristen_anzeigen`, `module_auflisten` (Function Calling) |
+| Tools | `unterlagen_durchsuchen`, `fristen_anzeigen`, `module_auflisten` (Function Calling), zusätzlich als MCP-Server |
 | Wissen & Memory | Kursunterlagen in Abschnitte zerlegt, Hybrid-Suche (BM25 + Embeddings, Reciprocal Rank Fusion), Gesprächsgedächtnis pro Chat |
 | Orchestrierung | LangGraph: Prüfung → Agent ⇄ Werkzeuge |
 | Interface | Chat im Browser (Streamlit), mit aufklappbaren Fundstellen |
 | Testing & Evaluation | Testset mit echten Fragen und bekannten Antworten, automatische Tests ohne Netz, LangSmith-Tracing (einschalten mit `LANGSMITH_TRACING=true` und `LANGSMITH_API_KEY`) |
+
+## Evaluation
+
+22 Testfragen aus den echten Unterlagen von sieben Modulen (Termine, Regeln, Inhalte), davon drei ohne Studienbezug,
+die abgelehnt werden sollen (`evaluation/fragen.jsonl`). DeepSeek V4.1 Flash, ohne Reasoning, 05.10.2026:
+
+| Kennzahl | Ergebnis | Fragen |
+|---|---|---|
+| Richtige Quelle unter den ersten 5 Treffern | 100 % | 14 |
+| Antwort enthält die erwarteten Fakten | 100 % | 18 |
+| Richtig abgelehnt bzw. beantwortet | 100 % | 22 |
+
+Was die Evaluation verbessert hat: Datumsangaben werden vereinheitlicht («12.10.» = «12. Oktober», vorher 93 % bei
+der Quelle), und das Suchwerkzeug liefert 8 statt 5 Stellen – die Teamgrösse («Teams aus 3 Studierenden, max. 4»)
+fand nur die Bedeutungssuche, und zwar auf Rang 7.
 
 ## Ausprobieren
 
@@ -47,6 +62,7 @@ python -m studienassistent einlesen <Ordner mit Unterlagen> --fristen fristen.js
 python -m studienassistent frage "Wann ist die GenAI-Präsentation?" --quellen
 python -m studienassistent app                              # Chat im Browser
 python -m studienassistent bewerten                         # Evaluation mit evaluation/fragen.jsonl
+python -m studienassistent mcp                              # Werkzeuge als MCP-Server (z. B. für Claude Desktop)
 pytest                                                      # Tests ohne Netz und ohne Schlüssel
 ```
 

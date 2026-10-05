@@ -111,10 +111,10 @@ verglichen. Die Tests in `tests/` laufen ohne Netz mit einem simulierten Sprachm
 |---|---|---|
 | KW 41 (05.10.) | Gruppenbildung, Use Case, Evaluationskriterien | diese Skizze; **Rollen eintragen** |
 | KW 42 (12.10.) | erste lauffähige Version, Tracing | lauffähig (Chat, CLI, Tests) |
-| KW 43 (19.10.) | MCP-Server anbinden | geplant |
+| KW 43 (19.10.) | MCP-Server anbinden | umgesetzt (`python -m studienassistent mcp`) |
 | KW 44 (26.10.) | RAG, Chunking, Hybrid Retrieval | umgesetzt; Feinschliff nach Evaluation |
 | KW 46 (09.11.) | Memory festlegen | Gesprächsgedächtnis umgesetzt |
-| KW 47 (16.11.) | Safeguarding, Evaluation | Guardrail und Testset umgesetzt; Testset ausbauen |
+| KW 47 (16.11.) | Safeguarding, Evaluation | Guardrail und Testset umgesetzt (22 Fragen, alle Kennzahlen 100 %); Testset ausbauen, Modelle vergleichen |
 | KW 48 (23.11.) | Abschlusspräsentation | Live-Demo im Chat |
 
 ## 9. Arbeitsteilung
