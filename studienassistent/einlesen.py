@@ -2,7 +2,9 @@
 
     python -m studienassistent einlesen <Ordner> [<Ordner> …]
 
-Das Modul ist der erste Ordner unterhalb des angegebenen Ordners (bei Teams-Ablagen: der Team-Ordner). Jede Seite bzw.
+Das Modul ist der erste Ordner unterhalb des angegebenen Ordners (bei Teams- und Moodle-Ablagen: der Team- bzw.
+Kurs-Ordner). Mit `--module module.json` werden Ordnernamen auf saubere Modulnamen abgebildet und alles andere
+weggelassen, z. B. {"Generative KI": ["Generative KI"], "Marketing": ["Marketing-Modul"]}. Jede Seite bzw.
 Folie wird in Abschnitte von etwa 900 Zeichen zerlegt (mit Überlappung), damit Treffer genau zitiert werden können.
 Ergebnis: <daten>/abschnitte.jsonl
 """
@@ -80,19 +82,30 @@ def zerlegen(text: str) -> list[str]:
 
 def modul_von(relativ: Path) -> str:
     teile = relativ.parts
-    if len(teile) > 2 and teile[0].lower() == "teams":
-        return teile[1].replace("_", " ")
-    return teile[0].replace("_", " ") if len(teile) > 1 else "Allgemein"
+    roh = teile[1] if len(teile) > 2 and teile[0].lower() in ("teams", "moodle") else (teile[0] if len(teile) > 1 else "Allgemein")
+    return re.sub(r"\s+", " ", roh.replace("_", " ")).strip()
 
 
-def einlesen(ordner: list[Path]) -> list[Abschnitt]:
+def zuordnen(modul: str, module: dict[str, list[str]] | None) -> str | None:
+    """Sauberer Modulname laut Zuordnung; None = nicht einlesen. Ohne Zuordnung bleibt der Ordnername."""
+    if not module:
+        return modul
+    for name, muster in module.items():
+        if any(m.casefold() in modul.casefold() for m in muster):
+            return name
+    return None
+
+
+def einlesen(ordner: list[Path], module: dict[str, list[str]] | None = None) -> list[Abschnitt]:
     abschnitte: list[Abschnitt] = []
     for wurzel in ordner:
         for pfad in sorted(Path(wurzel).rglob("*")):
             if not pfad.is_file() or pfad.suffix.lower() not in ENDUNGEN or pfad.name.endswith(".provenance.json"):
                 continue
             relativ = pfad.relative_to(wurzel)
-            modul = modul_von(relativ)
+            modul = zuordnen(modul_von(relativ), module)
+            if modul is None:
+                continue
             seiten = seiten_lesen(pfad)
             for nr, text in enumerate(seiten, 1):
                 for k, teil in enumerate(zerlegen(text)):

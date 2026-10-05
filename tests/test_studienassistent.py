@@ -85,3 +85,8 @@ def test_pruefung_lehnt_themen_ohne_studienbezug_ab():
 def test_fakten_vergleich():
     assert fakten_ok("Abgabe am 20. Dezember 2026", [["20.12", "20. Dezember"]])
     assert not fakten_ok("Abgabe im Dezember", ["20.12"])
+
+
+def test_module_zuordnen_und_weglassen():
+    abschnitte = einlesen([DATEN], {"GenAI": ["Generative"]})
+    assert {a.modul for a in abschnitte} == {"GenAI"}  # Marketing ist nicht zugeordnet und fällt weg

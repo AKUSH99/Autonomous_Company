@@ -34,7 +34,9 @@ def lade_alles(modell_name: str = "deepseek", denken: bool = False):
 def _einlesen(args) -> None:
     from .einlesen import einlesen, speichern
     d = daten_ordner()
-    abschnitte = einlesen([Path(o) for o in args.ordner])
+    import json
+    module = json.loads(Path(args.module).read_text(encoding="utf-8")) if args.module else None
+    abschnitte = einlesen([Path(o) for o in args.ordner], module)
     speichern(abschnitte, d / "abschnitte.jsonl")
     if args.fristen:
         shutil.copy(args.fristen, d / "fristen.json")
@@ -74,6 +76,7 @@ def main() -> int:
     s = sub.add_parser("einlesen", help="Kursunterlagen einlesen (PDF, PowerPoint, Word, Markdown)")
     s.add_argument("ordner", nargs="+")
     s.add_argument("--fristen", help="JSON-Liste mit Terminen (z. B. deadline-overview.json des Studienarchivs)")
+    s.add_argument("--module", help="JSON: {Modulname: [Teil des Ordnernamens, …]} – saubere Namen, Rest weglassen")
     s.set_defaults(fn=_einlesen)
     for name, fn, hilfe in (("frage", _frage, "eine Frage stellen"), ("bewerten", _bewerten, "Evaluation mit Testfragen")):
         s = sub.add_parser(name, help=hilfe)
