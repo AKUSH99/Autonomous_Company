@@ -78,22 +78,28 @@ def swissai_einbetter(cache: Path, stapel: int = 32):
             gespeichert = dict(zip(d["schluessel"].tolist(), d["vektoren"]))
     schluessel = lambda t: hashlib.sha1(f"{EMBEDDING_MODELL}\n{t}".encode()).hexdigest()
 
-    def sichern():
+    def sichern():  # erst in eine Hilfsdatei, dann umbenennen: nie eine halb geschriebene Datei
         cache.parent.mkdir(parents=True, exist_ok=True)
-        np.savez(cache, schluessel=np.array(list(gespeichert)), vektoren=np.stack(list(gespeichert.values())))
+        hilfe = cache.with_name(f"{cache.stem}.{os.getpid()}.tmp.npz")
+        np.savez(hilfe, schluessel=np.array(list(gespeichert)), vektoren=np.stack(list(gespeichert.values())))
+        os.replace(hilfe, cache)
 
-    def einbetten(texte: list[str]) -> np.ndarray:
+    def einbetten(texte: list[str], merken: bool = True) -> np.ndarray:
+        """`merken=False` für Suchanfragen: nur die Unterlagen kommen in den Cache."""
+        neu: dict[str, np.ndarray] = {}
         fehlend = [t for t in dict.fromkeys(texte) if schluessel(t) not in gespeichert]
         for nr, start in enumerate(range(0, len(fehlend), stapel), 1):
             teil = fehlend[start:start + stapel]
             antwort = client.embeddings.create(model=EMBEDDING_MODELL, input=teil)
             for t, d in zip(teil, sorted(antwort.data, key=lambda d: d.index)):
-                gespeichert[schluessel(t)] = np.asarray(d.embedding, dtype=np.float16)
-            if nr % 20 == 0:
-                sichern()
-        if fehlend:
+                neu[schluessel(t)] = np.asarray(d.embedding, dtype=np.float16)
+            if merken:
+                gespeichert.update(neu)
+                if nr % 20 == 0:
+                    sichern()
+        if merken and fehlend:
             sichern()
-        m = np.stack([gespeichert[schluessel(t)] for t in texte]).astype(np.float32)
+        m = np.stack([neu.get(schluessel(t), gespeichert.get(schluessel(t))) for t in texte]).astype(np.float32)
         return m / np.maximum(np.linalg.norm(m, axis=1, keepdims=True), 1e-9)
 
     return einbetten
@@ -118,7 +124,7 @@ class Suche:
         b = self.bm25.werte(anfrage)
         listen = [sorted((i for i in erlaubt if b[i] > 0), key=lambda i: -b[i])[:30]]
         if self.vektoren is not None:
-            sim = self.vektoren[erlaubt] @ self.einbetten([anfrage])[0]
+            sim = self.vektoren[erlaubt] @ self.einbetten([anfrage], merken=False)[0]
             listen.append([erlaubt[j] for j in sim.argsort()[::-1][:30]])
         rrf: dict[int, float] = {}
         for liste in listen:
