@@ -95,7 +95,7 @@ def test_module_zuordnen_und_weglassen():
 def test_hybrid_suche_mit_embeddings():
     import numpy as np
 
-    def einbetten(texte):  # Spielzeug-Embedding: Buchstabenhäufigkeiten, normiert
+    def einbetten(texte, merken=True):  # Spielzeug-Embedding: Buchstabenhäufigkeiten, normiert
         m = np.array([[t.lower().count(c) for c in "abcdefghijklmnopqrstuvwxyzäöü"] for t in texte], dtype=np.float32)
         return m / np.maximum(np.linalg.norm(m, axis=1, keepdims=True), 1e-9)
 
