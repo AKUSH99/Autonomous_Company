@@ -20,6 +20,10 @@ from .base import MAX_WERKZEUG_RUNDEN, LLMAntwort, LLMFehler, T, Werkzeug, fuehr
 
 
 def _json_aus_text(text: str) -> dict:
+    # Denk-Modelle ohne Reasoning-Parser auf dem Server schreiben ihre Überlegungen in <think>…</think> vor die Antwort
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.S)
+    if "<think>" in text:
+        text = text.split("<think>")[0]
     text = text.strip()
     block = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.S)
     if block:

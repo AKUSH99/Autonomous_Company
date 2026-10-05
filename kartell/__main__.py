@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from .config import DENKEN, DENKEN_MAXIMAL_ERSATZ, OPENROUTER_URL, ComplianceConfig, LLMSpec, kurz, lade_config, mit_denken, mit_modell, voreinstellung
+from .config import DENKEN, DENKEN_MAXIMAL_ERSATZ, OPENROUTER_URL, SWISSAI_URL, ComplianceConfig, LLMSpec, kurz, lade_config, mit_denken, mit_modell, voreinstellung
 
 
 def _lade(args):
@@ -318,7 +318,7 @@ def _auftrag(args) -> None:
         if auftrag.get("nur_gratis"):
             _pruefe_gratis(s, berichte)
     stufen = {e.get("denken", auftrag.get("denken")) for e in auftrag.get("laeufe", [])} | {auftrag.get("denken")}
-    if "maximal" in stufen:
+    if "maximal" in stufen and spec.base_url != SWISSAI_URL:  # Swiss AI kennt keine Stufen (siehe mit_denken)
         DENKEN["maximal"] = {"reasoning": {"effort": _denkstufe_pruefen(spec)}}
     waechter = None
     if auftrag.get("budget_usd"):

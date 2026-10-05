@@ -66,3 +66,17 @@ def test_plattformen_des_moduls(monkeypatch):
     assert kurz("apertus") == "apertus"
     with pytest.raises(ValueError):
         voreinstellung("swissai:")
+
+
+def test_maximales_denken_auf_swiss_ai():
+    from kartell.config import mit_denken
+    cfg = mit_modell(lade_config("experiments/marktplatz/m3_geheimer_chat.yaml"), "swissai:CSCS-Inference/zai-org/GLM-5.3")
+    voll = mit_denken(cfg, "maximal")
+    assert voll.agenten.llm.extra_body["chat_template_kwargs"] == {"thinking": True, "enable_thinking": True}
+    assert voll.agenten.llm.max_tokens == 32000 and "reasoning" not in voll.agenten.llm.extra_body
+    assert mit_denken(cfg, "aus").agenten.llm.extra_body["chat_template_kwargs"]["thinking"] is False
+
+
+def test_antwort_mit_ueberlegungen_wird_geparst():
+    from kartell.llm.openai_compat import _json_aus_text
+    assert _json_aus_text('<think>Soll ich {"preis": 99} nehmen? Nein.</think>\n{"preis": 69.9}') == {"preis": 69.9}
