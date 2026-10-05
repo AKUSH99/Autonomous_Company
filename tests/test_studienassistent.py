@@ -109,3 +109,15 @@ def test_taktbremse_wartet_erst_am_limit():
     b = Taktbremse(pro_minute=3)
     assert [b.warten() for _ in range(3)] == [0.0, 0.0, 0.0]  # die ersten drei sofort
     assert 59 < b.warten() <= 60.1                             # die vierte erst, wenn die erste aus dem Fenster fällt
+
+
+def test_fragen_live_liefert_werkzeug_und_ergebnis():
+    from studienassistent.agent import fragen_live
+    modell = FakeModell(antworten=[
+        AIMessage("", tool_calls=[{"name": "unterlagen_durchsuchen", "args": {"frage": "Präsentation"}, "id": "1"}]),
+        AIMessage("Am 23.11.2026 (Quelle: Generative KI · semesterprogramm.md)."),
+    ], gesehen=[])
+    graph = baue_agent(modell, Suche(einlesen([DATEN])), Fristen([]))
+    ereignisse = list(fragen_live(graph, "Wann ist die GenAI-Präsentation?", "live"))
+    assert ereignisse[-1][0] == "fertig" and "23.11.2026" in ereignisse[-1][1]["antwort"]
+    assert ereignisse[-1][1]["werkzeuge"] == ["unterlagen_durchsuchen"]

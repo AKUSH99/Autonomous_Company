@@ -71,12 +71,32 @@ def baue_agent(modell, suche: Suche, fristen: Fristen, heute: dt.date | None = N
     return g.compile(checkpointer=gedaechtnis or MemorySaver())
 
 
-def fragen(graph, text: str, thread_id: str = "standard") -> dict:
-    """Eine Frage stellen; gibt Antwort und die genutzten Quellen-Auszüge zurück."""
-    vorher = len(graph.get_state({"configurable": {"thread_id": thread_id}}).values.get("messages", []))
-    ende = graph.invoke({"messages": [("user", text)]}, config={"configurable": {"thread_id": thread_id}, "recursion_limit": 12})
-    neu = ende["messages"][vorher:]
+def _ergebnis(werte: dict, vorher: int) -> dict:
+    neu = werte["messages"][vorher:]
     quellen = [m.content for m in neu if getattr(m, "type", "") == "tool"]
     aufrufe = [c["name"] for m in neu if getattr(m, "tool_calls", None) for c in m.tool_calls]
-    return {"antwort": ende["messages"][-1].content, "quellen": quellen, "werkzeuge": aufrufe,
-            "abgelehnt": not ende.get("erlaubt", True)}
+    return {"antwort": werte["messages"][-1].content, "quellen": quellen, "werkzeuge": aufrufe,
+            "abgelehnt": not werte.get("erlaubt", True)}
+
+
+def fragen(graph, text: str, thread_id: str = "standard") -> dict:
+    """Eine Frage stellen; gibt Antwort und die genutzten Quellen-Auszüge zurück."""
+    konfig = {"configurable": {"thread_id": thread_id}, "recursion_limit": 12}
+    vorher = len(graph.get_state(konfig).values.get("messages", []))
+    return _ergebnis(graph.invoke({"messages": [("user", text)]}, config=konfig), vorher)
+
+
+def fragen_live(graph, text: str, thread_id: str = "standard"):
+    """Wie fragen(), aber als Generator für die Chat-Oberfläche: liefert ("text", Stück) während die Antwort entsteht,
+    ("werkzeug", Name) wenn der Agent sucht, und zum Schluss ("fertig", Ergebnis wie bei fragen())."""
+    konfig = {"configurable": {"thread_id": thread_id}, "recursion_limit": 12}
+    vorher = len(graph.get_state(konfig).values.get("messages", []))
+    for stueck, meta in graph.stream({"messages": [("user", text)]}, config=konfig, stream_mode="messages"):
+        if meta.get("langgraph_node") != "agent":
+            continue
+        for aufruf in getattr(stueck, "tool_call_chunks", None) or []:
+            if aufruf.get("name"):
+                yield "werkzeug", aufruf["name"]
+        if isinstance(stueck.content, str) and stueck.content:
+            yield "text", stueck.content
+    yield "fertig", _ergebnis(graph.get_state(konfig).values, vorher)
