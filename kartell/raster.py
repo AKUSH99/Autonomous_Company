@@ -6,7 +6,7 @@ vorab einmal gerechnet. Die Seite zeigt dann beim Verstellen sofort den passende
     python -m kartell raster --liste                          # alle Zellen
     python -m kartell raster --rechne --fertig fertig.txt --minuten 320 --ausgabe raster_runs
 
-Die Zellen kommen in einer festen Reihenfolge (zuerst 6 Shops ohne Ereignis, dann der Rest), fertige werden
+Die Zellen kommen in einer festen Reihenfolge (zuerst alle Ereignisse mit 6 Shops, dann 2, dann 10), fertige werden
 übersprungen. So kann der GitHub-Workflow «Raster rechnen» in mehreren Etappen weitermachen.
 """
 from __future__ import annotations
@@ -44,9 +44,9 @@ MODELL = "swissai:RCP-AIaaS/deepseek-ai/DeepSeek-V4.1-Flash"
 
 
 def zellen() -> list[dict]:
-    """Alle Kombinationen, wichtigste zuerst (Ereignisse in der Reihenfolge von EREIGNISSE, je 6 Shops vor 2 und 10)."""
+    """Alle Kombinationen, wichtigste zuerst: alle Ereignisse mit 6 Shops, dann 2 Shops, dann 10 Shops."""
     alle = []
-    for ereignis, shops, komm, budget in itertools.product(EREIGNIS, SHOPS, KOMMUNIKATION, BUDGET):
+    for shops, ereignis, komm, budget in itertools.product(SHOPS, EREIGNIS, KOMMUNIKATION, BUDGET):
         alle.append({"id": f"s{shops}_{komm}_{budget}_{ereignis}", "shops": shops, "kommunikation": komm,
                      "budget": budget, "ereignis": ereignis})
     return alle
