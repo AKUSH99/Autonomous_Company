@@ -6,7 +6,7 @@ import uuid
 import streamlit as st
 
 from studienassistent.__main__ import lade_alles
-from studienassistent.agent import fragen
+from studienassistent.agent import fragen_live
 
 st.set_page_config(page_title="FHNW Studienassistent", page_icon="🎓")
 st.title("FHNW Studienassistent")
@@ -44,9 +44,23 @@ if frage := st.chat_input("Deine Frage zum Studium …"):
     with st.chat_message("user"):
         st.markdown(frage)
     with st.chat_message("assistant"):
-        with st.spinner("Suche in den Unterlagen …"):
-            r = fragen(graph, frage, st.session_state["thread"])
-        st.markdown(r["antwort"])
+        status, feld, text = st.empty(), st.empty(), ""
+        status.caption("Denke nach …")
+        hinweise = {"unterlagen_durchsuchen": "🔎 Durchsuche die Unterlagen …", "fristen_anzeigen": "📅 Schaue in die Fristen …",
+                    "module_auflisten": "📚 Liste die Module …"}
+        for art, inhalt in fragen_live(graph, frage, st.session_state["thread"]):
+            if art == "werkzeug":  # Zwischentext vor einer Suche verwerfen, nur die Endantwort bleibt stehen
+                status.caption(hinweise.get(inhalt, "Arbeite …"))
+                text = ""
+                feld.empty()
+            elif art == "text":
+                status.empty()
+                text += inhalt
+                feld.markdown(text + " ▌")
+            else:
+                r = inhalt
+        status.empty()
+        feld.markdown(r["antwort"])
         if r["quellen"]:
             with st.expander("Gefundene Stellen"):
                 for q in r["quellen"]:
