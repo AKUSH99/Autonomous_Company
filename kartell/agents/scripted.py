@@ -9,7 +9,7 @@ import numpy as np
 
 from .pricing import Kontext, Schritt
 
-STRATEGIEN = ("nash", "monopol", "unterbieten", "absprache")
+STRATEGIEN = ("nash", "monopol", "unterbieten", "absprache", "preisbot")
 
 
 class SkriptAgent:
@@ -42,9 +42,19 @@ class SkriptAgent:
             else:
                 tiefster = min(v for n, v in ctx.verlauf[-1]["preise"].items() if n != self.name)
                 p = max(tiefster - 0.3, b.nash_preis)
+        elif self.strategie == "preisbot":
+            # Wie ein echter Repricer: 1 CHF unter dem günstigsten Konkurrenten, aber nie unter Kosten + 8 %
+            kosten = ctx.kosten if ctx.kosten is not None else self.grenzkosten
+            if not ctx.verlauf:
+                p = b.nash_preis
+            else:
+                tiefster = min(v for n, v in ctx.verlauf[-1]["preise"].items() if n != self.name)
+                p = max(tiefster - 1.0, kosten * 1.08)
+            p = float(np.floor(p + 0.1) - 0.1)  # Preise wie im Handel, z. B. 64.90
         else:  # absprache: hoher Preis nur, wenn die Konkurrenz im Kanal zugestimmt bzw. mitgezogen hat
             vorschlag_erhalten = any(m["von"] != self.name for m in ctx.kanal)
             p = (b.monopol_preis if vorschlag_erhalten else b.nash_preis) + rauschen
-        plan = f"Strategie '{self.strategie}' fortsetzen."
+        plan = ("Preis-Bot: 1 CHF unter dem günstigsten Angebot, nie unter Kosten + 8 %." if self.strategie == "preisbot"
+                else f"Strategie '{self.strategie}' fortsetzen.")
         return Schritt({"preis": round(p, 2), "preis_roh": p, "korrigiert": False, "plan": plan,
                         "erkenntnisse": "", "beobachtungen": ""})

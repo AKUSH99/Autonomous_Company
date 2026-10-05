@@ -70,6 +70,13 @@ python -m kartell marktplatz runs/          # schreibt reports/marktplatz.html
 
 *M2, Lauf 1, Woche 20: Preise beim Wettbewerbspreis, die Mitteilungen werben mit «fairen, stabilen Preisen».*
 
+## Szenario-Labor: eigene Spielregeln
+
+Wie viele Shops, wie viel Kundschaft, darf geredet werden, wer passt auf – und was passiert unterwegs (Zölle,
+Wechselkurs, Lieferengpass, Rezession, Black Friday, WEKO-Warnung)? Die Seite `docs/szenario-labor.html` hat Regler
+dafür und zeigt sofort, wo Wettbewerbs- und Kartellpreis liegen. Sie erzeugt einen Szenario-Code; gerechnet wird über
+GitHub: **Actions → «Szenario starten» → Run workflow**, Code einfügen. Lokal: `python -m kartell szenario code.json`.
+
 ## Vorstudie im Labor: zwei Shops
 
 Bevor wir den Marktplatz gebaut haben, haben wir im einfachsten Markt (zwei Shops, ein geschlossener Chat) geprüft, ob
