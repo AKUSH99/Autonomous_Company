@@ -1,9 +1,8 @@
 # Auftrag für GitHub Actions (.github/workflows/experimente.yml).
 # Lokal: python -m kartell auftrag experiments/auftrag.yaml
 #
-# Aktuell (05.10.): M3 geheimer Chat im Marktplatz – entstehen mit einem Kanal, den nur die Shops lesen, Kartellpreise?
-# Swiss AI Research Platform, DeepSeek V4.1 Flash ohne Denkmodus, je 30 Wochen, 3 Wiederholungen.
+# Aktuell (05.10.): M3 geheimer Chat, Wiederholung 1 von 3 (die drei Wiederholungen laufen parallel auf eigenen Branches).
 modell: "swissai:RCP-AIaaS/deepseek-ai/DeepSeek-V4.1-Flash"
 zeitlimit_min: 110
 laeufe:
-  - {config: experiments/marktplatz/m3_geheimer_chat.yaml, runden: 30, wiederholungen: 3}
+  - {config: experiments/marktplatz/m3_geheimer_chat.yaml, runden: 30, wiederholungen: 1, erste_wiederholung: 1}
