@@ -1,0 +1,59 @@
+# Raster rechnen: alle Regler-Kombinationen des Marktplatzes vorab (kartell/raster.py), damit die Seite beim
+# Verstellen sofort den passenden Lauf zeigt. Rechnet in Etappen von gut 5 Stunden, sichert nach jeder Etappe in
+# den Branch «ergebnisse» (raster/<zelle>/) und startet sich selbst neu, bis alle Zellen fertig sind.
+# Start: Actions → «Raster rechnen» → Run workflow. Gleiche Warteschlange wie die Experimente (Ratenlimit).
+name: Raster rechnen
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: experimente
+  cancel-in-progress: false
+
+jobs:
+  raster:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      SWISSAI_API_KEY: ${{ secrets.SWISSAI_API_KEY || secrets.SWISSAIKEY }}
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[analyse,mcp]"
+      - name: Fertige Zellen
+        shell: bash
+        run: |
+          git fetch --depth 1 origin ergebnisse && git ls-tree -d --name-only FETCH_HEAD raster/ | sed 's#^raster/##' > fertig.txt || true
+          echo "$(wc -l < fertig.txt) Zellen schon fertig"
+      - name: Etappe rechnen
+        run: python -m kartell raster --rechne --fertig fertig.txt --minuten 315 --ausgabe raster_runs 2>&1 | tee protokoll.txt
+      - name: Ergebnisse im Branch «ergebnisse» sichern
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/out" && cp -r raster_runs/. "$RUNNER_TEMP/out/" 2>/dev/null || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git clean -fdxq
+          git checkout -q -B ergebnisse FETCH_HEAD
+          mkdir -p raster
+          for d in "$RUNNER_TEMP"/out/*/; do [ -d "$d" ] && cp -r "$d" raster/; done
+          git add -A raster
+          git commit -qm "Raster-Etappe (${GITHUB_RUN_ID})" || echo "nichts Neues"
+          git push -q origin ergebnisse
+      - name: Nächste Etappe starten
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          offen=$(cat "$RUNNER_TEMP/out/OFFEN" 2>/dev/null || echo 0)
+          if [ "$offen" -gt 0 ]; then gh workflow run raster.yml --ref main -R "$GITHUB_REPOSITORY" && echo "Nächste Etappe gestartet ($offen offen)"; else echo "Raster komplett"; fi

@@ -421,6 +421,22 @@ def _szenario(args) -> None:
     fuehre_experiment_aus(cfg, ausgabe=args.ausgabe)
 
 
+def _raster(args) -> None:
+    """Vorgerechnetes Raster: Zellen auflisten oder offene Zellen rechnen (siehe kartell/raster.py)."""
+    from .raster import WOCHEN, rechne, zellen
+    if args.liste:
+        for z in zellen():
+            print(z["id"])
+        print(f"{len(zellen())} Zellen à {WOCHEN} Wochen")
+        return
+    fertig = set(Path(args.fertig).read_text(encoding="utf-8").split()) if args.fertig and Path(args.fertig).exists() else set()
+    neu = rechne(fertig, args.minuten, args.ausgabe)
+    offen = len([z for z in zellen() if z["id"] not in fertig | set(neu)])
+    print(f"Raster: {len(neu)} neu gerechnet, {offen} offen")
+    Path(args.ausgabe).mkdir(parents=True, exist_ok=True)
+    (Path(args.ausgabe) / "OFFEN").write_text(str(offen), encoding="utf-8")
+
+
 def _marktplatz(args) -> None:
     from .marktplatz_ansicht import baue
     r = baue([Path(o) for o in args.laeufe], Path(args.ausgabe), artifact=args.artifact)
@@ -550,6 +566,14 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--ausgabe", default="runs")
     s.add_argument("--berichte", default="reports")
     s.set_defaults(fn=_szenario)
+
+    s = sub.add_parser("raster", help="Vorgerechnetes Raster aller Regler-Kombinationen")
+    s.add_argument("--liste", action="store_true")
+    s.add_argument("--rechne", action="store_true")
+    s.add_argument("--fertig", help="Datei mit IDs bereits fertiger Zellen (eine pro Zeile)")
+    s.add_argument("--minuten", type=float, default=320)
+    s.add_argument("--ausgabe", default="raster_runs")
+    s.set_defaults(fn=_raster)
 
     s = sub.add_parser("marktplatz", help="Läufe als Preisvergleichsportal zum Durchblättern (HTML)")
     s.add_argument("laeufe", nargs="+", help="Lauf-Ordner oder Ordner mit Läufen (rekursiv)")
