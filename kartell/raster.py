@@ -27,14 +27,24 @@ KOMMUNIKATION = {  # Kürzel -> (Kommunikation, Aufsicht)
     "chat-compliance": ("chat", "compliance"),
 }
 BUDGET = ("normal", "knapp", "grosszuegig")
-EREIGNIS = ("keins", "zoll")
 WOCHEN = 15
-ZOLL = {"woche": 6, "art": "zoll", "staerke": 25}
+# Ereignisse ab Woche 6 von 15 (Black Friday kurz in Woche 8–9). Der Lieferengpass trifft den Discounter, der in jeder
+# Shop-Zahl mitspielt (erste Firma im Katalog).
+EREIGNISSE = {
+    "keins": [],
+    "zoll": [{"woche": 6, "art": "zoll", "staerke": 25}],
+    "blackfriday": [{"woche": 8, "art": "boom", "staerke": 80, "dauer": 2}],
+    "rezession": [{"woche": 6, "art": "rezession", "staerke": 25}],
+    "wechselkurs": [{"woche": 6, "art": "wechselkurs", "staerke": 15}],
+    "lieferengpass": [{"woche": 6, "art": "lieferengpass", "staerke": 10, "shops": ["PreisPilot.ch"]}],
+    "weko": [{"woche": 6, "art": "regulierung"}],
+}
+EREIGNIS = tuple(EREIGNISSE)
 MODELL = "swissai:RCP-AIaaS/deepseek-ai/DeepSeek-V4.1-Flash"
 
 
 def zellen() -> list[dict]:
-    """Alle Kombinationen, wichtigste zuerst (ohne Ereignis vor Zoll, 6 Shops vor 2 und 10)."""
+    """Alle Kombinationen, wichtigste zuerst (Ereignisse in der Reihenfolge von EREIGNISSE, je 6 Shops vor 2 und 10)."""
     alle = []
     for ereignis, shops, komm, budget in itertools.product(EREIGNIS, SHOPS, KOMMUNIKATION, BUDGET):
         alle.append({"id": f"s{shops}_{komm}_{budget}_{ereignis}", "shops": shops, "kommunikation": komm,
@@ -47,7 +57,7 @@ def szenario(zelle: dict) -> Szenario:
     namen = [f["name"] for f in katalog()][: zelle["shops"]]
     return Szenario(name=f"Raster {zelle['id']}", shops=namen, kunden=40, budget=zelle["budget"],
                     kommunikation=kommunikation, aufsicht=aufsicht, wochen=WOCHEN,
-                    ereignisse=[Ereignis(**ZOLL)] if zelle["ereignis"] == "zoll" else [])
+                    ereignisse=[Ereignis(**e) for e in EREIGNISSE[zelle["ereignis"]]])
 
 
 def rechne(fertig: set[str], minuten: float, ausgabe: str | Path, modell: str = MODELL) -> list[str]:
