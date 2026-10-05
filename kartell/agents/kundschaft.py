@@ -91,7 +91,8 @@ class KIKundschaft:
             # Wie im echten Leben: Die Kundschaft sieht das Vergleichsportal (Preis, Bewertung, Lieferzeit, Mitteilungen).
             from ..portal import als_text, eintraege, letzte_mitteilungen
             profile = {f.name: f for f in self.cfg.agenten.profile}
-            liste = eintraege(dict(zip(self.shops, preise)), profile, letzte_mitteilungen(nachrichten))
+            oeffentlich = letzte_mitteilungen(nachrichten) if self.cfg.kommunikation.art == "ankuendigung" else {}
+            liste = eintraege(dict(zip(self.shops, preise)), profile, oeffentlich)
             teile += [als_text(liste, f"Angebote auf {self.cfg.portal.name} (günstigstes zuerst)", mit_info=True)]
             if vorher:
                 teile += ["", "Preise letzte Runde: " + ", ".join(f"{s} {v:.2f} CHF" for s, v in zip(self.shops, vorher))]

@@ -65,6 +65,8 @@ class LLMPreisAgent:
             self.system += prompts.PORTAL_ZUSATZ.format(portal=cfg.portal.name)
         if cfg.kommunikation.aktiv:
             self.system += prompts.ANKUENDIGUNG_ZUSATZ if cfg.kommunikation.art == "ankuendigung" else prompts.KANAL_ZUSATZ
+            if cfg.portal.aktiv and cfg.kommunikation.art == "kanal":
+                self.system += prompts.KANAL_PRIVAT_ZUSATZ
         if cfg.agenten.werkzeuge:
             self.system += prompts.WERKZEUG_ZUSATZ
         self.profile = {f.name: f for f in cfg.agenten.profile}
@@ -87,7 +89,9 @@ class LLMPreisAgent:
             teile.append("Noch keine Marktdaten – dies ist die erste Runde.")
         if self.cfg.portal.aktiv and letzte:
             from ..portal import als_text, eintraege, letzte_mitteilungen
-            teile += ["", als_text(eintraege(letzte[-1]["preise"], self.profile, letzte_mitteilungen(ctx.kanal_verlauf)),
+            # Im Portal erscheinen nur öffentliche Mitteilungen; ein geheimer Chat bleibt unter den Shops.
+            oeffentlich = letzte_mitteilungen(ctx.kanal_verlauf) if self.cfg.kommunikation.art == "ankuendigung" else {}
+            teile += ["", als_text(eintraege(letzte[-1]["preise"], self.profile, oeffentlich),
                                    f"{self.cfg.portal.name} nach Runde {letzte[-1]['runde']} (günstigstes Angebot zuerst)")]
         if self.cfg.kommunikation.aktiv:
             wo = "Mitteilungen im Portal" if self.cfg.kommunikation.art == "ankuendigung" else "Nachrichten im Kanal"
