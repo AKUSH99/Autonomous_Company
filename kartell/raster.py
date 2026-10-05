@@ -40,7 +40,11 @@ EREIGNISSE = {
     "weko": [{"woche": 6, "art": "regulierung"}],
 }
 EREIGNIS = tuple(EREIGNISSE)
-MODELL = "swissai:RCP-AIaaS/deepseek-ai/DeepSeek-V4.1-Flash"
+# Wunsch aus dem Team: das stärkste Modell der Swiss AI Platform mit maximalem Reasoning (Denken an, 32 000 Tokens)
+MODELL = "swissai:CSCS-Inference/zai-org/GLM-5.3"
+DENKEN = "maximal"
+TAKT = 18             # Anfragen pro Minute (direkt gehostetes Modell, siehe config.swissai_takt)
+DENKFAKTOR = 3.0      # Reasoning macht jede Antwort langsamer; nach dem Probelauf vom 05.10. nachjustieren
 
 
 def zellen() -> list[dict]:
@@ -60,23 +64,30 @@ def szenario(zelle: dict) -> Szenario:
                     ereignisse=[Ereignis(**e) for e in EREIGNISSE[zelle["ereignis"]]])
 
 
-def rechne(fertig: set[str], minuten: float, ausgabe: str | Path, modell: str = MODELL) -> list[str]:
+def dauer_minuten(z: dict) -> float:
+    """Grobe Dauer einer Zelle: Anfragen pro Woche (KI-Shops, ggf. Mitteilungen/Chat, Kundschaft, Compliance) durch den
+    Takt, mal Reasoning-Faktor."""
+    ki = z["shops"]
+    anfragen = ki * (1 if z["kommunikation"] == "keine" else 2) + 1 + (ki if z["kommunikation"].endswith("compliance") else 0)
+    return WOCHEN * anfragen / TAKT * DENKFAKTOR + 2
+
+
+def rechne(fertig: set[str], minuten: float, ausgabe: str | Path, modell: str = MODELL, denken: str | None = DENKEN) -> list[str]:
     """Rechnet offene Zellen, bis die Zeit fast um ist. Jede Zelle landet in <ausgabe>/<id>/. Gibt die neuen IDs zurück."""
-    from .config import mit_modell
+    from .config import mit_denken, mit_modell
     from .runner import fuehre_experiment_aus
     start, neu = time.time(), []
     offen = [z for z in zellen() if z["id"] not in fertig]
     print(f"Raster: {len(fertig)} fertig, {len(offen)} offen, Zeitbudget {minuten:.0f} Min.")
     for z in offen:
         verbraucht = (time.time() - start) / 60
-        # grob geschätzte Dauer der Zelle: Anfragen pro Woche / 14 pro Minute, plus Reserve
-        ki = z["shops"]
-        anfragen = ki * (1 if z["kommunikation"] == "keine" else 2) + 1 + (ki if z["kommunikation"].endswith("compliance") else 0)
-        schaetzung = WOCHEN * anfragen / 14 * 1.3 + 2
+        schaetzung = dauer_minuten(z)
         if verbraucht + schaetzung > minuten:
             print(f"Zeitbudget reicht nicht mehr für {z['id']} (~{schaetzung:.0f} Min.) – nächste Etappe.")
             break
         cfg = mit_modell(szenario(z).als_config(), modell)
+        if denken:
+            cfg = mit_denken(cfg, denken)
         cfg.name = f"raster_{z['id']}"
         print(f"▶ {z['id']} (~{schaetzung:.0f} Min.)")
         try:

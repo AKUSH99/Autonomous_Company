@@ -59,4 +59,4 @@ def test_raster_alle_zellen_gueltig():
         assert cfg.markt.firmen == z["shops"] and cfg.runden == 15
         assert (cfg.compliance.modus == "filter") == z["kommunikation"].endswith("compliance")
         assert bool(cfg.ereignisse) == (z["ereignis"] != "keins")
-        assert cfg.agenten.llm.anfragen_pro_minute == 14 and cfg.compliance.llm.provider != "anthropic"
+        assert cfg.agenten.llm.anfragen_pro_minute == 18 and cfg.compliance.llm.provider != "anthropic"
