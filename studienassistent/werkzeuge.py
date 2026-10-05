@@ -12,7 +12,7 @@ def erstelle_werkzeuge(suche: Suche, fristen: Fristen) -> list:
     def unterlagen_durchsuchen(frage: str, modul: str = "") -> str:
         """Durchsucht die Kursunterlagen (Folien, Semesterprogramme, Projektbeschriebe, Aufgaben) und liefert die
         passendsten Stellen mit Quelle. `modul`: optional ein Teil des Modulnamens, z. B. «Marketing» oder «Generative»."""
-        treffer = suche.suchen(frage, k=5, modul=modul or None)
+        treffer = suche.suchen(frage, k=8, modul=modul or None)
         if not treffer:
             return "Keine passende Stelle in den Unterlagen gefunden."
         return "\n\n".join(f"[{i}] {a.quelle()}\n{a.text[:700]}" for i, (a, _) in enumerate(treffer, 1))
