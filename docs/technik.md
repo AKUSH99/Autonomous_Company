@@ -130,7 +130,7 @@ python -m kartell lauf experiments/archiv/e5_apertus.yaml                       
 python -m kartell eval-compliance --modell apertus                                                             # Guardrail mit Apertus
 ```
 
-Welche Modelle es gibt, zeigt `GET /v1/models` (bei Swiss AI ohne Schlüssel). Im GitHub-Workflow: Secrets `SWISSAI_API_KEY` bzw. `LITELLM_API_KEY` anlegen und in `experiments/auftrag.yaml` z. B. `modell: apertus` setzen.
+Welche Modelle es gibt, zeigt `GET /v1/models` (bei Swiss AI ohne Schlüssel). **Ratenlimit:** laut FAQ unter 15 Anfragen pro Minute pro Nutzer für weitergeleitete Modelle (`RCP-AIaaS/…`, z. B. DeepSeek), etwas mehr für direkt gehostete (`CSCS-Inference/…`, z. B. GLM, Apertus). Die Voreinstellung bremst darum auf 14 bzw. 18 Anfragen pro Minute für alle Agenten eines Laufs zusammen (ein Lauf mit 6 Shops, Mitteilungen und Kundschaft: rund 1 Minute pro Woche). Läufe auf der Swiss AI Platform nacheinander starten, nicht parallel. Im GitHub-Workflow: Secrets `SWISSAI_API_KEY` bzw. `LITELLM_API_KEY` anlegen und in `experiments/auftrag.yaml` z. B. `modell: apertus` setzen.
 
 
 ## Messgrössen
