@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KI-Kartell Szenario-Labor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,6 +77,8 @@ a { color: var(--accent) }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important } }
 </style>
 
+</head>
+<body>
 <div class="wrap">
   <header>
     <h1>Szenario-Labor</h1>
@@ -350,3 +357,6 @@ $("kopieren").onclick = () => {
 function markiere() { const r = document.createRange(); r.selectNodeContents($("code")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
 laden(); zeige();
 </script>
+
+</body>
+</html>
