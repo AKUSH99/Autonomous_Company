@@ -244,8 +244,16 @@ PLATTFORMEN = {"openrouter": (OPENROUTER_URL, "OPENROUTER_API_KEY"), "swissai": 
                "litellm": (LITELLM_URL, "LITELLM_API_KEY")}
 # Kurznamen für die Schweizer Modelle; der genaue Modellname steht in der Modellliste der Plattform.
 VOREINSTELLUNGEN["apertus"] = LLMSpec(provider="openai_compat", model="CSCS-Inference/swiss-ai/Apertus-v1.5-70B",
-                                      base_url=SWISSAI_URL, api_key_env="SWISSAI_API_KEY", max_tokens=8000)
+                                      base_url=SWISSAI_URL, api_key_env="SWISSAI_API_KEY", max_tokens=8000,
+                                      anfragen_pro_minute=18)
 VOREINSTELLUNGEN["apertus-8b"] = VOREINSTELLUNGEN["apertus"].model_copy(update={"model": "CSCS-Inference/swiss-ai/Apertus-v1.5-8B"})
+
+
+def swissai_takt(modell: str) -> int:
+    """Anfragen pro Minute auf der Swiss AI Platform. FAQ (05.10.2026): «unter 15 Anfragen pro Minute pro Nutzer» für
+    weitergeleitete Modelle (RCP-AIaaS/…), «etwas mehr» für direkt gehostete (CSCS-Inference/…, SwissAI-Research/…).
+    Die Bremse gilt für alle Agenten eines Laufs gemeinsam – darum Läufe nicht parallel starten."""
+    return 14 if modell.startswith("RCP-AIaaS/") else 18
 
 
 def plattform_url(plattform: str) -> str:
@@ -277,7 +285,8 @@ def voreinstellung(name: str) -> LLMSpec:
             # Chat-Vorlage ausschalten (DeepSeek: thinking, Qwen: enable_thinking; andere Vorlagen ignorieren das) und
             # mehr Platz lassen, falls ein Modell trotzdem denkt.
             return LLMSpec(provider="openai_compat", model=modell, base_url=SWISSAI_URL, api_key_env="SWISSAI_API_KEY",
-                           max_tokens=16000, extra_body={"chat_template_kwargs": {"thinking": False, "enable_thinking": False}})
+                           max_tokens=16000, extra_body={"chat_template_kwargs": {"thinking": False, "enable_thinking": False}},
+                           anfragen_pro_minute=swissai_takt(modell))
         return LLMSpec(provider="openai_compat", model=modell, base_url=plattform_url(plattform),
                        api_key_env=PLATTFORMEN[plattform][1], max_tokens=8000, anfragen_pro_minute=16 if gedrosselt else None)
     raise ValueError(f"Unbekanntes Modell '{name}'. Erlaubt: {', '.join(VOREINSTELLUNGEN)} oder "
