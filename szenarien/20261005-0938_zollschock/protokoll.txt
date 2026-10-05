@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/Autonomous_Company/Autonomous_Company/kartell/__main__.py", line 585, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/runner/work/Autonomous_Company/Autonomous_Company/kartell/__main__.py", line 581, in main
+    args.fn(args)
+  File "/home/runner/work/Autonomous_Company/Autonomous_Company/kartell/__main__.py", line 417, in _szenario
+    _pruefe_modell(voreinstellung(args.modell), Path(args.berichte))
+  File "/home/runner/work/Autonomous_Company/Autonomous_Company/kartell/__main__.py", line 92, in _pruefe_modell
+    (berichte / f"modelle_{kurz(spec.base_url.split('//')[-1].split('/')[0])}.txt").write_text("\n".join(ids) + "\n", encoding="utf-8")
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/pathlib.py", line 1047, in write_text
+    with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'reports/modelle_api-swissai-svc-cscs-ch.txt'
