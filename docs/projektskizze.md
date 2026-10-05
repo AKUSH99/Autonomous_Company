@@ -1,6 +1,6 @@
-# Projektskizze: KI-Kartell
+# Projektskizze: FHNW Studienassistent
 
-**Bilden KI-Preisagenten in einem realistischen Online-Markt von selbst ein Kartell – und kann man es verhindern?**
+**Ein KI-Agent, der Fragen zum Studium aus den echten Kursunterlagen beantwortet – mit Quelle.**
 
 Modul Generative KI & Agentensysteme · FHNW BSc Business Artificial Intelligence · Gruppenarbeit HS 2026
 Stand: 05.10.2026 · Abschlusspräsentation: 23.11.2026, 13:00 Uhr (10 Min. inkl. Verständnisfragen)
@@ -18,168 +18,141 @@ Stand: 05.10.2026 · Abschlusspräsentation: 23.11.2026, 13:00 Uhr (10 Min. inkl
 | Andrej Mauron | _Rolle eintragen_ |
 | Flavio Sibilia | _Rolle eintragen_ |
 
-## 1. Problemstellung und Relevanz
+## 1. Problemstellung
 
-Online-Händler setzen zunehmend Algorithmen ein, die Preise automatisch an die Konkurrenz anpassen. Mit LLM-Agenten
-entstehen Preissysteme, die selbstständig Marktdaten deuten, Strategien formulieren und – wenn man sie lässt – mit
-anderen Systemen kommunizieren. Erste Forschung zeigt, dass LLM-basierte Preisagenten ohne Anweisung zu Preisen über
-dem Wettbewerbsniveau finden können (Fish et al. 2024).
+Im BAI-Studium sind die Informationen zu einem Semester auf viele Orte verteilt: Semesterprogramme als PDF,
+Folien, Moodle-Kursseiten, Aufgabenbeschreibungen, Teams-Beiträge. Allein im HS 2026 sind es bei sieben Modulen
+rund 80 Dateien mit über 4000 Textabschnitten. Fragen wie «Wann ist die Präsentation?», «Wie viele Folien darf das
+Pitch Deck haben?» oder «Was ist diese Woche fällig?» kosten jedes Mal Minuten der Suche – und wer die Stelle nicht
+findet, fragt im Gruppenchat oder bei Dozierenden nach.
 
-Für Unternehmen ist das ein reales Haftungsrisiko: Nach dem Schweizer Kartellgesetz sind Preisabsprachen zwischen
-Konkurrenten grundsätzlich unzulässig (Art. 5 Abs. 3 KG) und können mit bis zu 10 % des Schweizer Umsatzes der
-letzten drei Jahre sanktioniert werden (Art. 49a KG). Wettbewerbsbehörden betonen, dass Unternehmen für ihre
-Algorithmen verantwortlich sind. Die praktische Frage lautet deshalb: **Wie erkennt und verhindert man, dass
-agentische Preissysteme Absprachen treffen?**
+Ein gewöhnlicher Chatbot hilft hier nicht: Er kennt die Unterlagen nicht und erfindet im Zweifel ein Datum.
+Gebraucht wird ein Assistent, der **in den eigenen Unterlagen sucht, kurz antwortet und die Fundstelle nennt**.
 
 ## 2. Use Case und Nutzerbedürfnisse
 
-Das System ist ein **Prüfstand für KI-Preisagenten**: Es simuliert einen Online-Markt, in dem KI-Agenten Preise
-setzen, und zeigt, ob sie kartellieren und ob ein Compliance-Agent das verhindert. Wer es nutzt:
-
 | Nutzerrolle | Bedürfnis |
 |---|---|
-| **Compliance-Verantwortliche** eines Online-Händlers, der KI-Preisagenten einführen will | wissen, ob der Agent Absprachen trifft, bevor er live geht |
-| **Pricing-Verantwortliche** | sehen, wie sich ein KI-Agent im Wettbewerb verhält (Preiskrieg, Signale, Reaktion auf Schocks) |
-| **Wettbewerbsbehörde** (z. B. WEKO) | verstehen, woran man algorithmische Kollusion erkennt – auch ohne offenen Chat |
+| **Studierende** im BAI | schnell eine verlässliche Antwort zu Terminen, Abgaben, Regeln und Inhalten – mit Quelle zum Nachprüfen |
+| **Projektgruppen** | gemeinsamer Stand, was wann abzugeben ist und welche Anforderungen gelten |
+| **Dozierende** (indirekt) | weniger wiederkehrende Organisationsfragen per Mail |
 
 **User Stories** (Form nach SW4, Folie 14):
 
-- Als **Compliance-Verantwortliche** eines Online-Händlers möchte ich unseren KI-Preisagenten vor dem Einsatz in einem
-  realistischen Markt testen, damit ich sehe, ob er sich mit der Konkurrenz abspricht.
-- Als **Compliance-Verantwortliche** möchte ich, dass jede öffentliche Mitteilung des Agenten vor der Veröffentlichung
-  auf Preissignale geprüft wird und die Begründung samt Rechtsgrundlage sehe, damit wir kein Bussgeld riskieren.
-- Als **Pricing-Verantwortlicher** möchte ich sehen, wie der Agent auf Zölle, Rezession oder Black Friday reagiert,
-  damit ich verstehe, ob er Schocks für Preiserhöhungen ausnutzt.
-- Als **Analystin einer Wettbewerbsbehörde** möchte ich Preisverläufe und Mitteilungen nebeneinander sehen, damit ich
-  stillschweigende Signale («keine Rabattschlacht») von normaler Werbung unterscheiden kann.
-- Als **Projektteam** möchten wir jede Einstellung reproduzierbar rechnen und vergleichen, damit unsere Aussagen
-  belegbar sind.
+- Als **Studentin** möchte ich fragen «Wann ist die GenAI-Präsentation und wie lange dauert sie?», damit ich die
+  Antwort nicht im Semesterprogramm suchen muss.
+- Als **Student** möchte ich zu jeder Antwort die Quelle (Modul, Datei, Seite) sehen, damit ich der Antwort trauen
+  oder sie selbst nachlesen kann.
+- Als **Studentin** möchte ich fragen «Was ist in den nächsten zwei Wochen fällig?», damit ich meine Woche planen kann.
+- Als **Student** möchte ich Rückfragen stellen können («Und wie viele Folien?»), ohne den Zusammenhang zu wiederholen.
+- Als **Studentin** möchte ich, dass der Assistent ehrlich sagt, wenn etwas nicht in den Unterlagen steht, statt zu raten.
 
-**Vergleich mit heute:** Händler setzen meist regelbasierte Repricer ein («1 CHF unter dem Günstigsten»), die nicht
-kommunizieren. Compliance-Prüfungen von Preisalgorithmen sind nachträglich und manuell. LLM-Agenten können erstmals
-selbst Strategien formulieren und Texte schreiben – das schafft ein neues Risiko, für das es noch kein Prüfverfahren
-gibt.
+**Vergleich mit heute:** Studierende suchen manuell in Moodle und Teams oder fragen nach. Allgemeine Chatbots
+(ChatGPT, Copilot) kennen die Kursunterlagen nicht und nennen keine überprüfbare Quelle.
 
-## 3. Forschungsfrage und Versuche
+## 3. Lösungsansatz
 
-Hauptgeschichte im **Marktplatz** (sechs Firmen, Vergleichsportal, KI-Kundschaft, Preisniveau des JBL Tune 770NC nach
-Toppreise.ch):
+Ein einzelner LLM-Agent mit Werkzeugen (laut Moodle genügt ein «LLM-Agent oder agentisches System»; Multi-Agent ist
+keine Pflicht). Ablauf als LangGraph-Zustandsgraph:
 
-| Versuch | Was die Shops dürfen | Frage |
-|---|---|---|
-| **M1** Nur Portal | nur Preise setzen | Steigen die Preise von selbst? |
-| **M2** Mitteilungen | öffentliche Mitteilungen im Portal | Nutzen die Shops sie als Preissignal? |
-| **M3** Geheimer Chat | Chat nur unter den Shops | Entstehen mit geheimem Kanal Kartellpreise? |
-| **M4** Compliance | wie M2, Mitteilungen werden geprüft, Marktbeobachtung | Lässt sich das verhindern? |
+1. **Prüfen** – Hat die Frage einen Studienbezug? Wenn nicht: freundliche Absage (Guardrail).
+2. **Agent** – Das Sprachmodell entscheidet, welches Werkzeug es braucht.
+3. **Werkzeuge** – `unterlagen_durchsuchen` (Hybrid-Suche in den Kursunterlagen, optional nach Modul gefiltert),
+   `fristen_anzeigen` (Termine in einem Zeitraum), `module_auflisten`.
+4. **Antwort** – zwei, drei Sätze mit «(Quelle: Modul · Datei, S. n)».
 
-Dazu die **Vorstudie** mit zwei Shops (V1–V4: ohne/mit Chat, Abweichungstest, Verbot) und das **Szenario-Labor**
-(eigene Regeln und Ereignisse wie Zoll, Black Friday, Rezession) mit einem vorgerechneten Raster aller Kombinationen.
+Das Gesprächsgedächtnis pro Chat erlaubt Rückfragen. Die Unterlagen werden einmal eingelesen (PDF, PowerPoint inkl.
+Notizen, Word, Markdown), in Abschnitte von etwa 900 Zeichen zerlegt und mit BM25 und Embeddings durchsuchbar gemacht.
 
-## 4. Lösungsansatz
+## 4. Erfolgskriterien und Zielwerte
 
-Ein Multi-Agenten-System, orchestriert mit **LangGraph**. Eine Woche ist ein Durchlauf durch den Graphen:
-Mitteilungen bzw. Chat → Compliance-Filter → Preisentscheid (6 Agenten parallel) → Markt (Portal, KI-Kundschaft,
-Gewinne). Jeder Preisagent kennt seine Kosten, sein Firmenprofil, das Portal und seine eigenen Notizen (Memory), aber
-keine Anweisung zu kooperieren und keine Referenzpreise. Der Compliance-Agent prüft Mitteilungen mit Regeln, RAG über
-eine Kartellrecht-Wissensbasis (über MCP, Hybrid-Suche) und einem LLM-Urteil. Wettbewerbs- und Kartellpreis werden
-aus dem Marktmodell exakt berechnet – der Massstab für die Auswertung.
+Gemessen mit dem Testset `evaluation/fragen.jsonl` (echte Fragen mit bekannten Antworten aus den Unterlagen):
 
-## 5. Erfolgskriterien und Zielwerte
+| Kriterium | Zielwert |
+|---|---|
+| Suche: richtige Quelle unter den ersten 5 Treffern | ≥ 90 % |
+| Antwort enthält die erwarteten Fakten (Datum, Zahl, Regel) | ≥ 80 % |
+| Fragen ohne Studienbezug abgelehnt, Studienfragen beantwortet | 100 % |
+| Antwort nennt eine Quelle | ≥ 90 % |
+| Antwortzeit | < 20 s |
 
-| Kriterium | Zielwert | Stand 05.10.2026 |
-|---|---|---|
-| Läufe technisch sauber | < 1 % ausgefallene Entscheide je Lauf | M1, M2: 0 %; M4: 0 %, 0 % und 6 % (ein Lauf während einer Überlastung der Plattform) |
-| Aussagekraft | je Versuch ≥ 3 Läufe à ≥ 15 Wochen, Unterschiede mit t-Test berichtet | M1, M2, M4: 3 × 30 Wochen; M3 läuft |
-| Kartell erkennbar machen | Preisindex (0 = Wettbewerb, 1 = Kartell) je Woche; Kartell = Index ≥ 0.5 in der zweiten Hälfte | umgesetzt (Marktplatz-Ansicht, Bericht) |
-| Guardrail findet Absprachen | Precision ≥ 0.95 und Recall ≥ 0.80 auf dem gelabelten Testset | Regeln + LLM: Precision 1.00, Recall 1.00 (39 Nachrichten); in Läufen Recall 0.78 |
-| Retrieval findet die Rechtsgrundlage | MRR ≥ 0.85 auf dem Retrieval-Testset | Hybrid 0.94 (BM25 allein 0.67) |
-| Nachvollziehbarkeit | jede Woche mit Preisen, Mitteilungen, Notizen und Kaufgründen einsehbar | Marktplatz-Ansicht |
-| Verständnis im Team | jede Person kann Problem, Architektur, Evaluation und Grenzen erklären | Lernpfad `docs/lernpfad.md` |
+## 5. Scope (MVP) und Limitierungen
 
-**Erfolg** heisst damit: Wir können für jede Bedingung belegt sagen, ob die Preise Richtung Kartell gehen, warum
-(Mitteilungen, Notizen), und ob der Compliance-Agent die Signale erkennt.
+**Im Scope:** Fragen zu den sieben Modulen des eigenen Semesters, Fristen, Rückfragen, Chat im Browser, Evaluation.
+**Nicht im Scope:** Abgaben schreiben oder Aufgaben lösen (bewusst ausgeschlossen), automatisches Herunterladen aus
+Moodle/Teams im Repository (jede Person liest ihre eigenen Unterlagen ein), Noten oder persönliche Daten.
+**Limitierungen:** Der Assistent weiss nur, was in den eingelesenen Unterlagen steht; gescannte Bilder ohne Text
+werden nicht gelesen; das Ratenlimit der Swiss AI Platform (≈ 15 Anfragen/Minute) begrenzt gleichzeitige Nutzer.
 
-## 6. Scope (MVP) und Limitierungen
-
-**Im Scope:** ein Produkt, sechs Firmen (Szenario-Labor: 2–10), wöchentliche Preisentscheide, KI-Kundschaft,
-öffentliche Mitteilungen oder geheimer Chat, Compliance-Agent, Ereignisse; Auswertung über Preisindex, Gewinne,
-Mitteilungen.
-
-**Nicht im Scope:** echte Shops oder echte Preise, Lager und Logistik, mehrere Produkte, menschliche Kundschaft,
-juristisch verbindliche Prüfung.
-
-**Limitierungen:** simulierte Kundschaft (ein Sprachmodell spielt 40 Personen), ein Hauptmodell (DeepSeek V4.1 Flash;
-Vergleich mit GLM-5.3 und mit Reasoning geplant), wenige Läufe pro Bedingung, Ratenlimit der Swiss AI Platform (rund
-15 Anfragen pro Minute), vereinfachte Rechtstexte.
-
-## 7. Eingesetzte Konzepte aus dem Modul
+## 6. Eingesetzte Konzepte aus dem Modul
 
 | Modulthema | Umsetzung |
 |---|---|
-| Agenten & Multi-Agent | 6 Preisagenten, KI-Kundschaft, Compliance-Agent |
-| Orchestrierung | LangGraph-Zustandsgraph, bedingte Knoten je Versuch, Agenten parallel |
-| System-Prompts & strukturierte Ausgaben | Rollen ohne Hinweis auf Kooperation, validiertes JSON (Pydantic) |
-| Memory | Plan und Erkenntnisse je Shop, in der Folgewoche im Prompt |
-| RAG | Wissensbasis Kartellrecht, Chunking, Hybrid-Suche (BM25 + Embeddings), Retrieval-Evaluation |
-| MCP | Wissensbasis und Regel-Prüfung als MCP-Server |
-| Guardrails | Compliance-Filter, Marktbeobachtung auf Preismuster, Preisgrenzen |
-| Evaluation | Guardrail Precision/Recall, Retrieval Hit@k/MRR, Versuche mit Wiederholungen und Statistik |
-| Tracing | LangSmith (jeder GitHub-Lauf im Projekt `ki-kartell`) |
-| Modellwahl | Swiss AI Research Platform (DeepSeek, GLM, Apertus), FHNW-LiteLLM; Entscheide in `docs/entscheidungen.md` |
-| Interface | Marktplatz-Ansicht, Szenario-Labor mit Reglern, Streamlit-Dashboard |
+| System-Prompt | Rolle, heutiges Datum und Wochentag, Regeln (erst suchen, Quelle nennen, nichts erfinden) |
+| Function Calling / Tools | drei Werkzeuge, das Modell wählt selbst |
+| Orchestrierung | LangGraph: Prüfung → Agent ⇄ Werkzeuge, bedingte Kanten |
+| RAG | Chunking mit Überlappung, Hybrid-Suche (BM25 + Qwen3-Embeddings, Reciprocal Rank Fusion), Modulfilter |
+| Memory | Gesprächsgedächtnis pro Chat (LangGraph-Checkpointer) |
+| Guardrails | Eingangsprüfung mit strukturierter Ausgabe (Pydantic), Regel gegen das Schreiben von Abgaben |
+| MCP | Werkzeuge zusätzlich als MCP-Server, damit sie auch andere Clients nutzen können (KW 43) |
+| Modellwahl | Swiss AI Research Platform: DeepSeek V4.1 Flash (Standard), Apertus, GLM-5.3; Reasoning zuschaltbar |
+| Evaluation & Tracing | Testset mit drei Kennzahlen, Tests ohne Netz (GitHub Actions), LangSmith-Tracing |
+| Interface | Streamlit-Chat mit aufklappbaren Fundstellen |
 
-## 8. Evaluation
+## 7. Evaluation
 
-Kennzahlen je Lauf: Preisindex und Gewinnindex (0 = Wettbewerb, 1 = Kartell, zweite Hälfte), Gewinne je Shop, Anteil
-Kundschaft ohne Kauf, Anzahl und Inhalt der Mitteilungen bzw. Chat-Nachrichten, blockierte Mitteilungen mit
-Begründung. Guardrail- und Retrieval-Evaluation auf gelabelten Testsets (`evaluation/`). Alle Läufe liegen öffentlich
-im Branch [`ergebnisse`](https://github.com/AKUSH99/Autonomous_Company/tree/ergebnisse).
+`python -m studienassistent bewerten` stellt alle Testfragen, misst die Kennzahlen aus Abschnitt 4 und listet die
+nicht bestandenen Fragen. Modelle (DeepSeek, Apertus, GLM) und Reasoning an/aus werden auf demselben Testset
+verglichen. Die Tests in `tests/` laufen ohne Netz mit einem simulierten Sprachmodell.
 
-## 9. Zeitplan
+## 8. Zeitplan
 
 | Woche | Meilenstein laut Semesterprogramm | Stand |
 |---|---|---|
-| KW 41 (05.10.) | Gruppenbildung, Use Case, Evaluationskriterien | Use Case und Kriterien: diese Skizze; **Team eintragen** |
-| KW 42 (12.10.) | erste lauffähige Version, Tracing | erledigt (Läufe M1–M4, LangSmith) |
-| KW 43 (19.10.) | MCP-Server anbinden | erledigt |
-| KW 44 (26.10.) | RAG, Chunking, Hybrid Retrieval | erledigt |
-| KW 46 (09.11.) | Memory festlegen | erledigt (Notizen je Shop) |
-| KW 47 (16.11.) | Safeguarding, Evaluation | erledigt; Ergebnisse M3 und Raster nachtragen |
-| KW 48 (23.11.) | Abschlusspräsentation | Entwurf: `docs/praesentation_entwurf.md` |
+| KW 41 (05.10.) | Gruppenbildung, Use Case, Evaluationskriterien | diese Skizze; **Rollen eintragen** |
+| KW 42 (12.10.) | erste lauffähige Version, Tracing | lauffähig (Chat, CLI, Tests) |
+| KW 43 (19.10.) | MCP-Server anbinden | umgesetzt (`python -m studienassistent mcp`) |
+| KW 44 (26.10.) | RAG, Chunking, Hybrid Retrieval | umgesetzt; Feinschliff nach Evaluation |
+| KW 46 (09.11.) | Memory festlegen | Gesprächsgedächtnis umgesetzt |
+| KW 47 (16.11.) | Safeguarding, Evaluation | Guardrail und Testset umgesetzt (22 Fragen, alle Kennzahlen 100 %); Testset ausbauen, Modelle vergleichen |
+| KW 48 (23.11.) | Abschlusspräsentation | Live-Demo im Chat |
 
-## 10. Arbeitsteilung
+## 9. Arbeitsteilung
 
-| Rolle | Verantwortung | Module | Person |
+| Rolle | Verantwortung | Dateien | Person |
 |---|---|---|---|
-| Markt und Auswertung | Marktmodell, Kalibrierung, Kennzahlen, Statistik | `market.py`, `metrics.py`, `bericht.py` | _Name_ |
-| Agenten und Orchestrierung | Preisagenten, Prompts, LangGraph, Versuche | `graph.py`, `agents/pricing.py`, `agents/prompts.py` | _Name_ |
-| Compliance und RAG | Wissensbasis, Retrieval, MCP, Guardrail, Testsets | `agents/compliance.py`, `rag.py`, `mcp_server.py`, `evaluation/` | _Name_ |
-| Demo und Präsentation | Marktplatz-Ansicht, Szenario-Labor, Präsentation | `marktplatz_ansicht.py`, `szenario.py`, `docs/` | _Name_ |
+| Daten & Suche | Einlesen, Chunking, Hybrid-Suche, Fristen | `einlesen.py`, `suche.py`, `fristen.py` | _Name_ |
+| Agent & Prompts | LangGraph, Werkzeuge, System-Prompt, Guardrail | `agent.py`, `werkzeuge.py`, `prompts.py` | _Name_ |
+| Evaluation | Testset, Kennzahlen, Modellvergleich, Tracing | `bewertung.py`, `evaluation/`, `tests/` | _Name_ |
+| Interface & Präsentation | Chat-App, MCP, Demo, Folien | `app.py`, `docs/` | _Name_ |
 
-Alle kennen den Gesamtablauf und die Entscheidungen in `docs/entscheidungen.md`. Was jede Person konkret beigetragen
-hat, steht in [beitraege.md](beitraege.md).
-
-## 11. Risiken
+## 10. Risiken
 
 | Risiko | Gegenmassnahme |
 |---|---|
-| Ratenlimit der Plattform | Taktbremse (14/18 Anfragen pro Minute), Läufe nacheinander, vorgerechnetes Raster |
-| Modell antwortet nicht im Format | tolerantes Parsing, Wiederholung, Ausfälle werden markiert und gezählt |
-| Demo scheitert live | Marktplatz-Ansicht mit fertigen Läufen, keine Live-Rechnung nötig |
-| Guardrail überangepasst ans Testset | zurückgehaltenes zweites Testset, Abgleich mit echten Nachrichten |
-| Zu wenige Läufe für klare Aussagen | ≥ 3 Wiederholungen je Hauptversuch, Unsicherheit in jeder Aussage nennen |
+| Modell erfindet Antworten | Regel «nur aus Unterlagen», Quelle Pflicht, Fakten-Kennzahl im Testset |
+| Suche findet die Stelle nicht | Hybrid-Suche, Modulfilter, Fehlfälle aus der Evaluation gezielt verbessern |
+| Ratenlimit / Ausfall der Plattform | Taktbremse im Client, Modell umschaltbar |
+| Urheberrecht der Kursunterlagen | Unterlagen nie im Repository, nur lokal eingelesen |
+| Demo scheitert live | Beispielfragen vorbereitet, Aufzeichnung als Rückfall |
 
-## 12. Ethik und Grenzen
+## 11. Ethik und Grenzen
 
-Der Markt ist vollständig simuliert, es werden keine echten Preise beeinflusst. Die Firmen sind erfunden. Ziel ist,
-Risiken agentischer Preissysteme zu verstehen und Schutzmechanismen zu prüfen. Die Wissensbasis fasst Rechtstexte
-vereinfacht zusammen und ist keine Rechtsberatung. Code und Dokumentation sind mit Unterstützung eines KI-Assistenten
-(Claude Code) entstanden; das wird in Abgabe und Präsentation offengelegt.
+Der Assistent hilft beim Finden von Informationen, nicht beim Erledigen von Leistungsnachweisen; Anfragen, Abgaben
+zu schreiben, lehnt er ab. Die Antworten ersetzen nicht die offiziellen Angaben – darum steht bei jeder Antwort die
+Quelle. Kursunterlagen der FHNW sind urheberrechtlich geschützt und bleiben lokal. Code und Dokumentation sind mit
+Unterstützung eines KI-Assistenten (Claude Code) entstanden; das wird in Abgabe und Präsentation offengelegt.
+
+## 12. Projektgeschichte
+
+Begonnen hat das Team mit «KI-Kartell» (Simulation, ob KI-Preisagenten Kartelle bilden). Im Gespräch mit dem
+Dozenten am 05.10. wurde klar, dass dieses Projekt zu komplex war und keinen greifbaren Nutzen hatte. Es ist im
+Branch `ki-kartell` archiviert; übernommen wurden Hybrid-Suche, Swiss-AI-Anbindung und Evaluationserfahrung.
 
 ## 13. Quellen
 
-- Calvano, E., Calzolari, G., Denicolò, V., Pastorello, S. (2020): Artificial Intelligence, Algorithmic Pricing, and Collusion. *American Economic Review*, 110(10).
-- Fish, S., Gonczarowski, Y. A., Shorrer, R. I. (2024): Algorithmic Collusion by Large Language Models. arXiv:2404.00806.
-- Kartellgesetz (KG), SR 251; AEUV Art. 101.
-- Toppreise.ch: Preisvergleich JBL Tune 770NC, abgerufen am 04.10.2026.
 - Schwander, S. (2026): SW4 Agentensystem – Bausteine, Vorgehen, Modellauswahl. FHNW.
+- LangGraph Dokumentation: Agents, Tool Calling, Persistence. langchain-ai.github.io/langgraph
+- Robertson, S., Zaragoza, H. (2009): The Probabilistic Relevance Framework: BM25 and Beyond.
+- Cormack, G., Clarke, C., Büttcher, S. (2009): Reciprocal Rank Fusion outperforms Condorcet and individual Rank Learning Methods. SIGIR.
+- Swiss AI Initiative (2026): Apertus und Swiss AI Research Platform, CSCS.

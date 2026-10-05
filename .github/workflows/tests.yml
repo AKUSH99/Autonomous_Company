@@ -1,5 +1,5 @@
 # Automatische Tests bei jedem Push und Pull Request – ohne API-Schlüssel, ohne Kosten.
-# Alle Tests laufen offline: Skript-Agenten statt LLMs, simulierte Server für DeepSeek, OpenRouter und Jev.
+# Alle Tests laufen offline: ein simuliertes Sprachmodell statt echter Aufrufe, kleine Beispieldokumente statt Kursunterlagen.
 name: Tests
 
 # Push auf main und jeder Pull Request (Branches mit offenem PR laufen so nur einmal pro Push).
@@ -26,10 +26,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-      - run: pip install -e ".[dev,analyse,dashboard]"
+      - run: pip install -e ".[dev]"
       - run: python -m pytest -q
-      - name: Offline-Demo und Monitor
+      - name: Befehlszeile ohne Netz (Einlesen der Beispieldokumente, Suche ohne Sprachmodell)
+        env:
+          STUDIENASSISTENT_DATEN: ${{ runner.temp }}/daten
         run: |
-          python -m kartell demo --ausgabe runs
-          python -m kartell bericht runs --ausgabe reports
-          python -m kartell monitor runs --ausgabe reports/monitor.html
+          python -m studienassistent einlesen tests/daten
+          python -m studienassistent bewerten --nur-suche --testset evaluation/fragen.jsonl

@@ -7,3 +7,6 @@ __pycache__/
 runs/
 reports/
 .cache/
+# Studienassistent: eingelesene Kursunterlagen und Index bleiben lokal (Urheberrecht der FHNW)
+/daten/
+/unterlagen/
