@@ -23,9 +23,21 @@ sehr es er sie wir ihr ich du man sich dass wenn weil ob doch ja nein alle was w
 mein meine muss müssen kann können soll the a an and or of to in on for with is are be""".split())
 
 
+_MONATE = {m: i for i, m in enumerate("januar februar märz april mai juni juli august september oktober november dezember".split(), 1)}
+_DATUM_ZAHL = re.compile(r"\b(\d{1,2})\.\s?(\d{1,2})\.")
+_DATUM_WORT = re.compile(r"\b(\d{1,2})\.\s?(" + "|".join(_MONATE) + r")\b")
+
+
+def daten(text: str) -> list[str]:
+    """Datumsangaben als gemeinsames Token: «12.10.» und «12. Oktober» → d12_10."""
+    t = text.lower()
+    return ([f"d{int(tag)}_{int(monat)}" for tag, monat in _DATUM_ZAHL.findall(t) if 1 <= int(monat) <= 12]
+            + [f"d{int(tag)}_{_MONATE[monat]}" for tag, monat in _DATUM_WORT.findall(t)])
+
+
 def tokens(text: str) -> list[str]:
     woerter = [w for w in re.findall(r"[a-zäöüß0-9]+", text.lower()) if w not in _STOPP and len(w) > 1]
-    return woerter + [w[:5] for w in woerter if len(w) > 6]  # einfache Stammform für Komposita und Flexion
+    return woerter + [w[:5] for w in woerter if len(w) > 6] + daten(text)  # Stammform für Komposita und Flexion
 
 
 class BM25:
