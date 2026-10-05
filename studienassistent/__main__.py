@@ -4,6 +4,7 @@
     python -m studienassistent frage "Wann ist die GenAI-Präsentation?"
     python -m studienassistent app                 # Chat im Browser (Streamlit)
     python -m studienassistent bewerten            # Evaluation mit evaluation/fragen.jsonl
+    python -m studienassistent mcp                 # Werkzeuge als MCP-Server (stdio)
 """
 from __future__ import annotations
 
@@ -63,6 +64,12 @@ def _app(args) -> None:
                               "--server.port", str(args.port)] + (["--server.address", args.adresse] if args.adresse else [])))
 
 
+def _mcp(args) -> None:
+    from .mcp_server import erstelle_server
+    _, suche, fristen = lade_alles()
+    erstelle_server(suche, fristen).run()
+
+
 def _bewerten(args) -> None:
     from .bewertung import bewerte, tabelle
     graph, suche, _ = lade_alles(args.modell, args.denken)
@@ -93,6 +100,7 @@ def main() -> int:
     s.add_argument("--port", type=int, default=8501)
     s.add_argument("--adresse", help="z. B. die Tailscale-IP, um im Tailnet erreichbar zu sein")
     s.set_defaults(fn=_app)
+    sub.add_parser("mcp", help="Werkzeuge als MCP-Server (stdio) anbieten").set_defaults(fn=_mcp)
     args = p.parse_args()
     args.fn(args)
     return 0
