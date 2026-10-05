@@ -430,6 +430,8 @@ def _raster(args) -> None:
         print(f"{len(zellen())} Zellen à {WOCHEN} Wochen")
         return
     fertig = set(Path(args.fertig).read_text(encoding="utf-8").split()) if args.fertig and Path(args.fertig).exists() else set()
+    if Path(args.ausgabe).is_dir():  # auf dem Thin Client: fertige Zellen direkt im Ergebnisordner erkennen
+        fertig |= {d.name for d in Path(args.ausgabe).iterdir() if d.is_dir() and any(d.rglob("ergebnis.json"))}
     neu = rechne(fertig, args.minuten, args.ausgabe)
     offen = len([z for z in zellen() if z["id"] not in fertig | set(neu)])
     print(f"Raster: {len(neu)} neu gerechnet, {offen} offen")
