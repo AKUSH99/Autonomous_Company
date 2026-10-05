@@ -53,10 +53,10 @@ def test_raster_alle_zellen_gueltig():
     from kartell.config import mit_modell
     from kartell.raster import MODELL, szenario, zellen
     alle = zellen()
-    assert len(alle) == 90 and len({z["id"] for z in alle}) == 90 and alle[0]["id"] == "s6_keine_normal_keins"
+    assert len(alle) == 315 and len({z["id"] for z in alle}) == 315 and alle[0]["id"] == "s6_keine_normal_keins"
     for z in alle:
         cfg = mit_modell(szenario(z).als_config(), MODELL)
         assert cfg.markt.firmen == z["shops"] and cfg.runden == 15
         assert (cfg.compliance.modus == "filter") == z["kommunikation"].endswith("compliance")
-        assert bool(cfg.ereignisse) == (z["ereignis"] == "zoll")
+        assert bool(cfg.ereignisse) == (z["ereignis"] != "keins")
         assert cfg.agenten.llm.anfragen_pro_minute == 14 and cfg.compliance.llm.provider != "anthropic"
