@@ -7,13 +7,11 @@ damit die Unterlagen nur einmal eingebettet werden. Ohne Schlüssel oder Netz bl
 from __future__ import annotations
 
 import hashlib
-import json
 import math
 import os
 import re
 from collections import Counter
 from pathlib import Path
-from typing import Callable
 
 from .einlesen import Abschnitt
 
@@ -63,8 +61,9 @@ class BM25:
         return out
 
 
-def swissai_einbetter(cache: Path, stapel: int = 32) -> Callable[[list[str]], list[list[float]]] | None:
-    """Embeddings über die Swiss AI Platform mit Cache (NumPy, float16 – klein und schnell geladen); None ohne Schlüssel."""
+def swissai_einbetter(cache: Path, stapel: int = 32):
+    """Embeddings über die Swiss AI Platform; Ergebnis als normierte NumPy-Matrix (float32), Cache als float16-npz.
+    Der Cache wird laufend gespeichert, ein abgebrochener Lauf macht beim nächsten Mal weiter. None ohne Schlüssel."""
     if not os.environ.get("SWISSAI_API_KEY"):
         return None
     import numpy as np
@@ -73,42 +72,41 @@ def swissai_einbetter(cache: Path, stapel: int = 32) -> Callable[[list[str]], li
     from .konfig import EMBEDDING_MODELL, SWISSAI_URL
     client = openai.OpenAI(base_url=SWISSAI_URL, api_key=os.environ["SWISSAI_API_KEY"], max_retries=6)
     cache = cache.with_suffix(".npz")
-    gespeichert: dict[str, list[float]] = {}
+    gespeichert: dict[str, np.ndarray] = {}
     if cache.exists():
         with np.load(cache) as d:
-            gespeichert = dict(zip(d["schluessel"].tolist(), d["vektoren"].astype(np.float32).tolist()))
-    elif cache.with_suffix(".json").exists():  # alter Cache
-        gespeichert = json.loads(cache.with_suffix(".json").read_text(encoding="utf-8"))
+            gespeichert = dict(zip(d["schluessel"].tolist(), d["vektoren"]))
     schluessel = lambda t: hashlib.sha1(f"{EMBEDDING_MODELL}\n{t}".encode()).hexdigest()
 
-    def einbetten(texte: list[str]) -> list[list[float]]:
+    def sichern():
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        np.savez(cache, schluessel=np.array(list(gespeichert)), vektoren=np.stack(list(gespeichert.values())))
+
+    def einbetten(texte: list[str]) -> np.ndarray:
         fehlend = [t for t in dict.fromkeys(texte) if schluessel(t) not in gespeichert]
-        for start in range(0, len(fehlend), stapel):
+        for nr, start in enumerate(range(0, len(fehlend), stapel), 1):
             teil = fehlend[start:start + stapel]
             antwort = client.embeddings.create(model=EMBEDDING_MODELL, input=teil)
             for t, d in zip(teil, sorted(antwort.data, key=lambda d: d.index)):
-                gespeichert[schluessel(t)] = d.embedding
-        if fehlend or not cache.exists():
-            cache.parent.mkdir(parents=True, exist_ok=True)
-            np.savez(cache, schluessel=np.array(list(gespeichert)), vektoren=np.array(list(gespeichert.values()), dtype=np.float16))
-        return [gespeichert[schluessel(t)] for t in texte]
+                gespeichert[schluessel(t)] = np.asarray(d.embedding, dtype=np.float16)
+            if nr % 20 == 0:
+                sichern()
+        if fehlend:
+            sichern()
+        m = np.stack([gespeichert[schluessel(t)] for t in texte]).astype(np.float32)
+        return m / np.maximum(np.linalg.norm(m, axis=1, keepdims=True), 1e-9)
 
     return einbetten
 
 
-def _norm(v: list[float]) -> list[float]:
-    laenge = math.sqrt(sum(x * x for x in v)) or 1.0
-    return [x / laenge for x in v]
-
-
 class Suche:
-    def __init__(self, abschnitte: list[Abschnitt], einbetten: Callable[[list[str]], list[list[float]]] | None = None, rrf_k: int = 60):
+    def __init__(self, abschnitte: list[Abschnitt], einbetten=None, rrf_k: int = 60):
         if not abschnitte:
             raise ValueError("Keine Unterlagen eingelesen – zuerst `python -m studienassistent einlesen <Ordner>`.")
         self.abschnitte = abschnitte
         self.bm25 = BM25(abschnitte)
         self.einbetten, self.rrf_k = einbetten, rrf_k
-        self.vektoren = [_norm(v) for v in einbetten([f"{a.modul}: {a.text}" for a in abschnitte])] if einbetten else None
+        self.vektoren = einbetten([f"{a.modul}: {a.text}" for a in abschnitte]) if einbetten else None
 
     def module(self) -> list[str]:
         return sorted({a.modul for a in self.abschnitte})
@@ -120,9 +118,8 @@ class Suche:
         b = self.bm25.werte(anfrage)
         listen = [sorted((i for i in erlaubt if b[i] > 0), key=lambda i: -b[i])[:30]]
         if self.vektoren is not None:
-            q = _norm(self.einbetten([anfrage])[0])
-            sim = {i: sum(x * y for x, y in zip(q, self.vektoren[i])) for i in erlaubt}
-            listen.append(sorted(erlaubt, key=lambda i: -sim[i])[:30])
+            sim = self.vektoren[erlaubt] @ self.einbetten([anfrage])[0]
+            listen.append([erlaubt[j] for j in sim.argsort()[::-1][:30]])
         rrf: dict[int, float] = {}
         for liste in listen:
             for rang, i in enumerate(liste, 1):

@@ -90,3 +90,15 @@ def test_fakten_vergleich():
 def test_module_zuordnen_und_weglassen():
     abschnitte = einlesen([DATEN], {"GenAI": ["Generative"]})
     assert {a.modul for a in abschnitte} == {"GenAI"}  # Marketing ist nicht zugeordnet und fällt weg
+
+
+def test_hybrid_suche_mit_embeddings():
+    import numpy as np
+
+    def einbetten(texte):  # Spielzeug-Embedding: Buchstabenhäufigkeiten, normiert
+        m = np.array([[t.lower().count(c) for c in "abcdefghijklmnopqrstuvwxyzäöü"] for t in texte], dtype=np.float32)
+        return m / np.maximum(np.linalg.norm(m, axis=1, keepdims=True), 1e-9)
+
+    suche = Suche(einlesen([DATEN]), einbetten)
+    assert suche.vektoren.shape[0] == len(suche.abschnitte)
+    assert suche.suchen("Wann ist die Abschlusspräsentation?", k=1)[0][0].modul == "Generative KI"
