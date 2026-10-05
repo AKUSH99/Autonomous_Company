@@ -14,13 +14,14 @@ on:
 permissions:
   contents: write
 
+# Jeder Branch hat eine eigene Gruppe: Läufe verschiedener Branches rechnen parallel (z. B. Wiederholungen auf je einem Branch).
 # Übernahmen nach main (Merge-Commits) bekommen je eine eigene Gruppe. Sonst würde ihr leerer Lauf einen wartenden
 # echten Lauf abbrechen: GitHub bricht in einer Gruppe den älteren WARTENDEN Lauf ab, sobald ein neuer dazukommt.
 concurrency:
   group: >-
     ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' &&
     (startsWith(github.event.head_commit.message, 'Merge pull request') || contains(github.event.head_commit.message, '(#')) &&
-    format('uebernahme-{0}', github.run_id) || 'experimente' }}
+    format('uebernahme-{0}', github.run_id) || format('experimente-{0}', github.ref_name) }}
   cancel-in-progress: false
 
 jobs:
