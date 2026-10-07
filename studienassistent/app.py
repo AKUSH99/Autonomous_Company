@@ -47,8 +47,10 @@ def auslastung() -> None:
     st.progress(min(lage["aufrufe_minute"] / lage["limit"], 1.0),
                 text=f"🔑 API-Schlüssel: {lage['aufrufe_minute']} von {lage['limit']} Aufrufen pro Minute")
     schnitt = f", Ø {lage['schnitt_sekunden']:.0f} s pro Antwort" if lage["schnitt_sekunden"] else ""
-    st.caption(f"Heute: {lage['fragen_heute']} Fragen von {lage['fragende_heute']} Personen{schnitt}; "
-               f"{lage['besucher_heute']} Besuche")
+    zahl = lambda n, eins, mehr: f"{n} {eins if n == 1 else mehr}"
+    st.caption(f"Heute: {zahl(lage['fragen_heute'], 'Frage', 'Fragen')} von "
+               f"{zahl(lage['fragende_heute'], 'Person', 'Personen')}{schnitt}; "
+               f"{zahl(lage['besucher_heute'], 'Besuch', 'Besuche')}")
 
 
 with st.sidebar:
