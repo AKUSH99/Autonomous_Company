@@ -3,14 +3,14 @@
 **Ein KI-Agent, der Fragen zum Studium aus den echten Kursunterlagen beantwortet – mit Quelle.**
 
 Modul Generative KI & Agentensysteme · FHNW BSc Business Artificial Intelligence · Gruppenarbeit HS 2026
-Stand: 05.10.2026 · Abschlusspräsentation: 23.11.2026, 13:00 Uhr (10 Min. inkl. Verständnisfragen)
+Stand: 07.10.2026 · Abschlusspräsentation: 23.11.2026, 13:00 Uhr (10 Min. inkl. Verständnisfragen)
 
 ## Team
 
 > **Teamgrösse:** Vorgesehen sind 3 Studierende, höchstens 4 (SW4, Folie 4; Moodle-Kursseite). Das Team hat fünf
-> Mitglieder – mit Sandro Schwander abklären. Die Rollen (Abschnitt 10) verteilt das Team noch.
+> Mitglieder – mit Sandro Schwander abklären. Die Rollen (Abschnitt 9) verteilt das Team noch.
 
-| Name | Rolle (Abschnitt 10) |
+| Name | Rolle (Abschnitt 9) |
 |---|---|
 | Almidin Bangoji | _Rolle eintragen_ |
 | Robin Meier | _Rolle eintragen_ |
@@ -96,11 +96,11 @@ werden nicht gelesen; das Ratenlimit der Swiss AI Platform (≈ 15 Anfragen/Minu
 | Orchestrierung | LangGraph: Prüfung → Agent ⇄ Werkzeuge, bedingte Kanten |
 | RAG | Chunking mit Überlappung, Hybrid-Suche (BM25 + Qwen3-Embeddings, Reciprocal Rank Fusion), Modulfilter |
 | Memory | Gesprächsgedächtnis pro Chat (LangGraph-Checkpointer) |
-| Guardrails | Eingangsprüfung mit strukturierter Ausgabe (Pydantic), Regel gegen das Schreiben von Abgaben |
-| MCP | Werkzeuge zusätzlich als MCP-Server, damit sie auch andere Clients nutzen können (KW 43) |
+| Guardrails | Eingangsprüfung mit strukturierter Ausgabe (Pydantic, per Function Calling), Regel gegen das Schreiben von Abgaben |
+| MCP | Eigener MCP-Server mit den drei Werkzeugen; der Agent ist MCP-Client und holt Werkzeugliste und Ergebnisse über das Protokoll (`mcp_client.py`). Andere Clients (Claude Desktop, Claude Code) können denselben Server nutzen |
 | Modellwahl | Swiss AI Research Platform: im Chat GLM-5.3 Flash mit maximalem Reasoning für die Antwort; Prüfung und Suche im schnellen Modus. Per Befehl auch DeepSeek und Apertus |
-| Evaluation & Tracing | Testset mit drei Kennzahlen, Tests ohne Netz (GitHub Actions), LangSmith-Tracing |
-| Interface | Streamlit-Chat mit aufklappbaren Fundstellen |
+| Evaluation & Tracing | Testset mit fünf Kennzahlen inkl. Antwortzeit, Modellvergleich (`docs/modellwahl.md`), Tests ohne Netz (GitHub Actions), LangSmith-Tracing (Projekt `studienassistent`) |
+| Interface | Streamlit-Chat mit Fundstellen als Karten, Warteschlange und Auslastungsanzeige für viele Nutzende |
 
 ## 7. Evaluation
 
@@ -113,11 +113,11 @@ verglichen. Die Tests in `tests/` laufen ohne Netz mit einem simulierten Sprachm
 | Woche | Meilenstein laut Semesterprogramm | Stand |
 |---|---|---|
 | KW 41 (05.10.) | Gruppenbildung, Use Case, Evaluationskriterien | diese Skizze; **Rollen eintragen** |
-| KW 42 (12.10.) | erste lauffähige Version, Tracing | lauffähig (Chat, CLI, Tests) |
-| KW 43 (19.10.) | MCP-Server anbinden | umgesetzt (`python -m studienassistent mcp`) |
+| KW 42 (12.10.) | erste lauffähige Version, Tracing | lauffähig (Chat, CLI, Tests); Tracing in LangSmith, Projekt `studienassistent` |
+| KW 43 (19.10.) | MCP-Server anbinden | umgesetzt: eigener Server (`python -m studienassistent mcp`), Agent als MCP-Client |
 | KW 44 (26.10.) | RAG, Chunking, Hybrid Retrieval | umgesetzt; Feinschliff nach Evaluation |
 | KW 46 (09.11.) | Memory festlegen | Gesprächsgedächtnis umgesetzt |
-| KW 47 (16.11.) | Safeguarding, Evaluation | Guardrail und Testset umgesetzt (22 Fragen, alle Kennzahlen 100 %); Testset ausbauen, Modelle vergleichen |
+| KW 47 (16.11.) | Safeguarding, Evaluation | Guardrail, Testset und Modellvergleich umgesetzt (`docs/modellwahl.md`); Testset ausbauen |
 | KW 48 (23.11.) | Abschlusspräsentation | Live-Demo im Chat |
 
 ## 9. Arbeitsteilung
@@ -127,7 +127,8 @@ verglichen. Die Tests in `tests/` laufen ohne Netz mit einem simulierten Sprachm
 | Daten & Suche | Einlesen, Chunking, Hybrid-Suche, Fristen | `einlesen.py`, `suche.py`, `fristen.py` | _Name_ |
 | Agent & Prompts | LangGraph, Werkzeuge, System-Prompt, Guardrail | `agent.py`, `werkzeuge.py`, `prompts.py` | _Name_ |
 | Evaluation | Testset, Kennzahlen, Modellvergleich, Tracing | `bewertung.py`, `evaluation/`, `tests/` | _Name_ |
-| Interface & Präsentation | Chat-App, MCP, Demo, Folien | `app.py`, `docs/` | _Name_ |
+| Interface & Demo | Chat-App, Betrieb (Warteschlange, Auslastung), Live-Demo | `app.py`, `betrieb.py`, `stellen.py` | _Name_ |
+| Integration & Präsentation | MCP-Server und -Client, Modellwahl, Folien | `mcp_server.py`, `mcp_client.py`, `docs/` | _Name_ |
 
 ## 10. Risiken
 
@@ -135,7 +136,7 @@ verglichen. Die Tests in `tests/` laufen ohne Netz mit einem simulierten Sprachm
 |---|---|
 | Modell erfindet Antworten | Regel «nur aus Unterlagen», Quelle Pflicht, Fakten-Kennzahl im Testset |
 | Suche findet die Stelle nicht | Hybrid-Suche, Modulfilter, Fehlfälle aus der Evaluation gezielt verbessern |
-| Ratenlimit / Ausfall der Plattform | Taktbremse im Client, Modell umschaltbar |
+| Ratenlimit / Ausfall der Plattform | Gemeinsame Taktbremse für alle Prozesse (14 Aufrufe/Min.), Warteschlange mit höchstens 2 gleichzeitigen Fragen, Modell per Befehl umschaltbar |
 | Urheberrecht der Kursunterlagen | Unterlagen nie im Repository, nur lokal eingelesen |
 | Demo scheitert live | Beispielfragen vorbereitet, Aufzeichnung als Rückfall |
 

@@ -17,7 +17,7 @@ from pathlib import Path
 from .konfig import daten_ordner
 
 
-def lade_alles(modell_name: str = "deepseek", denken: bool = False):
+def lade_alles(modell_name: str = "deepseek", denken: bool = False, mcp: bool = True):
     from .agent import baue_agent
     from .einlesen import laden
     from .fristen import Fristen
@@ -31,7 +31,13 @@ def lade_alles(modell_name: str = "deepseek", denken: bool = False):
     fristen = Fristen.laden(d / "fristen.json")
     # Mit Reasoning prüft und sucht das schnelle Modell; nur die Antwort schreibt das denkende (einmal statt pro Runde).
     denkmodell = chat_modell(modell_name, True) if denken else None
-    return baue_agent(chat_modell(modell_name, False), suche, fristen, denkmodell=denkmodell), suche, fristen
+    # Werkzeuge über MCP: Der Agent ist Client des eigenen MCP-Servers (im selben Prozess, siehe mcp_client.py)
+    werkzeuge = None
+    if mcp:
+        from .mcp_client import MCPWerkzeuge
+        from .mcp_server import erstelle_server
+        werkzeuge = MCPWerkzeuge(erstelle_server(suche, fristen)).werkzeuge
+    return baue_agent(chat_modell(modell_name, False), suche, fristen, denkmodell=denkmodell, werkzeuge=werkzeuge), suche, fristen
 
 
 def _einlesen(args) -> None:
