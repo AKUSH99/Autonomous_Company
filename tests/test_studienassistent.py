@@ -165,6 +165,7 @@ def test_fragen_live_meldet_denken_und_zeigt_nur_die_endantwort():
     assert arten.index("werkzeug") < arten.index("denken") < len(arten) - 1
     nach_denken = "".join(i for a, i in ereignisse[arten.index("denken"):] if a == "text")
     assert nach_denken == "Endantwort" and ereignisse[-1][1]["antwort"] == "Endantwort"
+    assert not any(a == "text" and "Entwurf" in i for a, i in ereignisse)  # der Entwurf wird gar nicht angezeigt
 
 
 def test_notbremse_statt_absturz(monkeypatch):

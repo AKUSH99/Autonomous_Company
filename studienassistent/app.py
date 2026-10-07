@@ -9,13 +9,16 @@ from studienassistent.__main__ import lade_alles
 from studienassistent.agent import fragen_live
 from studienassistent.stellen import als_markdown, farbe, suchbegriffe, zerlegen
 
+MODELLE_APP = {"glm": "GLM-5.3 (stärker)", "glm-flash": "GLM-5.3 Flash (schneller)"}
+
 st.set_page_config(page_title="FHNW Studienassistent", page_icon="🎓")
 st.title("FHNW Studienassistent")
 st.caption("Fragen zu Modulen, Prüfungen, Abgaben und Fristen im BAI-Herbstsemester 2026 – jede Antwort mit Quelle.")
 
 with st.sidebar:
-    modell = st.selectbox("Modell", ["deepseek", "apertus", "glm"], help="Sprachmodelle der Swiss AI Research Platform")
-    denken = st.toggle("Reasoning", value=False, help="Das Modell denkt vor der Antwort nach – genauer, aber langsamer.")
+    modell = st.selectbox("Modell", list(MODELLE_APP), format_func=MODELLE_APP.get,
+                          help="Sprachmodelle der Swiss AI Research Platform. Die Antwort entsteht immer mit maximalem Reasoning.")
+    st.caption("🧠 Reasoning: immer maximal")
     if st.button("Neues Gespräch"):
         st.session_state.pop("thread", None)
         st.session_state.pop("verlauf", None)
@@ -24,8 +27,8 @@ with st.sidebar:
 
 
 @st.cache_resource(show_spinner="Unterlagen werden geladen …")
-def agent(modell: str, denken: bool):
-    return lade_alles(modell, denken)
+def agent(modell: str):
+    return lade_alles(modell, denken=True)
 
 
 def zeige_stellen(quellen: list[str], antwort: str, frage: str) -> None:
@@ -51,7 +54,7 @@ def zeige_stellen(quellen: list[str], antwort: str, frage: str) -> None:
                 st.markdown(f"<small>{als_markdown(s.text, begriffe)}</small>", unsafe_allow_html=True)
 
 
-graph, suche, _ = agent(modell, denken)
+graph, suche, _ = agent(modell)
 st.session_state.setdefault("thread", str(uuid.uuid4()))
 st.session_state.setdefault("verlauf", [])
 

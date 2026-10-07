@@ -50,7 +50,8 @@ def baue_agent(modell, suche: Suche, fristen: Fristen, heute: dt.date | None = N
     zuständig für Prüfung und Suche. `denkmodell`: optional ein Modell mit Reasoning, das nur die Antwort schreibt."""
     werkzeuge = erstelle_werkzeuge(suche, fristen)
     mit_werkzeugen = modell.bind_tools(werkzeuge)
-    pruefer = modell.with_structured_output(Pruefung)
+    # Über einen Werkzeugaufruf statt JSON-Schema: bei GLM mit Reasoning viel schneller, und Gedankentext stört nicht
+    pruefer = modell.with_structured_output(Pruefung, method="function_calling")
 
     def system() -> SystemMessage:
         tag = heute or dt.date.today()
@@ -154,7 +155,9 @@ def fragen_live(graph, text: str, thread_id: str = "standard"):
             for aufruf in getattr(stueck, "tool_call_chunks", None) or getattr(stueck, "tool_calls", None) or []:
                 if aufruf.get("name"):
                     yield "werkzeug", aufruf["name"]
-            if isinstance(stueck.content, str) and stueck.content:
+            # Mit Denkmodell nur dessen Antwort zeigen: Der Text des schnellen Modells ist ein Entwurf (bei GLM ohne
+            # Reasoning oft mit rohen Gedanken davor).
+            if isinstance(stueck.content, str) and stueck.content and (meta["langgraph_node"] == "antworten" or not mit_denkmodell):
                 yield "text", stueck.content
     except GraphRecursionError:
         yield "fertig", _abbruch(graph, konfig, vorher)

@@ -95,7 +95,7 @@ def main() -> int:
         else:
             s.add_argument("--testset", default="evaluation/fragen.jsonl")
             s.add_argument("--nur-suche", action="store_true", help="nur die Suche bewerten (ohne Sprachmodell)")
-        s.add_argument("--modell", default="deepseek", help="deepseek, apertus, glm oder eine Modell-ID")
+        s.add_argument("--modell", default="deepseek", help="glm, glm-flash, deepseek, apertus oder eine Modell-ID")
         s.add_argument("--denken", action="store_true", help="Reasoning einschalten (langsamer)")
         s.set_defaults(fn=fn)
     s = sub.add_parser("app", help="Chat im Browser starten")
