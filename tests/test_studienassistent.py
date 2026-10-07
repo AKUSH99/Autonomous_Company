@@ -123,6 +123,8 @@ def test_besucher_und_fragen_zaehlen(tmp_path):
     lage = b.lage()
     assert (lage["aktiv"], lage["besucher_heute"], lage["fragen_heute"], lage["fragende_heute"]) == (2, 2, 1, 1)
     assert 11 < lage["schnitt_sekunden"] < 14
+    b.bewerten("a1", True), b.bewerten("a2", False), b.bewerten("a2", True), b.bewerten("a3", False), b.bewerten("a3", None)
+    assert (b.lage()["daumen_hoch"], b.lage()["daumen_runter"]) == (2, 0)  # umentschieden und zurückgenommen zählt richtig
 
 
 def test_warteschlange_der_reihe_nach():

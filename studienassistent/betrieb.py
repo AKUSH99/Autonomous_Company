@@ -34,6 +34,7 @@ class Betrieb:
                 CREATE TABLE IF NOT EXISTS besuche (besucher TEXT PRIMARY KEY, erstmals REAL, zuletzt REAL);
                 CREATE TABLE IF NOT EXISTS fragen (besucher TEXT, start REAL, sekunden REAL);
                 CREATE TABLE IF NOT EXISTS ablehnungen (zeit REAL, pause REAL);
+                CREATE TABLE IF NOT EXISTS bewertungen (antwort TEXT PRIMARY KEY, zeit REAL, gut INTEGER);
             """)
 
     def _verbindung(self) -> sqlite3.Connection:
@@ -86,6 +87,14 @@ class Betrieb:
         with closing(self._verbindung()) as db, db:
             db.execute("INSERT INTO fragen VALUES (?, ?, ?)", (besucher, start, time.time() - start))
 
+    def bewerten(self, antwort_id: str, gut: bool | None) -> None:
+        """👍/👎 zu einer Antwort (None = zurückgenommen). Gespeichert wird nur die Bewertung, nicht der Text."""
+        with closing(self._verbindung()) as db, db:
+            if gut is None:
+                db.execute("DELETE FROM bewertungen WHERE antwort = ?", (antwort_id,))
+            else:
+                db.execute("INSERT OR REPLACE INTO bewertungen VALUES (?, ?, ?)", (antwort_id, time.time(), int(gut)))
+
     def lage(self) -> dict:
         jetzt = time.time()
         heute = dt.datetime.combine(dt.date.today(), dt.time()).timestamp()
@@ -95,9 +104,10 @@ class Betrieb:
             fragen, personen, schnitt = db.execute(
                 "SELECT COUNT(*), COUNT(DISTINCT besucher), AVG(sekunden) FROM fragen WHERE start > ?", (heute,)).fetchone()
             besucher_heute = db.execute("SELECT COUNT(*) FROM besuche WHERE zuletzt > ?", (heute,)).fetchone()[0]
+            gut, schlecht = db.execute("SELECT COALESCE(SUM(gut), 0), COALESCE(SUM(1 - gut), 0) FROM bewertungen").fetchone()
             abgelehnt_heute = db.execute("SELECT COUNT(*) FROM ablehnungen WHERE zeit > ?", (heute,)).fetchone()[0]
             bis = db.execute("SELECT MAX(zeit + pause) FROM ablehnungen").fetchone()[0] or 0
-        return {"abgelehnt_heute": abgelehnt_heute, "pause_noch": max(0.0, bis - jetzt), "aktiv": aktiv, "aufrufe_minute": minute, "limit": self.pro_minute, "fragen_heute": fragen,
+        return {"daumen_hoch": gut, "daumen_runter": schlecht, "abgelehnt_heute": abgelehnt_heute, "pause_noch": max(0.0, bis - jetzt), "aktiv": aktiv, "aufrufe_minute": minute, "limit": self.pro_minute, "fragen_heute": fragen,
                 "fragende_heute": personen, "besucher_heute": besucher_heute, "schnitt_sekunden": schnitt}
 
 
