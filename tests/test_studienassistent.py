@@ -247,3 +247,15 @@ def test_notbremse_bei_429_und_jede_anfrage_zaehlt(tmp_path, monkeypatch):
     assert lage["abgelehnt_heute"] == 1 and 29 < lage["pause_noch"] <= 30  # alle Prozesse pausieren 30 s
     assert lage["aufrufe_minute"] == 1  # die Anfrage selbst ist in der Taktbremse gezählt
     assert 29 < b.warten() <= 30                                             # auch eine neue Anfrage muss warten
+
+
+def test_app_verlangt_passwort_wenn_gesetzt(monkeypatch):
+    import pytest
+    pytest.importorskip("streamlit")
+    from streamlit.testing.v1 import AppTest
+    monkeypatch.setenv("STUDIENASSISTENT_PASSWORT", "geheim")
+    app = AppTest.from_file(str(Path(__file__).parent.parent / "studienassistent" / "app.py"), default_timeout=30).run()
+    assert app.text_input[0].label == "Passwort" and not app.chat_input  # ohne Passwort keine App (und kein Modell)
+    app.text_input[0].input("falsch")
+    app.button[0].click().run()
+    assert app.error and not app.chat_input
