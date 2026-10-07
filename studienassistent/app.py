@@ -9,16 +9,14 @@ from studienassistent.__main__ import lade_alles
 from studienassistent.agent import fragen_live
 from studienassistent.stellen import als_markdown, farbe, suchbegriffe, zerlegen
 
-MODELLE_APP = {"glm": "GLM-5.3 (stärker)", "glm-flash": "GLM-5.3 Flash (schneller)"}
+MODELL = "glm-flash"  # GLM-5.3 Flash; die Antwort entsteht immer mit maximalem Reasoning
 
 st.set_page_config(page_title="FHNW Studienassistent", page_icon="🎓")
 st.title("FHNW Studienassistent")
 st.caption("Fragen zu Modulen, Prüfungen, Abgaben und Fristen im BAI-Herbstsemester 2026 – jede Antwort mit Quelle.")
 
 with st.sidebar:
-    modell = st.selectbox("Modell", list(MODELLE_APP), format_func=MODELLE_APP.get,
-                          help="Sprachmodelle der Swiss AI Research Platform. Die Antwort entsteht immer mit maximalem Reasoning.")
-    st.caption("🧠 Reasoning: immer maximal")
+    st.caption("Modell: GLM-5.3 Flash (Swiss AI Research Platform)  \n🧠 Reasoning: immer maximal")
     if st.button("Neues Gespräch"):
         st.session_state.pop("thread", None)
         st.session_state.pop("verlauf", None)
@@ -54,7 +52,7 @@ def zeige_stellen(quellen: list[str], antwort: str, frage: str) -> None:
                 st.markdown(f"<small>{als_markdown(s.text, begriffe)}</small>", unsafe_allow_html=True)
 
 
-graph, suche, _ = agent(modell)
+graph, suche, _ = agent(MODELL)
 st.session_state.setdefault("thread", str(uuid.uuid4()))
 st.session_state.setdefault("verlauf", [])
 

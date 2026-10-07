@@ -98,7 +98,7 @@ werden nicht gelesen; das Ratenlimit der Swiss AI Platform (≈ 15 Anfragen/Minu
 | Memory | Gesprächsgedächtnis pro Chat (LangGraph-Checkpointer) |
 | Guardrails | Eingangsprüfung mit strukturierter Ausgabe (Pydantic), Regel gegen das Schreiben von Abgaben |
 | MCP | Werkzeuge zusätzlich als MCP-Server, damit sie auch andere Clients nutzen können (KW 43) |
-| Modellwahl | Swiss AI Research Platform: im Chat GLM-5.3 oder GLM-5.3 Flash mit maximalem Reasoning für die Antwort; Prüfung und Suche im schnellen Modus. Per Befehl auch DeepSeek und Apertus |
+| Modellwahl | Swiss AI Research Platform: im Chat GLM-5.3 Flash mit maximalem Reasoning für die Antwort; Prüfung und Suche im schnellen Modus. Per Befehl auch DeepSeek und Apertus |
 | Evaluation & Tracing | Testset mit drei Kennzahlen, Tests ohne Netz (GitHub Actions), LangSmith-Tracing |
 | Interface | Streamlit-Chat mit aufklappbaren Fundstellen |
 
