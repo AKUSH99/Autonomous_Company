@@ -1,7 +1,9 @@
 """Betrieb mit vielen Nutzenden auf einem gemeinsamen API-Schlüssel.
 
 - Taktbremse: höchstens n Aufrufe pro Minute über ALLE Prozesse (Chat-App und Update-Job teilen den Schlüssel). Das
-  Fenster liegt in einer SQLite-Datei, damit sich die Prozesse abstimmen. Gezählt werden Chat- und Embedding-Aufrufe.
+  Fenster liegt in einer SQLite-Datei, damit sich die Prozesse abstimmen. Gezählt wird jede HTTP-Anfrage an die
+  Plattform (Chat, Embeddings und Wiederholungen), siehe konfig.http_client.
+- Notbremse: Lehnt die Plattform trotzdem ab (HTTP 429), pausieren alle Prozesse so lange, wie sie verlangt.
 - Besucher: wer die Seite offen hat (Lebenszeichen alle paar Sekunden) und wie viele Fragen heute gestellt wurden.
 - Warteschlange: höchstens MAX_GLEICHZEITIG Fragen werden zugleich bearbeitet, die übrigen warten der Reihe nach.
   So bekommt die erste Person schnell eine Antwort, statt dass alle gleichzeitig ausgebremst werden.
@@ -31,6 +33,7 @@ class Betrieb:
                 CREATE INDEX IF NOT EXISTS aufrufe_zeit ON aufrufe (zeit);
                 CREATE TABLE IF NOT EXISTS besuche (besucher TEXT PRIMARY KEY, erstmals REAL, zuletzt REAL);
                 CREATE TABLE IF NOT EXISTS fragen (besucher TEXT, start REAL, sekunden REAL);
+                CREATE TABLE IF NOT EXISTS ablehnungen (zeit REAL, pause REAL);
             """)
 
     def _verbindung(self) -> sqlite3.Connection:
@@ -46,6 +49,9 @@ class Betrieb:
             db.execute("BEGIN IMMEDIATE")  # sperrt die Datei für andere Prozesse bis zum Ende
             try:
                 jetzt = time.time()
+                bis = db.execute("SELECT MAX(zeit + pause) FROM ablehnungen").fetchone()[0] or 0
+                if bis > jetzt:  # Notbremse: die Plattform hat eine Pause verlangt
+                    return bis - jetzt
                 zeiten = [z for (z,) in db.execute("SELECT zeit FROM aufrufe WHERE zeit > ? ORDER BY zeit", (jetzt - 60,))]
                 if len(zeiten) < self.pro_minute:
                     db.execute("INSERT INTO aufrufe VALUES (?, ?)", (jetzt, art))
@@ -54,6 +60,11 @@ class Betrieb:
                 return zeiten[-self.pro_minute] + 60 - jetzt + 0.05
             finally:
                 db.execute("COMMIT")
+
+    def abgelehnt(self, pause: float) -> None:
+        """Die Plattform hat mit HTTP 429 abgelehnt: alle Prozesse warten `pause` Sekunden."""
+        with closing(self._verbindung()) as db, db:
+            db.execute("INSERT INTO ablehnungen VALUES (?, ?)", (time.time(), pause))
 
     def bremsen(self, art: str = "chat") -> None:
         while (w := self.warten(art)) > 0:
@@ -84,7 +95,9 @@ class Betrieb:
             fragen, personen, schnitt = db.execute(
                 "SELECT COUNT(*), COUNT(DISTINCT besucher), AVG(sekunden) FROM fragen WHERE start > ?", (heute,)).fetchone()
             besucher_heute = db.execute("SELECT COUNT(*) FROM besuche WHERE zuletzt > ?", (heute,)).fetchone()[0]
-        return {"aktiv": aktiv, "aufrufe_minute": minute, "limit": self.pro_minute, "fragen_heute": fragen,
+            abgelehnt_heute = db.execute("SELECT COUNT(*) FROM ablehnungen WHERE zeit > ?", (heute,)).fetchone()[0]
+            bis = db.execute("SELECT MAX(zeit + pause) FROM ablehnungen").fetchone()[0] or 0
+        return {"abgelehnt_heute": abgelehnt_heute, "pause_noch": max(0.0, bis - jetzt), "aktiv": aktiv, "aufrufe_minute": minute, "limit": self.pro_minute, "fragen_heute": fragen,
                 "fragende_heute": personen, "besucher_heute": besucher_heute, "schnitt_sekunden": schnitt}
 
 

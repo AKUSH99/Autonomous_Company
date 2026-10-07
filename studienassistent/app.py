@@ -44,6 +44,8 @@ def auslastung() -> None:
     st.markdown(f"👥 {lage['aktiv']} {'Person' if lage['aktiv'] == 1 else 'Personen'} online  \n"
                 f"💬 {in_arbeit} {'Frage' if in_arbeit == 1 else 'Fragen'} in Arbeit"
                 + (f", {wartend} in der Warteschlange" if wartend else ""))
+    if lage["pause_noch"] > 0:
+        st.warning(f"Die Plattform hat kurz gebremst, Fragen warten noch {lage['pause_noch']:.0f} s.", icon="⏸️")
     st.progress(min(lage["aufrufe_minute"] / lage["limit"], 1.0),
                 text=f"🔑 API-Schlüssel: {lage['aufrufe_minute']} von {lage['limit']} Aufrufen pro Minute")
     schnitt = f", Ø {lage['schnitt_sekunden']:.0f} s pro Antwort" if lage["schnitt_sekunden"] else ""
