@@ -7,6 +7,7 @@ import streamlit as st
 
 from studienassistent.__main__ import lade_alles
 from studienassistent.agent import fragen_live
+from studienassistent.stellen import als_markdown, farbe, suchbegriffe, zerlegen
 
 st.set_page_config(page_title="FHNW Studienassistent", page_icon="🎓")
 st.title("FHNW Studienassistent")
@@ -27,6 +28,29 @@ def agent(modell: str, denken: bool):
     return lade_alles(modell, denken)
 
 
+def zeige_stellen(quellen: list[str], antwort: str, frage: str) -> None:
+    """Gefundene Stellen als Karten: Modul, Datei und Seite, «zitiert», Suchbegriffe fett; Fristen als Liste."""
+    stellen, fristen = zerlegen(quellen, antwort)
+    if not stellen and not fristen:
+        return
+    zitiert = sum(s.zitiert for s in stellen)
+    teile = [f"{len(stellen)} Stellen" if stellen else "", f"{len(fristen)} Termine" if fristen else ""]
+    titel = "📄 Gefundene Stellen · " + " · ".join(x for x in teile if x) + (f" · {zitiert} zitiert" if zitiert else "")
+    begriffe = suchbegriffe(frage)
+    with st.expander(titel):
+        if fristen:
+            st.markdown("**📅 Termine**")
+            st.markdown("\n".join(f"- **{f.datum}**{' ' + f.zeit if f.zeit else ''} · :{farbe(f.modul)}-badge[{f.modul}] "
+                                   f"{als_markdown(f.titel, [])}" for f in fristen))
+        for s in stellen:
+            with st.container(border=True):
+                kopf = f":{farbe(s.modul)}-badge[{s.modul}] **{als_markdown(s.datei, [])}**"
+                kopf += f" · S. {s.seite}" if s.seite else ""
+                kopf += " :green-badge[:material/check: in der Antwort zitiert]" if s.zitiert else ""
+                st.markdown(kopf)
+                st.markdown(f"<small>{als_markdown(s.text, begriffe)}</small>", unsafe_allow_html=True)
+
+
 graph, suche, _ = agent(modell, denken)
 st.session_state.setdefault("thread", str(uuid.uuid4()))
 st.session_state.setdefault("verlauf", [])
@@ -35,9 +59,7 @@ for eintrag in st.session_state["verlauf"]:
     with st.chat_message(eintrag["rolle"]):
         st.markdown(eintrag["text"])
         if eintrag.get("quellen"):
-            with st.expander("Gefundene Stellen"):
-                for q in eintrag["quellen"]:
-                    st.text(q[:2500])
+            zeige_stellen(eintrag["quellen"], eintrag["text"], eintrag.get("frage", ""))
 
 if frage := st.chat_input("Deine Frage zum Studium …"):
     st.session_state["verlauf"].append({"rolle": "user", "text": frage})
@@ -53,6 +75,10 @@ if frage := st.chat_input("Deine Frage zum Studium …"):
                 status.caption(hinweise.get(inhalt, "Arbeite …"))
                 text = ""
                 feld.empty()
+            elif art == "denken":  # Entwurf verwerfen: Jetzt schreibt das Modell mit Reasoning die Antwort
+                status.caption("🧠 Denke über die Antwort nach …")
+                text = ""
+                feld.empty()
             elif art == "text":
                 status.empty()
                 text += inhalt
@@ -61,8 +87,5 @@ if frage := st.chat_input("Deine Frage zum Studium …"):
                 r = inhalt
         status.empty()
         feld.markdown(r["antwort"])
-        if r["quellen"]:
-            with st.expander("Gefundene Stellen"):
-                for q in r["quellen"]:
-                    st.text(q[:2500])
-    st.session_state["verlauf"].append({"rolle": "assistant", "text": r["antwort"], "quellen": r["quellen"]})
+        zeige_stellen(r["quellen"], r["antwort"], frage)
+    st.session_state["verlauf"].append({"rolle": "assistant", "text": r["antwort"], "quellen": r["quellen"], "frage": frage})

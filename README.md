@@ -24,6 +24,7 @@ flowchart LR
     AG -- "braucht Infos" --> W["werkzeuge<br/>Unterlagen durchsuchen · Fristen · Module"]
     W --> AG
     AG -- "fertig" --> A2["Antwort mit Quelle"]
+    AG -. "fertig, mit Reasoning" .-> D["antworten<br/>Modell denkt nach"] -.-> A2
     U[("Kursunterlagen<br/>Folien, Semesterprogramme,<br/>Moodle, Teams")] -.->|Hybrid-Suche| W
 ```
 

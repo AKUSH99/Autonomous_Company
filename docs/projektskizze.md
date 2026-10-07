@@ -60,6 +60,9 @@ keine Pflicht). Ablauf als LangGraph-Zustandsgraph:
 3. **Werkzeuge** – `unterlagen_durchsuchen` (Hybrid-Suche in den Kursunterlagen, optional nach Modul gefiltert),
    `fristen_anzeigen` (Termine in einem Zeitraum), `module_auflisten`.
 4. **Antwort** – zwei, drei Sätze mit «(Quelle: Modul · Datei, S. n)».
+   Nach höchstens drei Suchrunden antwortet der Agent mit dem Gefundenen. Bei unklaren Fragen («das Projekt») fragt er
+   zuerst nach dem Modul. Mit Reasoning prüft und sucht das schnelle Modell; nur die Antwort schreibt das denkende
+   Modell (Knoten `antworten`), so denkt es einmal statt in jeder Suchrunde.
 
 Das Gesprächsgedächtnis pro Chat erlaubt Rückfragen. Die Unterlagen werden einmal eingelesen (PDF, PowerPoint inkl.
 Notizen, Word, Markdown), in Abschnitte von etwa 900 Zeichen zerlegt und mit BM25 und Embeddings durchsuchbar gemacht.

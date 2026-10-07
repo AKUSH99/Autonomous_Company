@@ -29,7 +29,9 @@ def lade_alles(modell_name: str = "deepseek", denken: bool = False):
         raise SystemExit(f"Keine Unterlagen in {datei} – zuerst: python -m studienassistent einlesen <Ordner>")
     suche = Suche(laden(datei), swissai_einbetter(d / "embeddings.json"))
     fristen = Fristen.laden(d / "fristen.json")
-    return baue_agent(chat_modell(modell_name, denken), suche, fristen), suche, fristen
+    # Mit Reasoning prüft und sucht das schnelle Modell; nur die Antwort schreibt das denkende (einmal statt pro Runde).
+    denkmodell = chat_modell(modell_name, True) if denken else None
+    return baue_agent(chat_modell(modell_name, False), suche, fristen, denkmodell=denkmodell), suche, fristen
 
 
 def _einlesen(args) -> None:

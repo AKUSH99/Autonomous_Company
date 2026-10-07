@@ -1,20 +1,25 @@
 """Der Agent als LangGraph-Graph.
 
     START → pruefen ──(erlaubt)──▶ agent ⇄ werkzeuge
-              │                      │
-              └──(nicht erlaubt)──▶ END ◀── (fertige Antwort)
+              │                      ├──(fertig, ohne Reasoning)──▶ END
+              │                      └──(fertig, mit Reasoning)───▶ antworten ──▶ END
+              └──(nicht erlaubt)──▶ END
 
 - pruefen: Guardrail – Manipulationsversuche, Themen ohne Studienbezug und «schreib meine Abgabe» werden abgelehnt.
 - agent: das Sprachmodell mit drei Werkzeugen (Unterlagen durchsuchen, Fristen, Module); es entscheidet selbst, welches
   Werkzeug es braucht, und kann mehrmals suchen.
 - werkzeuge: führt die Aufrufe aus und gibt die Treffer mit Quellen zurück.
+- antworten: nur mit Reasoning. Prüfen und Suchen erledigt das schnelle Modell; erst die Antwort schreibt das denkende
+  Modell aus den gefundenen Stellen. So denkt es einmal statt in jeder Suchrunde.
+Nach MAX_SUCHRUNDEN Suchrunden muss der Agent mit dem antworten, was er gefunden hat.
 Gedächtnis: Der Checkpointer speichert den Gesprächsverlauf pro `thread_id`, so funktionieren Rückfragen.
 """
 from __future__ import annotations
 
 import datetime as dt
 
-from langchain_core.messages import AIMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, RemoveMessage, SystemMessage
+from langgraph.errors import GraphRecursionError
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
@@ -25,6 +30,9 @@ from .fristen import Fristen
 from .suche import Suche
 from .werkzeuge import erstelle_werkzeuge
 
+MAX_SUCHRUNDEN = 3
+# pruefen + je Suchrunde agent und werkzeuge + letzter agent + antworten, mit Reserve
+REKURSIONSGRENZE = 2 * MAX_SUCHRUNDEN + 6
 WOCHENTAGE = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
 
 
@@ -37,8 +45,9 @@ class Zustand(MessagesState):
     erlaubt: bool
 
 
-def baue_agent(modell, suche: Suche, fristen: Fristen, heute: dt.date | None = None, gedaechtnis=None):
-    """Kompilierter Graph. `modell`: ein LangChain-Chatmodell mit Werkzeug-Unterstützung (z. B. konfig.chat_modell())."""
+def baue_agent(modell, suche: Suche, fristen: Fristen, heute: dt.date | None = None, gedaechtnis=None, denkmodell=None):
+    """Kompilierter Graph. `modell`: ein LangChain-Chatmodell mit Werkzeug-Unterstützung (z. B. konfig.chat_modell()),
+    zuständig für Prüfung und Suche. `denkmodell`: optional ein Modell mit Reasoning, das nur die Antwort schreibt."""
     werkzeuge = erstelle_werkzeuge(suche, fristen)
     mit_werkzeugen = modell.bind_tools(werkzeuge)
     pruefer = modell.with_structured_output(Pruefung)
@@ -57,8 +66,28 @@ def baue_agent(modell, suche: Suche, fristen: Fristen, heute: dt.date | None = N
             return {"erlaubt": True}
         return {"erlaubt": False, "messages": [AIMessage(prompts.ABLEHNUNG.format(grund=ergebnis.grund))]}
 
+    def suchrunden(zustand: Zustand) -> int:
+        nachrichten = zustand["messages"]
+        letzte_frage = max((i for i, m in enumerate(nachrichten) if isinstance(m, HumanMessage)), default=0)
+        return sum(1 for m in nachrichten[letzte_frage:] if getattr(m, "tool_calls", None))
+
     def agent(zustand: Zustand) -> dict:
+        if suchrunden(zustand) >= MAX_SUCHRUNDEN:  # genug gesucht: ohne Werkzeuge antworten
+            if denkmodell is not None:
+                return {"messages": [AIMessage("")]}  # Platzhalter, die Antwort schreibt gleich das Denkmodell
+            return {"messages": [modell.invoke([system()] + zustand["messages"] + [SystemMessage(prompts.JETZT_ANTWORTEN)])]}
         return {"messages": [mit_werkzeugen.invoke([system()] + zustand["messages"])]}
+
+    def antworten(zustand: Zustand) -> dict:
+        # Der Entwurf des schnellen Modells wird ersetzt: Das Denkmodell sieht Frage und Treffer, aber nicht den Entwurf.
+        entwurf = zustand["messages"][-1]
+        antwort = denkmodell.invoke([system()] + zustand["messages"][:-1] + [SystemMessage(prompts.JETZT_ANTWORTEN)])
+        return {"messages": [RemoveMessage(id=entwurf.id), antwort]}
+
+    def nach_agent(zustand: Zustand) -> str:
+        if tools_condition(zustand) == "tools":
+            return "werkzeuge"
+        return "antworten" if denkmodell is not None else END
 
     g = StateGraph(Zustand)
     g.add_node("pruefen", pruefen)
@@ -66,7 +95,12 @@ def baue_agent(modell, suche: Suche, fristen: Fristen, heute: dt.date | None = N
     g.add_node("werkzeuge", ToolNode(werkzeuge))
     g.add_edge(START, "pruefen")
     g.add_conditional_edges("pruefen", lambda z: "agent" if z["erlaubt"] else END, ["agent", END])
-    g.add_conditional_edges("agent", tools_condition, {"tools": "werkzeuge", END: END})
+    ziele = ["werkzeuge", END]
+    if denkmodell is not None:
+        g.add_node("antworten", antworten)
+        g.add_edge("antworten", END)
+        ziele.append("antworten")
+    g.add_conditional_edges("agent", nach_agent, ziele)
     g.add_edge("werkzeuge", "agent")
     return g.compile(checkpointer=gedaechtnis or MemorySaver())
 
@@ -79,24 +113,50 @@ def _ergebnis(werte: dict, vorher: int) -> dict:
             "abgelehnt": not werte.get("erlaubt", True)}
 
 
+ABBRUCH = "Ich habe zu lange gesucht und keine Antwort gefunden. Stell die Frage bitte genauer, zum Beispiel mit dem Modul."
+
+
+def _abbruch(graph, konfig: dict, vorher: int) -> dict:
+    """Notbremse, falls der Graph trotz Suchrunden-Grenze nicht fertig wird: Hinweis statt Absturz."""
+    ergebnis = _ergebnis(graph.get_state(konfig).values, vorher)
+    graph.update_state(konfig, {"messages": [AIMessage(ABBRUCH)]})
+    return ergebnis | {"antwort": ABBRUCH}
+
+
 def fragen(graph, text: str, thread_id: str = "standard") -> dict:
     """Eine Frage stellen; gibt Antwort und die genutzten Quellen-Auszüge zurück."""
-    konfig = {"configurable": {"thread_id": thread_id}, "recursion_limit": 12}
+    konfig = {"configurable": {"thread_id": thread_id}, "recursion_limit": REKURSIONSGRENZE}
     vorher = len(graph.get_state(konfig).values.get("messages", []))
-    return _ergebnis(graph.invoke({"messages": [("user", text)]}, config=konfig), vorher)
+    try:
+        return _ergebnis(graph.invoke({"messages": [("user", text)]}, config=konfig), vorher)
+    except GraphRecursionError:
+        return _abbruch(graph, konfig, vorher)
 
 
 def fragen_live(graph, text: str, thread_id: str = "standard"):
     """Wie fragen(), aber als Generator für die Chat-Oberfläche: liefert ("text", Stück) während die Antwort entsteht,
-    ("werkzeug", Name) wenn der Agent sucht, und zum Schluss ("fertig", Ergebnis wie bei fragen())."""
-    konfig = {"configurable": {"thread_id": thread_id}, "recursion_limit": 12}
+    ("werkzeug", Name) wenn der Agent sucht, ("denken", None) wenn das Denkmodell die Antwort schreibt (der bisherige
+    Text war dann nur ein Entwurf), und zum Schluss ("fertig", Ergebnis wie bei fragen())."""
+    konfig = {"configurable": {"thread_id": thread_id}, "recursion_limit": REKURSIONSGRENZE}
     vorher = len(graph.get_state(konfig).values.get("messages", []))
-    for stueck, meta in graph.stream({"messages": [("user", text)]}, config=konfig, stream_mode="messages"):
-        if meta.get("langgraph_node") != "agent":
-            continue
-        for aufruf in getattr(stueck, "tool_call_chunks", None) or []:
-            if aufruf.get("name"):
-                yield "werkzeug", aufruf["name"]
-        if isinstance(stueck.content, str) and stueck.content:
-            yield "text", stueck.content
+    mit_denkmodell = "antworten" in graph.nodes
+    try:
+        for modus, daten in graph.stream({"messages": [("user", text)]}, config=konfig, stream_mode=["updates", "messages"]):
+            if modus == "updates":
+                # Agent ist fertig mit Suchen: Jetzt schreibt das Denkmodell, der gestreamte Entwurf ist hinfällig.
+                letzte = ((daten.get("agent") or {}).get("messages") or [None])[-1]
+                if mit_denkmodell and letzte is not None and not getattr(letzte, "tool_calls", None):
+                    yield "denken", None
+                continue
+            stueck, meta = daten
+            if meta.get("langgraph_node") not in ("agent", "antworten"):
+                continue
+            for aufruf in getattr(stueck, "tool_call_chunks", None) or getattr(stueck, "tool_calls", None) or []:
+                if aufruf.get("name"):
+                    yield "werkzeug", aufruf["name"]
+            if isinstance(stueck.content, str) and stueck.content:
+                yield "text", stueck.content
+    except GraphRecursionError:
+        yield "fertig", _abbruch(graph, konfig, vorher)
+        return
     yield "fertig", _ergebnis(graph.get_state(konfig).values, vorher)
