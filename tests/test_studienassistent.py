@@ -175,3 +175,25 @@ def test_notbremse_statt_absturz(monkeypatch):
     assert fragen(graph, "Was muss das Projekt beinhalten?", "notbremse")["antwort"] == agent_modul.ABBRUCH
     ereignisse = list(agent_modul.fragen_live(graph, "Nochmals?", "notbremse"))
     assert ereignisse[-1] == ("fertig", ereignisse[-1][1]) and ereignisse[-1][1]["antwort"] == agent_modul.ABBRUCH
+
+
+def test_gefundene_stellen_fuer_die_anzeige():
+    from studienassistent.stellen import als_markdown, suchbegriffe, zerlegen
+    suche_1 = ("[1] Generative KI · semesterprogramm.pdf, S. 1\nAbschluss  präsentation am 23.11.\n\n"
+               "[2] Marketing · plan.pdf, S. 4\nuellen Beitrag.\n\nAbgabe\n\nPräsentation *25 Min.*")
+    suche_2 = "[1] Generative KI · semesterprogramm.pdf, S. 1\nAbschluss  präsentation am 23.11."  # doppelt
+    termine = ("- 2026-11-23 13:00 · Generative KI: Abschlusspräsentation (Beleg: Folie 4)\n"
+               "- 2026-11-30 / 2026-12-07 · Marketing: Schlusspräsentation, Slot unbekannt (Beleg: S. 1)\nKeine passende Stelle.")
+    antwort = "Am 23.11. (Quelle: Generative KI · semesterprogramm.pdf, S. 1)."
+    stellen, fristen = zerlegen([suche_1, suche_2, termine, "- Marketing\n- Generative KI"], antwort)
+    assert [(s.datei, s.seite, s.zitiert) for s in stellen] == [("semesterprogramm.pdf", 1, True), ("plan.pdf", 4, False)]
+    assert stellen[0].text == "Abschluss präsentation am 23.11."  # Leerraum geglättet
+    assert stellen[1].text == "… Beitrag. Abgabe Präsentation *25 Min.*"  # Absätze im Treffer bleiben, Wortrest weg
+    assert [(f.datum, f.zeit, f.modul, f.titel) for f in fristen] == [
+        ("2026-11-23", "13:00", "Generative KI", "Abschlusspräsentation"),
+        ("2026-11-30 / 2026-12-07", "", "Marketing", "Schlusspräsentation, Slot unbekannt")]
+    # andere Seite derselben Datei gilt nicht als zitiert
+    assert not zerlegen(["[1] Marketing · plan.pdf, S. 9\nx"], "(Quelle: Marketing · plan.pdf, S. 4)")[0][0].zitiert
+    assert suchbegriffe("Wann ist die Präsentation in Marketing?") == ["präsentation", "marketing"]
+    assert als_markdown("Präsentation *25 Min.*", ["präsentation"]) == r"**Präsentation** \*25 Min.\*"
+    assert als_markdown("wort " * 200, []).endswith(" …")
