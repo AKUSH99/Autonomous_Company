@@ -1,6 +1,7 @@
 """Chat-Oberfläche (Streamlit):  python -m studienassistent app
 
-Mit STUDIENASSISTENT_PASSWORT verlangt die Seite ein gemeinsames Passwort (für den öffentlichen Zugang).
+Mit STUDIENASSISTENT_PASSWORT verlangt die Seite ein gemeinsames Passwort (für den öffentlichen Zugang). Ein Link
+mit ?zugang=<Passwort> (z. B. als QR-Code) meldet direkt an; der Code verschwindet danach aus der Adresszeile.
 """
 from __future__ import annotations
 
@@ -32,6 +33,12 @@ def anmelden() -> None:
     passwort = os.environ.get("STUDIENASSISTENT_PASSWORT", "")
     if not passwort or st.session_state.get("angemeldet"):
         return
+    zugang = st.query_params.get("zugang", "")
+    if zugang:
+        st.query_params.clear()  # Code nicht in der Adresszeile stehen lassen (Lesezeichen, Weiterleiten)
+        if hmac.compare_digest(zugang.encode(), passwort.encode()):
+            st.session_state["angemeldet"] = True
+            return
     st.title("🎓 FHNW Studienassistent")
     st.caption("Fragen zu Prüfungen, Abgaben und Fristen im BAI-Herbstsemester 2026, beantwortet aus den Kursunterlagen.")
     with st.form("anmelden"):
