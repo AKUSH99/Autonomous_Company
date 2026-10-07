@@ -7,16 +7,15 @@ Stand: 07.10.2026 · Abschlusspräsentation: 23.11.2026, 13:00 Uhr (10 Min. inkl
 
 ## Team
 
-> **Teamgrösse:** Vorgesehen sind 3 Studierende, höchstens 4 (SW4, Folie 4; Moodle-Kursseite). Das Team hat fünf
-> Mitglieder – mit Sandro Schwander abklären. Die Rollen (Abschnitt 9) verteilt das Team noch.
+Das Team hat fünf Mitglieder; das ist mit dem Dozenten abgesprochen (vorgesehen wären 3 bis 4, SW4, Folie 4).
 
 | Name | Rolle (Abschnitt 9) |
 |---|---|
-| Almidin Bangoji | _Rolle eintragen_ |
-| Robin Meier | _Rolle eintragen_ |
-| Jan Steiner | _Rolle eintragen_ |
-| Andrej Mauron | _Rolle eintragen_ |
-| Flavio Sibilia | _Rolle eintragen_ |
+| Almidin Bangoji | Agent & Prompts |
+| Robin Meier | Daten & Suche |
+| Jan Steiner | Evaluation |
+| Andrej Mauron | Interface & Demo |
+| Flavio Sibilia | Integration & Präsentation |
 
 ## 1. Problemstellung
 
@@ -124,11 +123,11 @@ verglichen. Die Tests in `tests/` laufen ohne Netz mit einem simulierten Sprachm
 
 | Rolle | Verantwortung | Dateien | Person |
 |---|---|---|---|
-| Daten & Suche | Einlesen, Chunking, Hybrid-Suche, Fristen | `einlesen.py`, `suche.py`, `fristen.py` | _Name_ |
-| Agent & Prompts | LangGraph, Werkzeuge, System-Prompt, Guardrail | `agent.py`, `werkzeuge.py`, `prompts.py` | _Name_ |
-| Evaluation | Testset, Kennzahlen, Modellvergleich, Tracing | `bewertung.py`, `evaluation/`, `tests/` | _Name_ |
-| Interface & Demo | Chat-App, Betrieb (Warteschlange, Auslastung), Live-Demo | `app.py`, `betrieb.py`, `stellen.py` | _Name_ |
-| Integration & Präsentation | MCP-Server und -Client, Modellwahl, Folien | `mcp_server.py`, `mcp_client.py`, `docs/` | _Name_ |
+| Daten & Suche | Einlesen, Chunking, Hybrid-Suche, Fristen | `einlesen.py`, `suche.py`, `fristen.py` | Robin Meier |
+| Agent & Prompts | LangGraph, Werkzeuge, System-Prompt, Guardrail | `agent.py`, `werkzeuge.py`, `prompts.py` | Almidin Bangoji |
+| Evaluation | Testset, Kennzahlen, Modellvergleich, Tracing | `bewertung.py`, `evaluation/`, `tests/` | Jan Steiner |
+| Interface & Demo | Chat-App, Betrieb (Warteschlange, Auslastung), Live-Demo | `app.py`, `betrieb.py`, `stellen.py` | Andrej Mauron |
+| Integration & Präsentation | MCP-Server und -Client, Modellwahl, Folien | `mcp_server.py`, `mcp_client.py`, `docs/` | Flavio Sibilia |
 
 ## 10. Risiken
 

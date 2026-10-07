@@ -1,6 +1,6 @@
 # FHNW Studienassistent
 
-[![Tests](https://github.com/AKUSH99/Autonomous_Company/actions/workflows/tests.yml/badge.svg)](https://github.com/AKUSH99/Autonomous_Company/actions/workflows/tests.yml)
+[![Tests](https://github.com/AKUSH99/fhnw-studienassistent/actions/workflows/tests.yml/badge.svg)](https://github.com/AKUSH99/fhnw-studienassistent/actions/workflows/tests.yml)
 
 **Ein KI-Agent, der Fragen zu deinem Studium beantwortet – mit Quelle.**
 
@@ -81,7 +81,7 @@ zeigt, wie Ordnernamen auf saubere Modulnamen abgebildet werden.
 
 Gestartet sind wir mit **KI-Kartell** – einer Untersuchung, ob KI-Preisagenten von selbst Kartelle bilden. Im Gespräch
 mit dem Dozenten wurde klar, dass das Projekt zu komplex war und keinen greifbaren Nutzen hatte. Der Code liegt im
-Branch [`ki-kartell`](https://github.com/AKUSH99/Autonomous_Company/tree/ki-kartell); übernommen haben wir die
+Branch [`ki-kartell`](https://github.com/AKUSH99/fhnw-studienassistent/tree/ki-kartell); übernommen haben wir die
 Hybrid-Suche, die Anbindung an die Swiss AI Platform und die Erfahrung mit Evaluation und Tracing.
 
 Code und Dokumentation sind mit Unterstützung eines KI-Assistenten (Claude Code) entstanden.
