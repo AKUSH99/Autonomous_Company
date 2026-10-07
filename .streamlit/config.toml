@@ -1,5 +1,6 @@
 # Aussehen und Verhalten der Chat-App (gilt, wenn die App aus dem Repository-Ordner gestartet wird)
 [theme]
+base = "dark"            # standardmässig dunkel
 primaryColor = "#3B82F6"
 baseRadius = "medium"
 
