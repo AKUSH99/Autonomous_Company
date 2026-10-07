@@ -53,6 +53,10 @@ if frage := st.chat_input("Deine Frage zum Studium …"):
                 status.caption(hinweise.get(inhalt, "Arbeite …"))
                 text = ""
                 feld.empty()
+            elif art == "denken":  # Entwurf verwerfen: Jetzt schreibt das Modell mit Reasoning die Antwort
+                status.caption("🧠 Denke über die Antwort nach …")
+                text = ""
+                feld.empty()
             elif art == "text":
                 status.empty()
                 text += inhalt
