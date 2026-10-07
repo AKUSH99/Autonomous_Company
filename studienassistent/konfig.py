@@ -25,26 +25,18 @@ def daten_ordner() -> Path:
     return Path(os.environ.get("STUDIENASSISTENT_DATEN", "daten"))
 
 
-class Taktbremse:
-    """Höchstens n Anfragen in 60 Sekunden (gleitendes Fenster). Gewartet wird nur, wenn das Limit wirklich erreicht
-    ist – einzelne Fragen laufen ohne Verzögerung durch. Ein gemeinsames Fenster für alle Modelle im Prozess."""
+_BETRIEB = None
+_BETRIEB_SPERRE = __import__("threading").Lock()
 
-    def __init__(self, pro_minute: int = ANFRAGEN_PRO_MINUTE):
-        import threading
-        from collections import deque
-        self.pro_minute, self.zeiten, self.sperre = pro_minute, deque(), threading.Lock()
 
-    def warten(self) -> float:
-        """Wie lange bis zur nächsten freien Anfrage; 0 = sofort (und die Anfrage ist dann gebucht)."""
-        import time
-        with self.sperre:
-            jetzt = time.monotonic()
-            while self.zeiten and jetzt - self.zeiten[0] >= 60:
-                self.zeiten.popleft()
-            if len(self.zeiten) < self.pro_minute:
-                self.zeiten.append(jetzt)
-                return 0.0
-            return 60 - (jetzt - self.zeiten[0]) + 0.05
+def betrieb():
+    """Gemeinsame Taktbremse und Statistik für alle Prozesse, die den Schlüssel nutzen (siehe betrieb.py)."""
+    global _BETRIEB
+    with _BETRIEB_SPERRE:
+        if _BETRIEB is None:
+            from .betrieb import Betrieb
+            _BETRIEB = Betrieb(daten_ordner() / "betrieb.sqlite", ANFRAGEN_PRO_MINUTE)
+        return _BETRIEB
 
 
 def _rate_limiter():
@@ -53,7 +45,7 @@ def _rate_limiter():
     class Fensterbremse(BaseRateLimiter):
         def acquire(self, *, blocking: bool = True) -> bool:
             import time
-            while (w := _BREMSE.warten()) > 0:
+            while (w := betrieb().warten("chat")) > 0:
                 if not blocking:
                     return False
                 time.sleep(w)
@@ -61,7 +53,7 @@ def _rate_limiter():
 
         async def aacquire(self, *, blocking: bool = True) -> bool:
             import asyncio
-            while (w := _BREMSE.warten()) > 0:
+            while (w := betrieb().warten("chat")) > 0:
                 if not blocking:
                     return False
                 await asyncio.sleep(w)
@@ -69,8 +61,6 @@ def _rate_limiter():
 
     return Fensterbremse()
 
-
-_BREMSE = Taktbremse()
 
 
 def chat_modell(name: str = "deepseek", denken: bool = False):

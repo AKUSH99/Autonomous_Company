@@ -69,7 +69,7 @@ def swissai_einbetter(cache: Path, stapel: int = 32):
     import numpy as np
     import openai
 
-    from .konfig import EMBEDDING_MODELL, SWISSAI_URL
+    from .konfig import EMBEDDING_MODELL, SWISSAI_URL, betrieb
     client = openai.OpenAI(base_url=SWISSAI_URL, api_key=os.environ["SWISSAI_API_KEY"], max_retries=6)
     cache = cache.with_suffix(".npz")
     gespeichert: dict[str, np.ndarray] = {}
@@ -90,6 +90,7 @@ def swissai_einbetter(cache: Path, stapel: int = 32):
         fehlend = [t for t in dict.fromkeys(texte) if schluessel(t) not in gespeichert]
         for nr, start in enumerate(range(0, len(fehlend), stapel), 1):
             teil = fehlend[start:start + stapel]
+            betrieb().bremsen("embedding")  # zählt zum selben Ratenlimit wie der Chat
             antwort = client.embeddings.create(model=EMBEDDING_MODELL, input=teil)
             for t, d in zip(teil, sorted(antwort.data, key=lambda d: d.index)):
                 neu[schluessel(t)] = np.asarray(d.embedding, dtype=np.float16)

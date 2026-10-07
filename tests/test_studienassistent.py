@@ -104,11 +104,35 @@ def test_hybrid_suche_mit_embeddings():
     assert suche.suchen("Wann ist die Abschlusspräsentation?", k=1)[0][0].modul == "Generative KI"
 
 
-def test_taktbremse_wartet_erst_am_limit():
-    from studienassistent.konfig import Taktbremse
-    b = Taktbremse(pro_minute=3)
-    assert [b.warten() for _ in range(3)] == [0.0, 0.0, 0.0]  # die ersten drei sofort
-    assert 59 < b.warten() <= 60.1                             # die vierte erst, wenn die erste aus dem Fenster fällt
+def test_taktbremse_wartet_erst_am_limit_auch_ueber_prozesse(tmp_path):
+    from studienassistent.betrieb import Betrieb
+    app, update_job = Betrieb(tmp_path / "b.sqlite", 3), Betrieb(tmp_path / "b.sqlite", 3)  # zwei Prozesse, eine Datei
+    assert [app.warten(), update_job.warten("embedding"), app.warten()] == [0.0, 0.0, 0.0]  # die ersten drei sofort
+    assert 59 < app.warten() <= 60.1 and 59 < update_job.warten() <= 60.1  # die vierte erst, wenn die erste rausfällt
+    assert app.lage()["aufrufe_minute"] == 3
+
+
+def test_besucher_und_fragen_zaehlen(tmp_path):
+    import time
+    from studienassistent.betrieb import Betrieb
+    b = Betrieb(tmp_path / "b.sqlite", 14)
+    b.lebenszeichen("anna"), b.lebenszeichen("ben"), b.lebenszeichen("anna")
+    b.frage_erledigt("anna", time.time() - 12)
+    lage = b.lage()
+    assert (lage["aktiv"], lage["besucher_heute"], lage["fragen_heute"], lage["fragende_heute"]) == (2, 2, 1, 1)
+    assert 11 < lage["schnitt_sekunden"] < 14
+
+
+def test_warteschlange_der_reihe_nach():
+    from studienassistent.betrieb import Warteschlange
+    s = Warteschlange(plaetze=2)
+    a, b, c, d = (s.anstellen() for _ in range(4))
+    assert [s.position(n) for n in (a, b, c, d)] == [0, 0, 1, 2]  # zwei dürfen, die anderen warten
+    assert s.position(d) == 2 and s.zustand() == (2, 2)            # d kann nicht vordrängeln
+    s.fertig(a)
+    assert s.position(d) == 2 and s.position(c) == 0 and s.position(d) == 1
+    s.fertig(d)  # wer die Seite schliesst, verlässt die Schlange
+    assert s.zustand() == (2, 0)
 
 
 def test_fragen_live_liefert_werkzeug_und_ergebnis():
