@@ -117,7 +117,7 @@ verglichen. Die Tests in `tests/` laufen ohne Netz mit einem simulierten Sprachm
 | KW 43 (19.10.) | MCP-Server anbinden | umgesetzt: eigener Server (`python -m studienassistent mcp`), Agent als MCP-Client |
 | KW 44 (26.10.) | RAG, Chunking, Hybrid Retrieval | umgesetzt; Feinschliff nach Evaluation |
 | KW 46 (09.11.) | Memory festlegen | Gesprächsgedächtnis umgesetzt |
-| KW 47 (16.11.) | Safeguarding, Evaluation | Guardrail, Testset und Modellvergleich umgesetzt (`docs/modellwahl.md`); Testset ausbauen |
+| KW 47 (16.11.) | Safeguarding, Evaluation | Guardrail, Testset und Modellvergleich umgesetzt (alle fünf Kennzahlen erreicht, `docs/modellwahl.md`); Testset ausbauen |
 | KW 48 (23.11.) | Abschlusspräsentation | Live-Demo im Chat |
 
 ## 9. Arbeitsteilung

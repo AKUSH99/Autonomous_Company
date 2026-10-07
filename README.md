@@ -42,13 +42,19 @@ flowchart LR
 ## Evaluation
 
 22 Testfragen aus den echten Unterlagen von sieben Modulen (Termine, Regeln, Inhalte), davon drei ohne Studienbezug,
-die abgelehnt werden sollen (`evaluation/fragen.jsonl`). DeepSeek V4.1 Flash, ohne Reasoning, 05.10.2026:
+die abgelehnt werden sollen (`evaluation/fragen.jsonl`). GLM-5.3 Flash wie im Chat (Antwort mit maximalem
+Reasoning), 07.10.2026:
 
-| Kennzahl | Ergebnis | Fragen |
-|---|---|---|
-| Richtige Quelle unter den ersten 5 Treffern | 100 % | 14 |
-| Antwort enthält die erwarteten Fakten | 100 % | 18 |
-| Richtig abgelehnt bzw. beantwortet | 100 % | 22 |
+| Kennzahl | Ziel | Ergebnis | Fragen |
+|---|---|---|---|
+| Richtige Quelle unter den ersten 5 Treffern | ≥ 90 % | 100 % | 14 |
+| Antwort enthält die erwarteten Fakten | ≥ 80 % | 100 % | 18 |
+| Richtig abgelehnt bzw. beantwortet | 100 % | 100 % | 22 |
+| Antwort nennt eine Quelle | ≥ 90 % | 100 % | 19 |
+| Antwortzeit ohne Andrang (Median, max) | < 20 s | 10 s, 24 s (91 % unter 20 s) | 22 |
+
+Vergleich mit GLM-5.3 und DeepSeek, Begründung nach den SW4-Kriterien und was wir dabei über das Ratenlimit gelernt
+haben: [docs/modellwahl.md](docs/modellwahl.md).
 
 Was die Evaluation verbessert hat: Datumsangaben werden vereinheitlicht («12.10.» = «12. Oktober», vorher 93 % bei
 der Quelle), und das Suchwerkzeug liefert 8 statt 5 Stellen – die Teamgrösse («Teams aus 3 Studierenden, max. 4»)

@@ -9,7 +9,30 @@ Kriterien aus SW4 (Folien 22 bis 38) und an unserem Testset.
 Studienbezug, die abgelehnt werden sollen). Gleiche Unterlagen, gleiche Suche, gleicher Agent; nur das Modell und
 das Reasoning ändern sich. Gemessen auf dem Thin Client am 07.10.2026 mit `python -m studienassistent bewerten`.
 
-<!-- MESSUNG -->
+| Modell (Swiss AI Platform) | Reasoning | Fakten richtig | Ablehnung richtig | Quelle genannt | Antwortzeit Median (max) | ohne Wartezeit Ratenlimit | 429-Ablehnungen |
+|---|---|---|---|---|---|---|---|
+| **GLM-5.3 Flash** (im Chat) | für die Antwort | **100 %** | **100 %** | **100 %** | 31 s (61 s) | **10 s (24 s), 91 % unter 20 s** | 0 |
+| GLM-5.3 Flash, erster Lauf | für die Antwort | 94 %¹ | 100 % | 95 % | 13 s (114 s) | nicht gemessen | nicht protokolliert |
+| GLM-5.3 | für die Antwort | 100 % | 100 % | 95 % | 27 s (118 s) | 24 s (118 s), 36 % unter 20 s | 4 |
+| DeepSeek V4.1 Flash | aus | 100 % | 100 % | 95 % | 58 s (131 s) | nicht gemessen | nicht protokolliert |
+| DeepSeek V4.1 Flash | für die Antwort | 100 % | 100 % | 95 % | 10 s (115 s) | nicht trennbar² | 18 von 135 Anfragen |
+
+Fakten: 18 Fragen mit bekannter Antwort; Ablehnung: alle 22; Quelle genannt: 19 beantwortete Fragen.
+¹ Testset-Fehler: Die Antwort «24.–25. Oktober» war richtig, das Testset kannte die Schreibweise nicht (korrigiert).
+² Die Wartezeiten nach 429 lagen damals noch im HTTP-Client des SDK und wurden nicht mitgezählt.
+
+**So lesen:** Die Evaluation stellt 22 Fragen ohne Pause hintereinander, also mehr als das Ratenlimit erlaubt.
+Darum enthält die Spalte «Antwortzeit» Wartezeit; «ohne Wartezeit Ratenlimit» ist die Zeit, die eine einzelne
+Person ohne Andrang erlebt. Die Läufe vor 21:00 liefen noch mit 14 Aufrufen pro Minute und ohne Notbremse; die
+Plattform lehnte dabei Anfragen ab (HTTP 429, Wartezeit 41 bis 59 s), schon bei rund 8 Aufrufen pro Minute. Der
+letzte Lauf mit 10 Aufrufen pro Minute und Notbremse hatte keine einzige Ablehnung.
+
+**Entscheid:** GLM-5.3 Flash. Es erreicht alle fünf Zielwerte und ist ohne Wartezeit deutlich schneller als das
+grosse GLM-5.3 (Median 10 s statt 24 s) bei gleicher Genauigkeit. DeepSeek V4.1 Flash ist ebenso genau und eine
+gute Ausweichmöglichkeit (per `--modell deepseek`). Vorsicht beim Vergleich: Die Läufe fanden unter verschiedenen
+Bedingungen statt (mit und ohne Notbremse, unterschiedliche Auslastung der Plattform), und bei 22 Fragen sind die
+Unterschiede klein. Für eine sichere Aussage sollte das Testset wachsen und alle Modelle unter gleichen
+Bedingungen nochmals laufen.
 
 **Suche allein** (ohne Sprachmodell): Die richtige Quelle steht bei 14 von 14 Fragen unter den ersten 5 Treffern,
 mit BM25 allein wie mit der Hybrid-Suche (BM25 + Qwen3-Embeddings). Das Testset prüft die Quelle nur auf Ebene
