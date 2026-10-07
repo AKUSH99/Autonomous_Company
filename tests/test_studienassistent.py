@@ -198,3 +198,8 @@ def test_gefundene_stellen_fuer_die_anzeige():
     assert suchbegriffe("Wann ist die Präsentation in Marketing?") == ["präsentation", "marketing"]
     assert als_markdown("Präsentation *25 Min.*", ["präsentation"]) == r"**Präsentation** \*25 Min.\*"
     assert als_markdown("wort " * 200, []).endswith(" …")
+
+
+def test_app_ist_gueltiges_python():
+    import ast
+    ast.parse((Path(__file__).parent.parent / "studienassistent" / "app.py").read_text(encoding="utf-8"))

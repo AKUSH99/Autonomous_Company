@@ -16,8 +16,7 @@ st.title("FHNW Studienassistent")
 st.caption("Fragen zu Modulen, Prüfungen, Abgaben und Fristen im BAI-Herbstsemester 2026 – jede Antwort mit Quelle.")
 
 with st.sidebar:
-    st.caption("Modell: GLM-5.3 Flash (Swiss AI Research Platform)  
-🧠 Reasoning: immer maximal")
+    st.caption("Modell: GLM-5.3 Flash (Swiss AI Research Platform)  \n🧠 Reasoning: immer maximal")
     if st.button("Neues Gespräch"):
         st.session_state.pop("thread", None)
         st.session_state.pop("verlauf", None)
