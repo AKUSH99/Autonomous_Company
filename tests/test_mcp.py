@@ -29,3 +29,28 @@ def test_werkzeuge_ueber_mcp():
     namen, suche, fristen = asyncio.run(ablauf())
     assert namen == {"unterlagen_durchsuchen", "fristen_anzeigen", "module_auflisten"}
     assert "semesterprogramm.md" in suche and "Präsentation" in fristen
+
+
+def test_agent_als_mcp_client():
+    """Der Agent ruft seine Werkzeuge über das MCP-Protokoll auf und bekommt dieselben Treffer wie direkt."""
+    from langchain_core.messages import AIMessage
+
+    from studienassistent.agent import baue_agent, fragen
+    from studienassistent.mcp_client import MCPWerkzeuge
+    from test_studienassistent import FakeModell
+
+    suche, fristen = Suche(einlesen([DATEN])), Fristen([])
+    mcp = MCPWerkzeuge(erstelle_server(suche, fristen))
+    try:
+        assert {w.name for w in mcp.werkzeuge} == {"unterlagen_durchsuchen", "fristen_anzeigen", "module_auflisten"}
+        modell = FakeModell(antworten=[
+            AIMessage("", tool_calls=[{"name": "unterlagen_durchsuchen", "args": {"frage": "Abschlusspräsentation"}, "id": "1"}]),
+            AIMessage("Am 23.11.2026 (Quelle: Generative KI · semesterprogramm.md)."),
+        ], gesehen=[])
+        r = fragen(baue_agent(modell, suche, fristen, werkzeuge=mcp.werkzeuge), "Wann ist die Präsentation?", "mcp")
+        assert r["werkzeuge"] == ["unterlagen_durchsuchen"] and "semesterprogramm.md" in r["quellen"][0]
+        direkt = next(w for w in __import__("studienassistent.werkzeuge", fromlist=["x"]).erstelle_werkzeuge(suche, fristen)
+                      if w.name == "unterlagen_durchsuchen").invoke({"frage": "Abschlusspräsentation"})
+        assert r["quellen"][0] == direkt  # über MCP kommt genau dasselbe an
+    finally:
+        mcp.schliessen()

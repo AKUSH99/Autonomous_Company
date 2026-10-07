@@ -18,7 +18,11 @@ MODELLE = {
 }
 EMBEDDING_MODELL = "RCP-AIaaS/Qwen/Qwen3-Embedding-8B"
 # Ratenlimit der Plattform laut FAQ: unter 15 Anfragen pro Minute pro Nutzer (weitergeleitete Modelle)
-ANFRAGEN_PRO_MINUTE = 14
+# Die Plattform lehnte bei 14 pro Minute schon ab (HTTP 429, gemessen 07.10.2026), darum vorsichtiger
+ANFRAGEN_PRO_MINUTE = 10
+# Zeitlimit pro Modell-Aufruf in Sekunden
+ZEITLIMIT_SCHNELL = 60
+ZEITLIMIT_DENKEN = 240
 
 
 def daten_ordner() -> Path:
@@ -39,28 +43,27 @@ def betrieb():
         return _BETRIEB
 
 
-def _rate_limiter():
-    from langchain_core.rate_limiters import BaseRateLimiter
+def _pause_aus(antwort) -> float:
+    """Wie lange die Plattform warten lässt: Retry-After in Sekunden, sonst eine Minute (das Fenster des Limits)."""
+    try:
+        return max(1.0, float(antwort.headers.get("retry-after", "")))
+    except ValueError:
+        return 60.0
 
-    class Fensterbremse(BaseRateLimiter):
-        def acquire(self, *, blocking: bool = True) -> bool:
-            import time
-            while (w := betrieb().warten("chat")) > 0:
-                if not blocking:
-                    return False
-                time.sleep(w)
-            return True
 
-        async def aacquire(self, *, blocking: bool = True) -> bool:
-            import asyncio
-            while (w := betrieb().warten("chat")) > 0:
-                if not blocking:
-                    return False
-                await asyncio.sleep(w)
-            return True
+def http_client(zeitlimit: float, transport=None):
+    """HTTP-Client für alle Anfragen an die Plattform. Jede Anfrage (auch Wiederholungen nach Fehlern) wartet vorher auf
+    die gemeinsame Taktbremse; lehnt die Plattform mit 429 ab, pausieren alle Prozesse (Notbremse)."""
+    import httpx
 
-    return Fensterbremse()
+    def vorher(anfrage) -> None:
+        betrieb().bremsen("embedding" if anfrage.url.path.endswith("/embeddings") else "chat")
 
+    def nachher(antwort) -> None:
+        if antwort.status_code == 429:
+            betrieb().abgelehnt(_pause_aus(antwort))
+
+    return httpx.Client(timeout=zeitlimit, transport=transport, event_hooks={"request": [vorher], "response": [nachher]})
 
 
 def chat_modell(name: str = "deepseek", denken: bool = False):
@@ -72,8 +75,10 @@ def chat_modell(name: str = "deepseek", denken: bool = False):
         api_key=os.environ.get("SWISSAI_API_KEY", "fehlt"),
         temperature=0.2,
         max_tokens=32000 if denken else 3000,  # mit Reasoning das volle Denkbudget
-        max_retries=4,
-        rate_limiter=_rate_limiter(),
+        # Ohne Zeitlimit wartet ein hängender Aufruf ewig. Mit Reasoning darf eine Antwort lange denken.
+        timeout=ZEITLIMIT_DENKEN if denken else ZEITLIMIT_SCHNELL,
+        max_retries=2,
+        http_client=http_client(ZEITLIMIT_DENKEN if denken else ZEITLIMIT_SCHNELL),  # mit Taktbremse und Notbremse
         # Denkmodus über die Chat-Vorlage (DeepSeek: thinking, Qwen/GLM: enable_thinking)
         extra_body={"chat_template_kwargs": {"thinking": denken, "enable_thinking": denken}},
     )

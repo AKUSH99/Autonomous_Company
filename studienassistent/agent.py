@@ -45,10 +45,11 @@ class Zustand(MessagesState):
     erlaubt: bool
 
 
-def baue_agent(modell, suche: Suche, fristen: Fristen, heute: dt.date | None = None, gedaechtnis=None, denkmodell=None):
+def baue_agent(modell, suche: Suche, fristen: Fristen, heute: dt.date | None = None, gedaechtnis=None, denkmodell=None,
+               werkzeuge: list | None = None):
     """Kompilierter Graph. `modell`: ein LangChain-Chatmodell mit Werkzeug-Unterstützung (z. B. konfig.chat_modell()),
     zuständig für Prüfung und Suche. `denkmodell`: optional ein Modell mit Reasoning, das nur die Antwort schreibt."""
-    werkzeuge = erstelle_werkzeuge(suche, fristen)
+    werkzeuge = werkzeuge or erstelle_werkzeuge(suche, fristen)  # z. B. über MCP (mcp_client.py) oder direkt
     mit_werkzeugen = modell.bind_tools(werkzeuge)
     # Über einen Werkzeugaufruf statt JSON-Schema: bei GLM mit Reasoning viel schneller, und Gedankentext stört nicht
     pruefer = modell.with_structured_output(Pruefung, method="function_calling")
@@ -114,6 +115,12 @@ def _ergebnis(werte: dict, vorher: int) -> dict:
             "abgelehnt": not werte.get("erlaubt", True)}
 
 
+def _konfig(thread_id: str) -> dict:
+    # run_name und Metadaten erscheinen im LangSmith-Tracing (eingeschaltet mit LANGSMITH_TRACING=true)
+    return {"configurable": {"thread_id": thread_id}, "recursion_limit": REKURSIONSGRENZE,
+            "run_name": "Studienassistent", "metadata": {"gespraech": thread_id}}
+
+
 ABBRUCH = "Ich habe zu lange gesucht und keine Antwort gefunden. Stell die Frage bitte genauer, zum Beispiel mit dem Modul."
 
 
@@ -126,7 +133,7 @@ def _abbruch(graph, konfig: dict, vorher: int) -> dict:
 
 def fragen(graph, text: str, thread_id: str = "standard") -> dict:
     """Eine Frage stellen; gibt Antwort und die genutzten Quellen-Auszüge zurück."""
-    konfig = {"configurable": {"thread_id": thread_id}, "recursion_limit": REKURSIONSGRENZE}
+    konfig = _konfig(thread_id)
     vorher = len(graph.get_state(konfig).values.get("messages", []))
     try:
         return _ergebnis(graph.invoke({"messages": [("user", text)]}, config=konfig), vorher)
@@ -138,7 +145,7 @@ def fragen_live(graph, text: str, thread_id: str = "standard"):
     """Wie fragen(), aber als Generator für die Chat-Oberfläche: liefert ("text", Stück) während die Antwort entsteht,
     ("werkzeug", Name) wenn der Agent sucht, ("denken", None) wenn das Denkmodell die Antwort schreibt (der bisherige
     Text war dann nur ein Entwurf), und zum Schluss ("fertig", Ergebnis wie bei fragen())."""
-    konfig = {"configurable": {"thread_id": thread_id}, "recursion_limit": REKURSIONSGRENZE}
+    konfig = _konfig(thread_id)
     vorher = len(graph.get_state(konfig).values.get("messages", []))
     mit_denkmodell = "antworten" in graph.nodes
     try:

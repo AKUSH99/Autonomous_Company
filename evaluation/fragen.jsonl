@@ -11,7 +11,7 @@
 {"frage": "An wie vielen Gruppendiskussionen muss ich in Mensch-KI mindestens teilnehmen?", "quelle": "Mensch", "fakten": ["9"]}
 {"frage": "Wie lange dauert die mündliche Prüfung in Mensch-KI-Interaktion?", "quelle": "Mensch", "fakten": ["15"]}
 {"frage": "Wie muss die KI-Zusammenfassung in Mensch-KI überarbeitet werden?", "quelle": "Mensch", "fakten": [["Track Change", "Korrekturmodus", "Änderungen nachverfolgen"]]}
-{"frage": "Wann findet der MAKEathon statt?", "fakten": [["24.10", "24. Oktober", "2026-10-24", "24./25."]]}
+{"frage": "Wann findet der MAKEathon statt?", "fakten": [["24.10", "24. Oktober", "2026-10-24", "24./25.", "24.–25.", "24.-25."]]}
 {"frage": "Was muss beim MAKEathon am Schluss abgegeben werden?", "quelle": "MAKEathon", "fakten": ["Poster"]}
 {"frage": "Bis wann ist die Abgabe beim MAKEathon?", "fakten": [["10.01", "10. Januar", "2027-01-10"]]}
 {"frage": "Nach welchen Kriterien wird das Gruppenprojekt in Reinforcement Learning bewertet?", "quelle": "Reinforcement", "fakten": [["Originalität", "Originality"]]}

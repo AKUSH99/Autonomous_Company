@@ -17,7 +17,7 @@ from pathlib import Path
 from .konfig import daten_ordner
 
 
-def lade_alles(modell_name: str = "deepseek", denken: bool = False):
+def lade_alles(modell_name: str = "deepseek", denken: bool = False, mcp: bool = True):
     from .agent import baue_agent
     from .einlesen import laden
     from .fristen import Fristen
@@ -31,7 +31,13 @@ def lade_alles(modell_name: str = "deepseek", denken: bool = False):
     fristen = Fristen.laden(d / "fristen.json")
     # Mit Reasoning prüft und sucht das schnelle Modell; nur die Antwort schreibt das denkende (einmal statt pro Runde).
     denkmodell = chat_modell(modell_name, True) if denken else None
-    return baue_agent(chat_modell(modell_name, False), suche, fristen, denkmodell=denkmodell), suche, fristen
+    # Werkzeuge über MCP: Der Agent ist Client des eigenen MCP-Servers (im selben Prozess, siehe mcp_client.py)
+    werkzeuge = None
+    if mcp:
+        from .mcp_client import MCPWerkzeuge
+        from .mcp_server import erstelle_server
+        werkzeuge = MCPWerkzeuge(erstelle_server(suche, fristen)).werkzeuge
+    return baue_agent(chat_modell(modell_name, False), suche, fristen, denkmodell=denkmodell, werkzeuge=werkzeuge), suche, fristen
 
 
 def _einlesen(args) -> None:
@@ -76,6 +82,11 @@ def _bewerten(args) -> None:
     from .bewertung import bewerte, tabelle
     graph, suche, _ = lade_alles(args.modell, args.denken)
     ergebnis = bewerte(graph, suche, Path(args.testset), nur_suche=args.nur_suche)
+    if args.ausgabe:
+        import json
+        from .bewertung import ohne_antworten
+        Path(args.ausgabe).write_text(json.dumps(ohne_antworten(ergebnis) | {"modell": args.modell, "denken": args.denken},
+                                                 ensure_ascii=False, indent=1), encoding="utf-8")
     print(tabelle(ergebnis))
 
 
@@ -95,6 +106,7 @@ def main() -> int:
         else:
             s.add_argument("--testset", default="evaluation/fragen.jsonl")
             s.add_argument("--nur-suche", action="store_true", help="nur die Suche bewerten (ohne Sprachmodell)")
+            s.add_argument("--ausgabe", help="Ergebnis als JSON speichern (ohne Antworttexte)")
         s.add_argument("--modell", default="deepseek", help="glm, glm-flash, deepseek, apertus oder eine Modell-ID")
         s.add_argument("--denken", action="store_true", help="Reasoning einschalten (langsamer)")
         s.set_defaults(fn=fn)

@@ -85,6 +85,8 @@ def test_pruefung_lehnt_themen_ohne_studienbezug_ab():
 def test_fakten_vergleich():
     assert fakten_ok("Abgabe am 20. Dezember 2026", [["20.12", "20. Dezember"]])
     assert not fakten_ok("Abgabe im Dezember", ["20.12"])
+    from studienassistent.bewertung import quelle_genannt
+    assert quelle_genannt("Am 23.11. (Quelle: Generative KI · plan.pdf, S. 1).") and not quelle_genannt("Am 23.11.")
 
 
 def test_module_zuordnen_und_weglassen():
@@ -227,3 +229,19 @@ def test_gefundene_stellen_fuer_die_anzeige():
 def test_app_ist_gueltiges_python():
     import ast
     ast.parse((Path(__file__).parent.parent / "studienassistent" / "app.py").read_text(encoding="utf-8"))
+
+
+def test_notbremse_bei_429_und_jede_anfrage_zaehlt(tmp_path, monkeypatch):
+    import httpx
+
+    import studienassistent.konfig as konfig
+    from studienassistent.betrieb import Betrieb
+    b = Betrieb(tmp_path / "b.sqlite", 5)
+    monkeypatch.setattr(konfig, "_BETRIEB", b)
+    antworten = iter([httpx.Response(429, headers={"retry-after": "30"}), httpx.Response(200), httpx.Response(200)])
+    client = konfig.http_client(5, transport=httpx.MockTransport(lambda anfrage: next(antworten)))
+    assert client.post("https://x/v1/chat/completions").status_code == 429
+    lage = b.lage()
+    assert lage["abgelehnt_heute"] == 1 and 29 < lage["pause_noch"] <= 30  # alle Prozesse pausieren 30 s
+    assert lage["aufrufe_minute"] == 1  # die Anfrage selbst ist in der Taktbremse gezählt
+    assert 29 < b.warten() <= 30                                             # auch eine neue Anfrage muss warten
