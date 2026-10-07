@@ -33,11 +33,11 @@ flowchart LR
 | Use Case & Nutzer | Studierende im BAI; Fragen zu Modulen, Prüfungen, Abgaben, Fristen und Regeln |
 | System-Prompt | Rolle, heutiges Datum, Regeln: erst suchen, Quelle nennen, nichts erfinden, keine Abgaben schreiben |
 | Modell | Swiss AI Research Platform: im Chat GLM-5.3 Flash, Antwort immer mit maximalem Reasoning; per Befehl auch DeepSeek und Apertus |
-| Tools | `unterlagen_durchsuchen`, `fristen_anzeigen`, `module_auflisten` (Function Calling), zusätzlich als MCP-Server |
+| Tools & MCP | `unterlagen_durchsuchen`, `fristen_anzeigen`, `module_auflisten` (Function Calling) auf einem eigenen MCP-Server; der Agent ist MCP-Client und holt die Werkzeuge über das Protokoll |
 | Wissen & Memory | Kursunterlagen in Abschnitte zerlegt, Hybrid-Suche (BM25 + Embeddings, Reciprocal Rank Fusion), Gesprächsgedächtnis pro Chat |
-| Orchestrierung | LangGraph: Prüfung → Agent ⇄ Werkzeuge |
-| Interface | Chat im Browser (Streamlit), mit aufklappbaren Fundstellen |
-| Testing & Evaluation | Testset mit echten Fragen und bekannten Antworten, automatische Tests ohne Netz, LangSmith-Tracing (einschalten mit `LANGSMITH_TRACING=true` und `LANGSMITH_API_KEY`) |
+| Orchestrierung | LangGraph: Prüfung → Agent ⇄ Werkzeuge → Antwort mit Reasoning; höchstens drei Suchrunden |
+| Interface | Chat im Browser (Streamlit): Fundstellen als Karten, Warteschlange und Auslastung des API-Schlüssels |
+| Testing & Evaluation | Testset mit echten Fragen und bekannten Antworten, Modellvergleich ([docs/modellwahl.md](docs/modellwahl.md)), automatische Tests ohne Netz, LangSmith-Tracing (einschalten mit `LANGSMITH_TRACING=true` und `LANGSMITH_API_KEY`) |
 
 ## Evaluation
 
@@ -62,7 +62,7 @@ export SWISSAI_API_KEY=...                                  # https://serving.sw
 python -m studienassistent einlesen <Ordner mit Unterlagen> --fristen fristen.json --module module.json
 python -m studienassistent frage "Wann ist die GenAI-Präsentation?" --quellen
 python -m studienassistent app                              # Chat im Browser
-python -m studienassistent bewerten                         # Evaluation mit evaluation/fragen.jsonl
+python -m studienassistent bewerten --modell glm-flash --denken   # Evaluation mit evaluation/fragen.jsonl
 python -m studienassistent mcp                              # Werkzeuge als MCP-Server (z. B. für Claude Desktop)
 pytest                                                      # Tests ohne Netz und ohne Schlüssel
 ```
