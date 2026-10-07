@@ -44,14 +44,17 @@ def bewerte(graph, suche, testset: Path, nur_suche: bool = False) -> dict:
     zeilen = []
     for fall in faelle:
         z = {"frage": fall["frage"], "quelle_ok": None, "fakten_ok": None, "ablehnung_ok": None, "quelle_genannt": None,
-             "sekunden": None}
+             "sekunden": None, "sekunden_ohne_bremse": None}
         if fall.get("quelle"):
             treffer = suche.suchen(fall["frage"], k=5)
             z["quelle_ok"] = any(fall["quelle"].lower() in f"{a.modul} {a.datei}".lower() for a, _ in treffer)
         if not nur_suche:
-            start = time.time()
+            from .konfig import betrieb
+            start, gewartet = time.time(), betrieb().gewartet
             r = fragen(graph, fall["frage"], thread_id=str(uuid.uuid4()))
             z["sekunden"] = round(time.time() - start, 1)
+            # ohne die Wartezeit der Taktbremse: so lange dauert die Antwort, wenn das Ratenlimit nicht greift
+            z["sekunden_ohne_bremse"] = round(z["sekunden"] - (betrieb().gewartet - gewartet), 1)
             z["antwort"] = r["antwort"]
             z["ablehnung_ok"] = r["abgelehnt"] == bool(fall.get("ablehnen"))
             if not fall.get("ablehnen") and not r["abgelehnt"]:
@@ -64,11 +67,14 @@ def bewerte(graph, suche, testset: Path, nur_suche: bool = False) -> dict:
         werte = [z[feld] for z in zeilen if z[feld] is not None]
         return (sum(werte) / len(werte), len(werte)) if werte else (None, 0)
 
-    zeiten = [z["sekunden"] for z in zeilen if z["sekunden"] is not None]
-    zeit = {"median": statistics.median(zeiten), "max": max(zeiten),
-            "unter_ziel": sum(s < ZIEL_SEKUNDEN for s in zeiten) / len(zeiten)} if zeiten else None
+    def zeit(feld: str) -> dict | None:
+        zeiten = [z[feld] for z in zeilen if z[feld] is not None]
+        return {"median": statistics.median(zeiten), "max": max(zeiten),
+                "unter_ziel": sum(s < ZIEL_SEKUNDEN for s in zeiten) / len(zeiten)} if zeiten else None
+
     return {"quelle": anteil("quelle_ok"), "fakten": anteil("fakten_ok"), "ablehnung": anteil("ablehnung_ok"),
-            "quelle_genannt": anteil("quelle_genannt"), "zeit": zeit, "faelle": zeilen}
+            "quelle_genannt": anteil("quelle_genannt"), "zeit": zeit("sekunden"), "zeit_ohne_bremse": zeit("sekunden_ohne_bremse"),
+            "faelle": zeilen}
 
 
 def ohne_antworten(e: dict) -> dict:
@@ -87,6 +93,10 @@ def tabelle(e: dict) -> str:
         z = e["zeit"]
         zeilen.append(f"| Antwortzeit (Median, max) | {z['median']:.0f} s, {z['max']:.0f} s | {len([f for f in e['faelle'] if f['sekunden']])} |")
         zeilen.append(f"| Antwort unter {ZIEL_SEKUNDEN} s | {z['unter_ziel']:.0%} | |")
+    if e.get("zeit_ohne_bremse"):
+        z = e["zeit_ohne_bremse"]
+        zeilen.append(f"| Ohne Wartezeit der Taktbremse: Median, max | {z['median']:.0f} s, {z['max']:.0f} s | |")
+        zeilen.append(f"| Ohne Wartezeit der Taktbremse: unter {ZIEL_SEKUNDEN} s | {z['unter_ziel']:.0%} | |")
     fehler = [z for z in e["faelle"] if False in (z["quelle_ok"], z["fakten_ok"], z["ablehnung_ok"])]
     if fehler:
         zeilen += ["", "Nicht bestanden:"] + [f"- {z['frage']}" + (f" → {z.get('antwort', '')[:160]!r}" if z.get("antwort") else "")

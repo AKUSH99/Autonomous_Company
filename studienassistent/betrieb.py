@@ -23,6 +23,7 @@ AKTIV_SEKUNDEN = 45  # so lange gilt eine offene Seite nach ihrem letzten Lebens
 class Betrieb:
     def __init__(self, pfad: Path, pro_minute: int):
         self.pfad, self.pro_minute = Path(pfad), pro_minute
+        self.gewartet = 0.0  # Sekunden, die dieser Prozess insgesamt auf die Bremse gewartet hat (für die Evaluation)
         self.pfad.parent.mkdir(parents=True, exist_ok=True)
         with closing(self._verbindung()) as db, db:
             db.executescript("""
@@ -56,7 +57,11 @@ class Betrieb:
 
     def bremsen(self, art: str = "chat") -> None:
         while (w := self.warten(art)) > 0:
-            time.sleep(min(w, 5))
+            self.schlafen(min(w, 5))
+
+    def schlafen(self, sekunden: float) -> None:
+        time.sleep(sekunden)
+        self.gewartet += sekunden
 
     # ---------- Besucher und Statistik ----------
 

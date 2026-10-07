@@ -51,7 +51,7 @@ def _rate_limiter():
             while (w := betrieb().warten("chat")) > 0:
                 if not blocking:
                     return False
-                time.sleep(w)
+                betrieb().schlafen(w)
             return True
 
         async def aacquire(self, *, blocking: bool = True) -> bool:
