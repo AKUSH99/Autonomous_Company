@@ -14,6 +14,8 @@ Quelle (Modul, Datei, Seite). Was nicht in den Unterlagen steht, erfindet er nic
 Gruppenarbeit im Modul Generative KI & Agentensysteme, FHNW BSc Business Artificial Intelligence, HS 2026 ·
 Team: Almidin Bangoji, Robin Meier, Jan Steiner, Andrej Mauron, Flavio Sibilia
 
+**Live ausprobieren:** https://akus.tail31c8f9.ts.net:8443 (Passwort beim Team)
+
 ## So funktioniert es
 
 ```mermaid
