@@ -14,6 +14,7 @@ MODELLE = {
     "deepseek": "RCP-AIaaS/deepseek-ai/DeepSeek-V4.1-Flash",   # schnell, zuverlässiges Werkzeug-Aufrufen
     "apertus": "CSCS-Inference/swiss-ai/Apertus-v1.5-70B",     # das Schweizer Modell
     "glm": "CSCS-Inference/zai-org/GLM-5.3",                   # stärkstes Modell der Plattform
+    "glm-flash": "RCP-AIaaS/zai-org/GLM-5.3-Flash",            # schnellere GLM-Variante
 }
 EMBEDDING_MODELL = "RCP-AIaaS/Qwen/Qwen3-Embedding-8B"
 # Ratenlimit der Plattform laut FAQ: unter 15 Anfragen pro Minute pro Nutzer (weitergeleitete Modelle)
@@ -80,7 +81,7 @@ def chat_modell(name: str = "deepseek", denken: bool = False):
         base_url=SWISSAI_URL,
         api_key=os.environ.get("SWISSAI_API_KEY", "fehlt"),
         temperature=0.2,
-        max_tokens=16000 if denken else 3000,
+        max_tokens=32000 if denken else 3000,  # mit Reasoning das volle Denkbudget
         max_retries=4,
         rate_limiter=_rate_limiter(),
         # Denkmodus über die Chat-Vorlage (DeepSeek: thinking, Qwen/GLM: enable_thinking)
