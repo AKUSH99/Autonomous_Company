@@ -76,6 +76,11 @@ def _bewerten(args) -> None:
     from .bewertung import bewerte, tabelle
     graph, suche, _ = lade_alles(args.modell, args.denken)
     ergebnis = bewerte(graph, suche, Path(args.testset), nur_suche=args.nur_suche)
+    if args.ausgabe:
+        import json
+        from .bewertung import ohne_antworten
+        Path(args.ausgabe).write_text(json.dumps(ohne_antworten(ergebnis) | {"modell": args.modell, "denken": args.denken},
+                                                 ensure_ascii=False, indent=1), encoding="utf-8")
     print(tabelle(ergebnis))
 
 
@@ -95,6 +100,7 @@ def main() -> int:
         else:
             s.add_argument("--testset", default="evaluation/fragen.jsonl")
             s.add_argument("--nur-suche", action="store_true", help="nur die Suche bewerten (ohne Sprachmodell)")
+            s.add_argument("--ausgabe", help="Ergebnis als JSON speichern (ohne Antworttexte)")
         s.add_argument("--modell", default="deepseek", help="glm, glm-flash, deepseek, apertus oder eine Modell-ID")
         s.add_argument("--denken", action="store_true", help="Reasoning einschalten (langsamer)")
         s.set_defaults(fn=fn)

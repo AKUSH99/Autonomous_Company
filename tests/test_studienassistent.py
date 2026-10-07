@@ -85,6 +85,8 @@ def test_pruefung_lehnt_themen_ohne_studienbezug_ab():
 def test_fakten_vergleich():
     assert fakten_ok("Abgabe am 20. Dezember 2026", [["20.12", "20. Dezember"]])
     assert not fakten_ok("Abgabe im Dezember", ["20.12"])
+    from studienassistent.bewertung import quelle_genannt
+    assert quelle_genannt("Am 23.11. (Quelle: Generative KI · plan.pdf, S. 1).") and not quelle_genannt("Am 23.11.")
 
 
 def test_module_zuordnen_und_weglassen():
