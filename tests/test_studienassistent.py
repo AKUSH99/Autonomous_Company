@@ -259,3 +259,25 @@ def test_app_verlangt_passwort_wenn_gesetzt(monkeypatch):
     app.text_input[0].input("falsch")
     app.button[0].click().run()
     assert app.error and not app.chat_input
+
+
+def test_qr_link_meldet_direkt_an(monkeypatch, tmp_path):
+    import pytest
+    pytest.importorskip("streamlit")
+    from streamlit.testing.v1 import AppTest
+    speichern(einlesen([DATEN]), tmp_path / "abschnitte.jsonl")  # kleine Testunterlagen statt der echten
+    monkeypatch.setenv("STUDIENASSISTENT_DATEN", str(tmp_path))
+    monkeypatch.setenv("STUDIENASSISTENT_PASSWORT", "geheim")
+    monkeypatch.delenv("SWISSAI_API_KEY", raising=False)
+    datei = str(Path(__file__).parent.parent / "studienassistent" / "app.py")
+
+    app = AppTest.from_file(datei, default_timeout=60)
+    app.query_params["zugang"] = "geheim"
+    app.run()
+    assert not app.exception and app.chat_input and not app.text_input  # direkt im Chat, keine Passwortabfrage
+    assert app.query_params.get("zugang") in (None, [], "")              # Code aus der Adresszeile entfernt
+
+    falsch = AppTest.from_file(datei, default_timeout=60)
+    falsch.query_params["zugang"] = "falsch"
+    falsch.run()
+    assert falsch.text_input[0].label == "Passwort" and not falsch.chat_input
