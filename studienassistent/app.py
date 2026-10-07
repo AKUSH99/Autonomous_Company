@@ -125,6 +125,9 @@ if frage := st.chat_input("Deine Frage zum Studium …"):
                     feld.markdown(text + " ▌")
                 else:
                     r = inhalt
+        except Exception as fehler:  # noqa: BLE001 – Plattform nicht erreichbar, Zeitlimit: Hinweis statt Absturz
+            r = {"antwort": "Die Sprachmodell-Plattform antwortet gerade nicht oder zu langsam. Versuch es bitte in einer "
+                            f"Minute nochmals. ({type(fehler).__name__})", "quellen": []}
         finally:
             schlange().fertig(nummer)
         betrieb().frage_erledigt(st.session_state["besucher"], start)

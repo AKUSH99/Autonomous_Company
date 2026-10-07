@@ -19,6 +19,9 @@ MODELLE = {
 EMBEDDING_MODELL = "RCP-AIaaS/Qwen/Qwen3-Embedding-8B"
 # Ratenlimit der Plattform laut FAQ: unter 15 Anfragen pro Minute pro Nutzer (weitergeleitete Modelle)
 ANFRAGEN_PRO_MINUTE = 14
+# Zeitlimit pro Modell-Aufruf in Sekunden
+ZEITLIMIT_SCHNELL = 60
+ZEITLIMIT_DENKEN = 240
 
 
 def daten_ordner() -> Path:
@@ -72,7 +75,9 @@ def chat_modell(name: str = "deepseek", denken: bool = False):
         api_key=os.environ.get("SWISSAI_API_KEY", "fehlt"),
         temperature=0.2,
         max_tokens=32000 if denken else 3000,  # mit Reasoning das volle Denkbudget
-        max_retries=4,
+        # Ohne Zeitlimit wartet ein hängender Aufruf ewig. Mit Reasoning darf eine Antwort lange denken.
+        timeout=ZEITLIMIT_DENKEN if denken else ZEITLIMIT_SCHNELL,
+        max_retries=2,
         rate_limiter=_rate_limiter(),
         # Denkmodus über die Chat-Vorlage (DeepSeek: thinking, Qwen/GLM: enable_thinking)
         extra_body={"chat_template_kwargs": {"thinking": denken, "enable_thinking": denken}},
